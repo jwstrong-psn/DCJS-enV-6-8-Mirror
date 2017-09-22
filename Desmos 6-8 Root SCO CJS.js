@@ -22,6 +22,160 @@ PearsonGL.External.rootJS = (function() {
    **********************************************************************************/
 
 // DCJS Stuff [TK]
+  /* ←—PRIVATE VARIABLES———————————————————————————————————————————————————→ *\
+       | Variable cache; access with vs[uniqueId].myVariable
+       * ←—————————————————————————————————————————————————————————————————→ */
+    let vs = {common:{}};
+  /* ←—PRIVATE HELPER FUNCTIONS————————————————————————————————————————————→ *\
+       | Subroutines; access with hs.functionName(args)
+       * ←—————————————————————————————————————————————————————————————————→ */
+    let hs = {
+      /* ←— flattenFuncStruct —————————————————————————————————————————————→ *\
+       ↑ Turn a nested function structure into a single layer; each function's   ↑
+       |  name prefixed by its parent objects, connected by underscores.         |
+       |                                                                         |
+       | @Arg1: a hierarchical structure containing only Functions and objects   |
+       | @Arg2: (Optional) a string to prefix all function names                 |
+       |                                                                         |
+       | @Returns: object whose members are all references to functions          |
+       ↓ @Returns: false if input contains (sub-)*members that are not functions ↓
+       * ←—————————————————————————————————————————————————————————————————————→ */
+      flattenFuncStruct: function(funcStruct,prefix='')
+       {
+        let functions={};
+        let keys = Object.keys(funcStruct);
+        let i; let l = keys.length;
+        for(i=0; i<l; i+=1) {
+          if (typeof funcStruct[keys[i]] === 'object') {
+            if (!(Object.assign(functions,hs.flattenFuncStruct(funcStruct[keys[i]],prefix+keys[i]+'_')))) {return false;}
+          }
+          else if (typeof funcStruct[keys[i]] === 'function') {functions[prefix+keys[i]] = funcStruct[keys[i]];}
+          else {
+            alert(prefix+keys[i]+' is not a function or object');
+            return false;
+          }
+        }
+        return functions;
+       },
+      /* ←— reportDCJSError —————————————————————————————————————————————————→ *\
+       ↑ Downloads an error report file including the current state and some     ↑
+       |  other useful stuff.                                                    |
+       | Additionally sets the Desmos calculator instance to a global variable   |
+       |  for futher debugging.                                                  |
+       |                                                                         |
+       | @Arg1: A standard DCJS options struct                                   |
+       | @Arg2: (Optional) additional info to be recorded in the error report    |
+       ↓                                                                         ↓
+       * ←—————————————————————————————————————————————————————————————————————→ */
+      reportDCJSError: function(options)
+       {
+
+        window['widget_' + output.uniqueId] = options.desmos;
+
+        let output = {
+            id: options.uniqueId,
+            state: options.desmos.getState(),
+            variables: vs[options.uniqueId],
+            helpers: hxs[options.uniqueId],
+            screenshot: options.desmos.screenshot()
+          };
+
+        let i;
+        for (i = 1; i < arguments.length; i += 1)
+         {
+          output["arguments["+i+"]"] = arguments[i];
+         }
+
+        let element = document.createElement('a');
+        element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(output,null,"\t")));
+        element.setAttribute('download', 'Widget Error Report '+((new Date()).toISOString())+'.json');
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+       },
+      /* ←— parseArgs —————————————————————————————————————————————————————→ *\
+       ↑ Returns a new struct merging given options with defaults for those   ↑
+       | options not provided.                                                |
+       |                                                                      |
+       |          TODO TK STUB UPDATE WHEN MSWEB-7680 IS RESOLVED             |
+       |                                                                      |
+       | @arg: an argument list from a function call, either:                 |
+       |           Standard Desmos Gadget helper function options struct:     |
+       |              [{                                                      |
+       |                desmos: Desmos,                                       |
+       |                name: String,                                         |
+       |                value: Number,                                        |
+       |                uniqueId: String,                                     |
+       |                (optional) log: Function                              |
+       |              }]                                                      |
+       |           or [value, name, desmos]                                   |
+       |                                                                      |
+       | @Returns: standard Desmos Gadget helper function options struct      |
+       ↓ @Returns: default options if input is empty                          ↓
+       * ←—————————————————————————————————————————————————————————————————→ */
+      parseArgs: function(args)
+       {
+        if (args.length < 1)
+          throw new Error("DCJS cannot parse empty argument list.");
+
+        let output = {
+          log: console.log // Kill this when not debugging
+        };
+
+        if (typeof args[0] === "object")
+          Object.assign(output,args[0]);
+        else if (typeof args[0] === "number")
+          output.value = args[0];
+        else
+         {
+          output.log(args);
+          throw new Error ("DCJS received non-standard arguments.");
+         }
+
+        if (output.desmos === undefined)
+          output.desmos = args[2] || window.calculator || window.Calc;
+
+        if (output.name === undefined)
+          output.name = args[1] || "";
+
+        if (output.value === undefined)
+          output.value = NaN;
+
+        if (output.uniqueId === undefined)
+          output.uniqueId = output.desmos.guid;
+
+        if (window.widget === undefined && output.log === console.log)
+          window.reportDesmosError = this.reportDCJSerror;
+
+        vs[output.uniqueId] = vs[output.uniqueId] || {};
+
+        hxs[output.uniqueId] = hxs[output.uniqueId] || {};
+
+        return output;
+       },
+      /* ←— eval ——————————————————————————————————————————————————————————→ *\
+       ↑ Evaluates a LaTeX expression using a given Desmos Calculator object  ↑
+       |                                                                      |
+       |                                                                      |
+       | @arg0: A valid LaTeX expression (we trust you)                       |
+       | @arg1: A standard DCJS Options Object                                |
+       | @arg2: a callback to execute with the value once it is evaluated     |
+       |                desmos: Desmos,                                       |
+       |                name: String,                                         |
+       |                value: Number,                                        |
+       |                uniqueId: String,                                     |
+       |                (optional) log: Function                              |
+       |              }]                                                      |
+       |           or [value, name, desmos]                                   |
+       |                                                                      |
+       | @Returns: standard Desmos Gadget helper function options struct      |
+       ↓ @Returns: default options if input is empty                          ↓
+       * ←—————————————————————————————————————————————————————————————————→ */
+      eval: function(args)
+       {
+       }
+     };
 
 // Pre-DCJS Stuff
  {
