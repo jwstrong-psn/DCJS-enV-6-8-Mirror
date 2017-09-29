@@ -1343,7 +1343,7 @@
         if (typeof(Storage) !== undefined) {
           var package = [];
           for (graph in savedGraphs) package.push(savedGraphs[graph].package());
-          localStorage.MGMsavedGraphs = JSON.stringify(package);
+          localStorage.setItem("MGMsavedGraphs",JSON.stringify(package));
         } else {
           console.log('No local storage available.');
         }
@@ -1367,8 +1367,8 @@
         if (typeof(Storage) === undefined) return;
         // console.log('Checking for new versions…')
         // if (latestVersion < localStorage.MGMcurrentVersion); // STUB
-        localStorage.MGMautoSave = JSON.stringify(workingState.package());
-        localStorage.MGMcurrentVersion = Date.now();
+        localStorage.setItem("MGMautoSave",JSON.stringify(workingState.package()));
+        localStorage.setItem("MGMcurrentVersion",Date.now());
       }
 
       // Note: never set toolType before refreshing the calculator;
@@ -1599,15 +1599,15 @@
       var latestVersion = Date.now();
 
       if (typeof(Storage) !== undefined) {
-        if (localStorage.MGMcurrentVersion !== undefined) latestVersion = localStorage.MGMcurrentVersion;
-        if (localStorage.MGMautoSave !== undefined) {
-          workingState = new savedGraph($.parseJSON(localStorage.MGMautoSave),'workingState');
+        if (localStorage.getItem("MGMcurrentVersion")) latestVersion = localStorage.getItem("MGMcurrentVersion");
+        if (localStorage.getItem("MGMautoSave")) {
+          workingState = new savedGraph($.parseJSON(localStorage.getItem("MGMautoSave")),'workingState');
         } else {
           workingState = new savedGraph(null,'workingState');
           refreshCalculator();
         }
-        if (localStorage.MGMsavedGraphs !== undefined) {
-          var unpacked = $.parseJSON(localStorage.MGMsavedGraphs);
+        if (localStorage.getItem("MGMsavedGraphs")) {
+          var unpacked = $.parseJSON(localStorage.getItem("MGMsavedGraphs"));
           for (graph in unpacked) savedGraphs.push(new savedGraph(unpacked[graph]));
         }
       } else {
