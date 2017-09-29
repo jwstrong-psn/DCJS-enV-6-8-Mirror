@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>WIDGET Tool (6-8)</title>
+  <title>6–8 WIDGET</title>
   <link href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
   <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -1184,12 +1184,10 @@
           width = pack.width;
           height = pack.height;
           helpers = Object.assign([],pack.helpers);
-          thumbnail = pack.preview;
+          thumbnail = pack.previewCloud ? pack.previewCloud : pack.preview;
           buildGui();
-          if(pack.previewCloud) {
-            $('#'+id+'_img').attr("src",pack.previewCloud);
-            $('#'+id+'_img').attr("onerror",'this.src="'+pack.preview+'"');
-          } else $('#'+id+'_img').attr("src",pack.preview);
+
+          $('#'+id+'_img').attr("src",thumbnail);
         }
 
         function destroy() {
@@ -1345,7 +1343,7 @@
         if (typeof(Storage) !== undefined) {
           var package = [];
           for (graph in savedGraphs) package.push(savedGraphs[graph].package());
-          localStorage.savedGraphs = JSON.stringify(package);
+          localStorage.MGMsavedGraphs = JSON.stringify(package);
         } else {
           console.log('No local storage available.');
         }
@@ -1368,9 +1366,9 @@
         autoSaveQueued = false;
         if (typeof(Storage) === undefined) return;
         // console.log('Checking for new versions…')
-        // if (latestVersion < localStorage.currentVersion); // STUB
-        localStorage.autoSave = JSON.stringify(workingState.package());
-        localStorage.currentVersion = Date.now();
+        // if (latestVersion < localStorage.MGMcurrentVersion); // STUB
+        localStorage.MGMautoSave = JSON.stringify(workingState.package());
+        localStorage.MGMcurrentVersion = Date.now();
       }
 
       // Note: never set toolType before refreshing the calculator;
@@ -1601,15 +1599,15 @@
       var latestVersion = Date.now();
 
       if (typeof(Storage) !== undefined) {
-        if (localStorage.currentVersion !== undefined) latestVersion = localStorage.currentVersion;
-        if (localStorage.autoSave !== undefined) {
-          workingState = new savedGraph($.parseJSON(localStorage.autoSave),'workingState');
+        if (localStorage.MGMcurrentVersion !== undefined) latestVersion = localStorage.MGMcurrentVersion;
+        if (localStorage.MGMautoSave !== undefined) {
+          workingState = new savedGraph($.parseJSON(localStorage.MGMautoSave),'workingState');
         } else {
           workingState = new savedGraph(null,'workingState');
           refreshCalculator();
         }
-        if (localStorage.savedGraphs !== undefined) {
-          var unpacked = $.parseJSON(localStorage.savedGraphs);
+        if (localStorage.MGMsavedGraphs !== undefined) {
+          var unpacked = $.parseJSON(localStorage.MGMsavedGraphs);
           for (graph in unpacked) savedGraphs.push(new savedGraph(unpacked[graph]));
         }
       } else {
