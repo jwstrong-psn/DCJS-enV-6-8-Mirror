@@ -177,35 +177,29 @@ PearsonGL.External.rootJS = (function() {
        }
      };
 
-// Pre-DCJS Stuff
- {
+// Pre-DCJS Stuff {
     // Define functions
 
-      function getUniqueRandom(arr,num)
-       {
+      function getUniqueRandom(arr,num) {
         var arr = arr.value;
         
-        if(String(arr).indexOf('|') != -1)
-        {
+        if(String(arr).indexOf('|') != -1) {
           var aTemp = String(arr).split('|')
           var num0 = Number(aTemp[0])
           var num1 = Number(aTemp[1])
           var aTemp2 = new Array();
-          for(var i=num0;i<=num1;i++)
-          {
+          for(var i=num0;i<=num1;i++) {
             aTemp2.push(i)
           }
           arr = aTemp2;
         }
 
-        if(String(arr).indexOf('::') != -1)
-        {
+        if(String(arr).indexOf('::') != -1) {
           var aTemp = String(arr).split('::')
           var num0 = Number(aTemp[0])
           var num1 = Number(aTemp[1])
           var aTemp2 = new Array();
-          for(var i=num0;i<=num1;i++)
-          {
+          for(var i=num0;i<=num1;i++) {
             aTemp2.push(i)
           }
           arr = aTemp2;
@@ -222,22 +216,18 @@ PearsonGL.External.rootJS = (function() {
         
         var tempArr = arr;
         var aSet = new Array();
-        for(var i=0;i<num;i++)
-        {
+        for(var i=0;i<num;i++) {
           aSet.push(tempArr[i])
         }
-        if(typeof arr[0] == 'number')
-        {
+        if(typeof arr[0] == 'number') {
           return new PearsonGL.Parameters.Parameter(aSet,"ordered","integer");
         }
-        if(typeof arr[0] == 'string')
-        {
+        if(typeof arr[0] == 'string') {
           return new PearsonGL.Parameters.Parameter(aSet,"ordered","string");
         }
        }
 
-      function textOnSVG_V1(width,height,xPos,yPos,text,style,canvasBgStyle)
-       {
+      function textOnSVG_V1(width,height,xPos,yPos,text,style,canvasBgStyle) {
           
           var width = width.value;
           var height = height.value;
@@ -248,10 +238,8 @@ PearsonGL.External.rootJS = (function() {
           var canvasBgStyle = canvasBgStyle.value;
           var canvas = '';
           
-          var SVGObj = 
-          {  
-              createLabel : function(x,y,text,style)
-              {   
+          var SVGObj = {  
+              createLabel : function(x,y,text,style) {   
                   return '<text class="svg-text-on-table" x="' + x + '" y="' + y + '" style="'+style+'">'+text+'</text>';
               }
           }
@@ -266,8 +254,7 @@ PearsonGL.External.rootJS = (function() {
 
        }
 
-      function FractionReduce(n,d)
-       {
+      function FractionReduce(n,d) {
 
               var numerator = (n<d)?n:d;
               var denominator = (n<d)?d:n;        
@@ -292,8 +279,7 @@ PearsonGL.External.rootJS = (function() {
               }
        }
 
-      function decimalToFraction(decimal)
-       {
+      function decimalToFraction(decimal) {
         var answer = "";
         var decimalArray = String(decimal).split("."); // 1.75
         var leftDecimalPart = decimalArray[0]; // 1
@@ -306,20 +292,17 @@ PearsonGL.External.rootJS = (function() {
         return new PearsonGL.Parameters.Parameter(answer ,"single","string");
        }
 
-      function splitNumaratorDeno(number) 
-       {
+      function splitNumaratorDeno(number) {
           var str = number;
           var result = str.toString().split("/");
           return new PearsonGL.Parameters.Parameter(result,"ordered","string");
        }
 
-      function parseStrToInt(exp)
-       {
+      function parseStrToInt(exp) {
         return new PearsonGL.Parameters.Parameter(parseInt(exp),"single","integer"); 
        }
 
-      function arrayFilter(array1,array2)
-       {
+      function arrayFilter(array1,array2) {
         var array1 = array1.value;
         var array2 = array2.value;
           var aSet = array1.filter(function(obj) {
@@ -329,21 +312,18 @@ PearsonGL.External.rootJS = (function() {
         
        }
 
-      function getUniqueRandomFloat(arr,num,increament,round)
-       {
+      function getUniqueRandomFloat(arr,num,increament,round) {
         var arr = arr.value;
         var num = num.value;
         var increament = increament.value;
         var round = round.value;
         
-        if(String(arr).indexOf('::') != -1)
-        {
+        if(String(arr).indexOf('::') != -1) {
           var aTemp = String(arr).split('::')
           var num0 = Number(aTemp[0])
           var num1 = Number(aTemp[1])
           var aTemp2 = new Array();
-          for(var i=num0;i<=num1;i=i+increament)
-          {
+          for(var i=num0;i<=num1;i=i+increament) {
             aTemp2.push(i);
           }
           arr = aTemp2;
@@ -360,19 +340,16 @@ PearsonGL.External.rootJS = (function() {
         
          var tempArr = arr;
         var aSet = new Array();
-        for(var i=0;i<num;i++)
-        {
+        for(var i=0;i<num;i++) {
           aSet.push(Number(tempArr[i].toFixed(round)))
         }
-        if(typeof arr[0] == 'number')
-        {
+        if(typeof arr[0] == 'number') {
             return new PearsonGL.Parameters.Parameter(aSet,"ordered","float");
         }
        
        }
 
-      function getPlaceValue(num,placevalue)
-       {
+      function getPlaceValue(num,placevalue) {
 
        
         var numLength = String(num).length;  
@@ -381,28 +358,24 @@ PearsonGL.External.rootJS = (function() {
         return new PearsonGL.Parameters.Parameter(placeValueNumber,"single","integer");
        }
 
-      function sqrt(number)
-       {
+      function sqrt(number) {
         var sqrt = Math.sqrt(number.value);
         return new PearsonGL.Parameters.Parameter(sqrt,"single","float");
         
        }
 
-      function parseStrToInt(exp)
-       {
+      function parseStrToInt(exp) {
         return new PearsonGL.Parameters.Parameter(parseInt(exp.value),"single","integer"); 
        }
 
-      function isSquare(n)
-       {
+      function isSquare(n) {
 
         var isTrue = n.value > 0 && Math.sqrt(n.value) % 1 === 0;
         return new PearsonGL.Parameters.Parameter(isTrue,"single","boolean"); 
 
        }
 
-      function createNumberLine_A0495260(dim,minXRange,maxXRange,ptArr,interval)
-       { 
+      function createNumberLine_A0495260(dim,minXRange,maxXRange,ptArr,interval) { 
 
               var dim = dim.value;
               var minXRange = minXRange.value;
@@ -420,19 +393,15 @@ PearsonGL.External.rootJS = (function() {
               var container;
               var aPoints = ptArr;
               var rightArrPos = dim - 18.67;
-              var SVGObj = 
-              {
+              var SVGObj = {
                   
-                  createLine : function (x1, y1, x2, y2, color, w) 
-                  {
+                  createLine : function (x1, y1, x2, y2, color, w) {
                       return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="' + w + '"/>';
                   },
-                  createCircle : function(x,y,r)
-                  {
+                  createCircle : function(x,y,r) {
                       return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#0092C8"/>';
                   },
-                  createLabel : function(x,y,text,fontStyle)
-                  {   
+                  createLabel : function(x,y,text,fontStyle) {   
                       return '<text x="' + x + '" y="' + y + '" font-style="' + fontStyle + '" font-size="12"  style="font-size:18px;">'+text+'</text>';
                   }
               }
@@ -450,8 +419,7 @@ PearsonGL.External.rootJS = (function() {
 
               
 
-              for(var i=0;i<noOfParts+1;i++)
-              {
+              for(var i=0;i<noOfParts+1;i++) {
                       
                       canvas += SVGObj.createLine(xPos, 15, xPos, 35, 'rgb(0,0,0)', 1);
                       if(i==0){
@@ -489,8 +457,7 @@ PearsonGL.External.rootJS = (function() {
 
        }
 
-      function FractionReduce(n,d)
-       {
+      function FractionReduce(n,d) {
 
               var numerator = (n<d)?n:d;
               var denominator = (n<d)?d:n;        
@@ -515,13 +482,11 @@ PearsonGL.External.rootJS = (function() {
               }
        }
 
-      function getStrLength(str)
-       {
+      function getStrLength(str) {
            return new PearsonGL.Parameters.Parameter(String(str).length,"single","integer"); 
        }
 
-      function numberWithCommas(x)
-       {
+      function numberWithCommas(x) {
           var x = x.toString();
           x= String(x);
           var pattern = /(-?\d+)(\d{3})/;
@@ -530,8 +495,7 @@ PearsonGL.External.rootJS = (function() {
           return new PearsonGL.Parameters.Parameter(x,"single","string");
        }
 
-      function addzeroafter(var1, number)
-       {
+      function addzeroafter(var1, number) {
           var sNum = String(var1)
           var text = '';
          for (i = 0; i < number; i++) {
@@ -544,8 +508,7 @@ PearsonGL.External.rootJS = (function() {
         return new PearsonGL.Parameters.Parameter(text ,"single","string");
        }
 
-      function addTrailFixZero(num,place)
-       {
+      function addTrailFixZero(num,place) {
         var num = num.value;
         var place = place.value;  
         var n;
@@ -554,21 +517,18 @@ PearsonGL.External.rootJS = (function() {
 
        }
 
-      function StrToFloat(exp)
-       {
+      function StrToFloat(exp) {
         var floatValue = Number(exp.value);
         return new PearsonGL.Parameters.Parameter(floatValue,"single","float"); 
        }
 
-      function strToFloat(str)
-       {
+      function strToFloat(str) {
         var floatval = parseFloat(str.value);
         return new PearsonGL.Parameters.Parameter(floatval ,"single","float");
 
        }
 
-      function isInteger(exp)
-       {
+      function isInteger(exp) {
         var num = Number(exp.value);
         if (num === parseInt(num, 10))
           return new PearsonGL.Parameters.Parameter(true,"single","boolean"); 
@@ -576,8 +536,7 @@ PearsonGL.External.rootJS = (function() {
           return new PearsonGL.Parameters.Parameter(false,"single","boolean"); 
        }
 
-      function arrToStrRand(myArray, length)
-       {
+      function arrToStrRand(myArray, length) {
         var myArray = myArray.value;
         var hcount = 0;
         var tcount = 0;
@@ -601,8 +560,7 @@ PearsonGL.External.rootJS = (function() {
         return new PearsonGL.Parameters.Parameter(retArr,"ordered","string");
        }
 
-      function arrayShuffle(arr)
-       {
+      function arrayShuffle(arr) {
         var arr = arr.value;
         var currentIndex = arr.length, temporaryValue, randomIndex, str;
         // While there remain elements to shuffle...
@@ -618,16 +576,14 @@ PearsonGL.External.rootJS = (function() {
         return new PearsonGL.Parameters.Parameter(arr,"ordered","integer");
        }
 
-      function arrayToStr(arr)
-       {
+      function arrayToStr(arr) {
         var str;
         var arr = arr.value;
         str = arr.join(", ");
         return new PearsonGL.Parameters.Parameter(str,"single","string");
        }
 
-      function strletterRand(n, k)
-       {
+      function strletterRand(n, k) {
         var retArr = [];
           var letter = "";
         var letterstr = "";
