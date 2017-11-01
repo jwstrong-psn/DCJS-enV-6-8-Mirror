@@ -40,8 +40,8 @@ PearsonGL.External.rootJS = (function() {
        | @Returns: object whose members are all references to functions          |
        ↓ @Returns: false if input contains (sub-)*members that are not functions ↓
        * ←—————————————————————————————————————————————————————————————————————→ */
-      flattenFuncStruct: function(funcStruct,prefix='')
-       {
+      flattenFuncStruct: function(funcStruct,prefix) {
+        let prefix = prefix || '';
         let functions={};
         let keys = Object.keys(funcStruct);
         let i; let l = keys.length;
@@ -67,8 +67,7 @@ PearsonGL.External.rootJS = (function() {
        | @Arg2: (Optional) additional info to be recorded in the error report    |
        ↓                                                                         ↓
        * ←—————————————————————————————————————————————————————————————————————→ */
-      reportDCJSError: function(options)
-       {
+      reportDCJSError: function(options) {
 
         window['widget_' + output.uniqueId] = options.desmos;
 
@@ -81,8 +80,7 @@ PearsonGL.External.rootJS = (function() {
           };
 
         let i;
-        for (i = 1; i < arguments.length; i += 1)
-         {
+        for (i = 1; i < arguments.length; i += 1) {
           output["arguments["+i+"]"] = arguments[i];
          }
 
@@ -114,8 +112,7 @@ PearsonGL.External.rootJS = (function() {
        | @Returns: standard Desmos Gadget helper function options struct      |
        ↓ @Returns: default options if input is empty                          ↓
        * ←—————————————————————————————————————————————————————————————————→ */
-      parseArgs: function(args)
-       {
+      parseArgs: function(args) {
         if (args.length < 1)
           throw new Error("DCJS cannot parse empty argument list.");
 
@@ -127,8 +124,7 @@ PearsonGL.External.rootJS = (function() {
           Object.assign(output,args[0]);
         else if (typeof args[0] === "number")
           output.value = args[0];
-        else
-         {
+        else {
           output.log(args);
           throw new Error ("DCJS received non-standard arguments.");
          }
@@ -161,19 +157,38 @@ PearsonGL.External.rootJS = (function() {
        | @arg0: A valid LaTeX expression (we trust you)                       |
        | @arg1: A standard DCJS Options Object                                |
        | @arg2: a callback to execute with the value once it is evaluated     |
-       |                desmos: Desmos,                                       |
-       |                name: String,                                         |
-       |                value: Number,                                        |
-       |                uniqueId: String,                                     |
-       |                (optional) log: Function                              |
-       |              }]                                                      |
-       |           or [value, name, desmos]                                   |
        |                                                                      |
-       | @Returns: standard Desmos Gadget helper function options struct      |
-       ↓ @Returns: default options if input is empty                          ↓
+       |                                                                      |
+       | @Returns: value of the given expression if a number                  |
+       | @Returns: array of values if expression evaluates to a list          |
+       ↓ @Returns: NaN if the expression does not evaluate                    ↓
        * ←—————————————————————————————————————————————————————————————————→ */
-      eval: function(args)
-       {
+      eval: function(expression,options,callback) {
+        let o = hs.parseArgs(options),
+            desmos = o.desmos,
+            vars = vs[o.uniqueId],
+            helpers = hxs[o.uniqueId],
+            helper = helpers[expression];
+
+        // Access Helper Expression
+        if(helper === undefined)
+          helper = helpers[expression] = desmos.HelperExpression({latex:expression});
+        
+        if(helper.numericValue !== undefined) callback(helper.numericValue);
+        else if(helper.listValue !== undefined) callback(helper.listValue);
+        else {
+          let thiscall = Date.now(),
+              observeCallback = function(type,thishelper) {
+                if(isNaN(thishelper[type]) || thishelper[type] === undefined) return;
+
+                thishelper.unobserve('numericValue.'+thiscall);
+                thishelper.unobserve('listValue.'+thiscall);
+
+                callback(thishelper[type]);
+               };
+          helper.observe('numericValue.'+thiscall,observeCallback);
+          helper.observe('listValue.'+thiscall,observeCallback);
+         }
        }
      };
 
