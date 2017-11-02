@@ -191,12 +191,16 @@ PearsonGL.External.rootJS = (function() {
           helper = helpers[expression] = desmos.HelperExpression({latex:expression});
         }
         
-        if(helper.numericValue !== undefined) callback(helper.numericValue);
-        else if(helper.listValue !== undefined) callback(helper.listValue);
-        else {
+        if(helper.numericValue !== undefined) {
+          callback(helper.numericValue);
+        } else if(helper.listValue !== undefined){
+          callback(helper.listValue);
+        } else {
           var thiscall = Date.now(),
               observeCallback = function(type,thishelper) {
-                if(isNaN(thishelper[type]) || thishelper[type] === undefined) return;
+                if(isNaN(thishelper[type]) || thishelper[type] === undefined) {
+                  return;
+                }
 
                 thishelper.unobserve('numericValue.'+thiscall);
                 thishelper.unobserve('listValue.'+thiscall);
@@ -506,8 +510,9 @@ PearsonGL.External.rootJS = (function() {
           x = x.toString();
           x= String(x);
           var pattern = /(-?\d+)(\d{3})/;
-          while (pattern.test(x))
-              x = String(x).replace(pattern, "$1,$2");
+          while (pattern.test(x)) {
+            x = String(x).replace(pattern, "$1,$2");
+          }
           return new PearsonGL.Parameters.Parameter(x,"single","string");
        }
 
@@ -516,10 +521,12 @@ PearsonGL.External.rootJS = (function() {
           var text = '';
           var i;
          for (i = 0; i < number; i++) {
-            if(sNum[i])
+            if(sNum[i]) {
                text += sNum[i];
-         else
+             }
+         else {
              text += '0';
+           }
          }
 
         return new PearsonGL.Parameters.Parameter(text ,"single","string");
@@ -547,10 +554,11 @@ PearsonGL.External.rootJS = (function() {
 
       function isInteger(exp) {
         var num = Number(exp.value);
-        if (num === parseInt(num, 10))
+        if (num === parseInt(num, 10)) {
           return new PearsonGL.Parameters.Parameter(true,"single","boolean"); 
-        else
+        } else {
           return new PearsonGL.Parameters.Parameter(false,"single","boolean"); 
+        }
        }
 
       function arrToStrRand(myArray, length) {
@@ -563,10 +571,12 @@ PearsonGL.External.rootJS = (function() {
 
         for(i = 0; i < length; i++){
           var rand = myArray[Math.floor(Math.random() * myArray.length)];
-          if(str  !== '')
+          if(str  !== '') {
             str += ", "+rand;
-          else
+          } else {
             str += rand;
+          }
+            // 2017-11-01 don't know if this block is supposed to be part of else
             if ( rand == 'H') {
               hcount++;
             } else {
@@ -613,19 +623,22 @@ PearsonGL.External.rootJS = (function() {
         var shuffled = "";
         var flength = n/2;
         var i;
-        if (flength === parseInt(flength, 10))
+        if (flength === parseInt(flength, 10)) {
           flength = parseInt(flength);
-        else
+        } else {
           flength = parseInt(flength)+1;
+        }
         letter = possible.charAt(Math.floor(Math.random() * possible.length));
-          for(i = 0; i < k; i++ )
+        for(i = 0; i < k; i++ ) {
           letterstr += letter;
-          for(i = 0; i < n-k; i++ ){
+        }
+        for(i = 0; i < n-k; i++ ){
           newletter = possible.charAt(Math.floor(Math.random() * possible.length));
-          if(newletter != letter)
+          if(newletter != letter) {
             letterstr += newletter;
-          else
+          } else {
             i--;
+          }
         }
         var a = letterstr.split("");
         n = a.length;
