@@ -161,7 +161,7 @@ PearsonGL.External.rootJS = (function() {
           output.desmos = args[2] || window.calculator || window.Calc;
           output.uniqueId = output.desmos.guid;
          } else {
-          throw new Error('DCJS parseArgs received non-standard arguments.')
+          throw new Error('DCJS parseArgs received non-standard arguments.');
          }
 
         var desmos = output.desmos;
@@ -201,9 +201,8 @@ PearsonGL.External.rootJS = (function() {
        * ←—————————————————————————————————————————————————————————————————→ */
       eval: function(expression,options,callback) {
         var o = hs.parseArgs(options);
-        var desmos = o.desmos;
         var helpers = hxs[o.uniqueId];
-        var helper = helpers[expression] || desmos.HelperExpression({latex:expression});
+        var helper = helpers[expression] || helpers.maker({latex:expression});
 
         if (typeof helper.numericValue === 'number' && !(Number.isNaN(helper.numericValue))) {
           callback(helper.numericValue);
@@ -294,7 +293,7 @@ PearsonGL.External.rootJS = (function() {
           x: mathCoordinates.width/pixelCoordinates.width,
           y: mathCoordinates.height/pixelCoordinates.height
         };
-       }
+       };
 
       // var pixelsPerUnit = function() {
       //   var pixelCoordinates = desmos.graphpaperBounds.pixelCoordinates;
@@ -320,15 +319,15 @@ PearsonGL.External.rootJS = (function() {
         if(o.log() !== false) {
           if (Math.abs(Math.log2(newScale.x) - Math.log2(v.oldScale.x)) > cs.tolerance.RESCALE) {
             o.log('x-scale change: ' +
-              (1/v.oldScale.x).toPrecision(3) + 'px/unit to ' +
-              (1/newScale.x).toPrecision(3) + 'px/unit'
+              Number(1/v.oldScale.x).toPrecision(3) + 'px/unit to ' +
+              Number(1/newScale.x).toPrecision(3) + 'px/unit'
             );
             v.oldScale.x = newScale.x;
           }
           if (Math.abs(Math.log2(newScale.y) - Math.log2(v.oldScale.y)) > cs.tolerance.RESCALE) {
             o.log('y-scale change: ' +
-              (1/v.oldScale.y).toPrecision(3) + 'px/unit to ' +
-              (1/newScale.y).toPrecision(3) + 'px/unit'
+              Number(1/v.oldScale.y).toPrecision(3) + 'px/unit to ' +
+              Number(1/newScale.y).toPrecision(3) + 'px/unit'
             );
             v.oldScale.y = newScale.y;
           }
@@ -356,29 +355,29 @@ PearsonGL.External.rootJS = (function() {
         var randomIndex;
         var itemAtIndex;
 
-        if(String(arr).indexOf('|') != -1) {
+        if(String(arr).indexOf('|') !== -1) {
           aTemp = String(arr).split('|');
           num0 = Number(aTemp[0]);
           num1 = Number(aTemp[1]);
           aTemp2 = [];
-          for(i=num0;i<=num1;i++) {
+          for(i=num0;i<=num1;i+=1) {
             aTemp2.push(i);
           }
           arr = aTemp2;
         }
 
-        if(String(arr).indexOf('::') != -1) {
+        if(String(arr).indexOf('::') !== -1) {
           aTemp = String(arr).split('::');
           num0 = Number(aTemp[0]);
           num1 = Number(aTemp[1]);
           aTemp2 = [];
-          for(i=num0;i<=num1;i++) {
+          for(i=num0;i<=num1;i+=1) {
             aTemp2.push(i);
           }
           arr = aTemp2;
         }
 
-        for (i = arr.length-1; i >=0; i--) {
+        for (i = arr.length-1; i >=0; i-=1) {
 
               randomIndex = Math.floor(Math.random()*(i+1));
               itemAtIndex = arr[randomIndex];
@@ -389,13 +388,13 @@ PearsonGL.External.rootJS = (function() {
 
         var tempArr = arr;
         var aSet = [];
-        for(i=0;i<num;i++) {
+        for(i=0;i<num;i+=1) {
           aSet.push(tempArr[i]);
         }
-        if(typeof arr[0] == 'number') {
+        if(typeof arr[0] === 'number') {
           return new PearsonGL.Parameters.Parameter(aSet,"ordered","integer");
         }
-        if(typeof arr[0] == 'string') {
+        if(typeof arr[0] === 'string') {
           return new PearsonGL.Parameters.Parameter(aSet,"ordered","string");
         }
        }
@@ -477,7 +476,7 @@ PearsonGL.External.rootJS = (function() {
         array1 = array1.value;
         array2 = array2.value;
           var aSet = array1.filter(function(obj) {
-              return array2.indexOf(obj) == -1;
+              return array2.indexOf(obj) === -1;
           });
         return new PearsonGL.Parameters.Parameter(aSet,"ordered","integer");
 
@@ -503,7 +502,7 @@ PearsonGL.External.rootJS = (function() {
           arr = aTemp2;
         }
 
-        for (i = arr.length-1; i >=0; i--) {
+        for (i = arr.length-1; i >=0; i-=1) {
 
               randomIndex = Math.floor(Math.random()*(i+1));
               itemAtIndex = arr[randomIndex];
@@ -514,10 +513,10 @@ PearsonGL.External.rootJS = (function() {
 
          var tempArr = arr;
         var aSet = [];
-        for(i=0;i<num;i++) {
+        for(i=0;i<num;i+=1) {
           aSet.push(Number(tempArr[i].toFixed(round)));
         }
-        if(typeof arr[0] == 'number') {
+        if(typeof arr[0] === 'number') {
             return new PearsonGL.Parameters.Parameter(aSet,"ordered","float");
         }
 
@@ -562,7 +561,7 @@ PearsonGL.External.rootJS = (function() {
         var offset = 0;
         // var minValue = minXRange;
         var dimentions = dim-(offset*2);
-        var finalGrid;
+        // var finalGrid;
         // var SVGNS = 'http://www.w3.org/2000/svg'
         // var container;
         // var aPoints = ptArr;
@@ -580,7 +579,7 @@ PearsonGL.External.rootJS = (function() {
             }
         };
 
-        finalGrid = Math.abs(minXRange)+Math.abs(maxXRange);
+        // finalGrid = Math.abs(minXRange)+Math.abs(maxXRange);
         // factor = Math.round(dimentions/finalGrid);
         // for grid
         canvas += '<polygon points="22.667,17 11.77,22.084 0,24.998 11.77,27.912 22.667,32.994 18.831,24.998"/>';
@@ -593,12 +592,12 @@ PearsonGL.External.rootJS = (function() {
 
         var i;
 
-        for(i=0;i<noOfParts+1;i++) {
+        for(i=0;i<noOfParts+1;i+=1) {
 
             canvas += SVGObj.createLine(xPos, 15, xPos, 35, 'rgb(0,0,0)', 1);
             if(i===0){
                 canvas += SVGObj.createLabel(xPos-7, 55, minXRange ,"normal");
-            }else if(i == noOfParts){
+            }else if(i === noOfParts){
                 canvas += SVGObj.createLabel(xPos-7, 55, parseInt(minXRange+interval) ,"normal");
             }else{
                 canvas += SVGObj.createLabel(xPos-14, 55, minXRange.toFixed(1) ,"normal");
@@ -612,13 +611,13 @@ PearsonGL.External.rootJS = (function() {
         var k;
         var number1;
 
-        for(k=0;k<ptArr.length;k++){
+        for(k=0;k<ptArr.length;k+=1){
             //var numLength = String(ptArr[k]).length;
            // var placeValueNumber = parseInt(String(ptArr[k]).charAt(numLength-1))+1;
            // var multiplier = (ptArr[k]-minValue); // ! not used, according to jsHint
             number1 = Number(ptArr[k].toFixed(2).substring(2, 4))*0.1;
             debugLog("number1:: ",number1, typeof number1);
-            if(ptArr[k] == maxXRange){
+            if(ptArr[k] === maxXRange){
                 canvas += SVGObj.createCircle(partDistance*11, 25, 7);
             }else{
                 canvas += SVGObj.createCircle(partDistance*(number1+1), 25, 7);
@@ -650,7 +649,7 @@ PearsonGL.External.rootJS = (function() {
         var sNum = String(var1);
         var text = '';
         var i;
-        for (i = 0; i < number; i++) {
+        for (i = 0; i < number; i+=1) {
             if(sNum[i]) {
                 text += sNum[i];
             }
@@ -700,7 +699,7 @@ PearsonGL.External.rootJS = (function() {
         var i;
         var rand;
 
-        for(i = 0; i < length; i++){
+        for(i = 0; i < length; i+=1){
           rand = myArray[Math.floor(Math.random() * myArray.length)];
           if(str  !== '') {
             str += ", "+rand;
@@ -708,10 +707,10 @@ PearsonGL.External.rootJS = (function() {
             str += rand;
           }
             // 2017-11-01 don't know if this block is supposed to be part of else
-            if ( rand == 'H') {
-              hcount++;
+            if ( rand === 'H') {
+              hcount+=1;
             } else {
-              tcount++;
+              tcount+=1;
             }
         }
         retArr[0] = str;
@@ -760,22 +759,22 @@ PearsonGL.External.rootJS = (function() {
           flength = parseInt(flength)+1;
         }
         letter = possible.charAt(Math.floor(Math.random() * possible.length));
-        for(i = 0; i < k; i++ ) {
+        for(i = 0; i < k; i+=1 ) {
           letterstr += letter;
         }
-        for(i = 0; i < n-k; i++ ){
+        for(i = 0; i < n-k; i+=1 ){
           newletter = possible.charAt(Math.floor(Math.random() * possible.length));
-          if(newletter != letter) {
+          if(newletter !== letter) {
             letterstr += newletter;
           } else {
-            i--;
+            i-=1;
           }
         }
         var a = letterstr.split("");
         n = a.length;
         var j;
         var tmp;
-          for(i = n - 1; i > 0; i--) {
+          for(i = n - 1; i > 0; i-=1) {
               j = Math.floor(Math.random() * (i + 1));
               tmp = a[i];
               a[i] = a[j];
