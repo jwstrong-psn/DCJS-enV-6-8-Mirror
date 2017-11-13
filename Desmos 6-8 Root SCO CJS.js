@@ -224,6 +224,53 @@ PearsonGL.External.rootJS = (function() {
           helper.observe('listValue.'+thiscall,observeCallback);
         }
        },
+      /* ←— latexToText ———————————————————————————————————————————————————————→ *\
+       ↑ Convert a latex string to a plaintext string, e.g. for labels
+       ↓
+       * ←—————————————————————————————————————————————————————————————————————→ */
+      latexToText: function(expr){
+        expr = ''+expr;
+        expr = expr.replace(/\\cdot\s?/g,'\u22c5');
+        expr = expr.replace(/._\{([a-zA-Z])Var\}/g,'$1');
+        expr = expr.replace(/([+=÷×\u22c5])/g,' $1 ');
+        expr = expr.replace(/,/g,',\u202f');
+        expr = expr.replace(/\^2/g,'²');
+        expr = expr.replace(/\^3/g,'³');
+        expr = expr.replace(/\\sqrt\{([^{}]*?)\}/g,'√($1)');
+        expr = expr.replace(/\\theta\s?/g,'θ');
+        expr = expr.replace(/\\pi\s?/g,'π');
+        expr = expr.replace(/_0/g,'₀');
+        expr = expr.replace(/_1/g,'₁');
+        expr = expr.replace(/_2/g,'₂');
+        expr = expr.replace(/\\(?:right|left)\\*([()\[\]|{}])/g,'$1');
+        expr = expr.replace(/\\right/g,'');
+        expr = expr.replace(/\\left/g,'');
+        expr = expr.replace(/([^\s \u202f(\[{])\-/g,'$1 − ');
+        expr = expr.replace(/\-/g,'−');
+        return expr;
+       },
+      /* ←— number to letter (lowercase) —————————————————————————————————→ *\
+       | Convert a number to its lowercase letter with cs.alpha[n]`
+       * ←————————————————————————————————————————————————————————————————→ */
+      alpha:(function(){
+        var alphabet = '_abcdefghijklmnopqrstuvwxyz';
+        var func = function(x){
+          return alphabet[x];
+        };
+        Object.assign(func,alphabet);
+        return func;
+       }()),
+      /* ←— number to letter (uppercase) —————————————————————————————————→ *\
+       | Convert a number to its uppercase letter with `cs.ALPHA[n]`
+       * ←————————————————————————————————————————————————————————————————→ */
+      ALPHA:(function(){
+        var alphabet = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var func = function(x){
+          return alphabet[x];
+        };
+        Object.assign(func,alphabet);
+        return func;
+       }()),
       /* ←— getPrimes(min,max) (memoized) —————————————————————————————————→ *\
        ↑ Returns a list of prime numbers between min and max, inclusive       ↑
        |                                                                      |
@@ -367,7 +414,8 @@ PearsonGL.External.rootJS = (function() {
        return function(n) {
         if (n < 1) {
           throw new Error('Cannot factor numbers less than 1');
-        } else if (n % 1) {
+        }
+        if (n % 1 !== 0) {
           throw new Error('Cannot factor non-integer values');
         }
 
@@ -410,7 +458,7 @@ PearsonGL.External.rootJS = (function() {
        return function(n) {
 
         if(!catalog[n]) {
-          catalog[n] = hs.powerSet(hs.factorize(n)).sort(function(a,b){return a>b});
+          catalog[n] = hs.powerSet(hs.factorize(n)).sort(function(a,b){return a>b;});
         }
 
         return catalog[n].slice();
@@ -453,7 +501,9 @@ PearsonGL.External.rootJS = (function() {
        | recommended for production.
        * ←—————————————————————————————————————————————————————————————————→ */
     var fs = {
-      common:{}
+      common:{
+        label:{}
+      }
      };
 
     /* ←— observeZoom ———————————————————————————————————————————————————→ *\
@@ -469,7 +519,7 @@ PearsonGL.External.rootJS = (function() {
      | For testing, use option {log:console.log}, which will log whenever
      |  the scale or aspect ratio changes by a significant amount.
      * ←———————————————————————————————————————————————————————————————————→ */
-     fs.common.observeZoom = function(){
+    fs.common.observeZoom = function(){
       var o = hs.parseArgs(arguments);
 
       o.log('observeZoom activated on '+o.uniqueId);
@@ -530,6 +580,66 @@ PearsonGL.External.rootJS = (function() {
 
       });
      };
+    /* ←— valueOnly —————————————————————————————————————————————————————→ *\
+     | Label a point according to the value of an expression.
+     | Use for labeling anonymous sliders, or e.g. side lengths.
+     |
+     | POINT MUST FIRST BE MANUALLY AUTHORED USING API:
+        calculator.setExpression({
+          id:'[expressionLaTeX]',
+          latex:'\\left(X,Y\\right)',
+          showLabel:true
+        });
+     * ←————————————————————————————————————————————————————————————————→ */
+    fs.common.label.valueOnly = function(){
+      var o = hs.parseArgs(arguments);
+      o.desmos.setExpression({id:o.name,label:hs.latexToText(o.value)});
+     };
+    /* ←— point —— point_A_x_named —— or —— point_A_x ———————————————————→ *\
+     | Label a point according to its coordinates.
+     | Substitute A with the point name.
+     | Use on both the x- and y-coordinates, obviously
+     | Add "_named" to the function to get the point's name at the front
+     |  e.g., "A(3,−4)" instead of "(3,−4)"
+     |
+     | POINT MUST FIRST BE MANUALLY AUTHORED USING API:
+        calculator.setExpression({
+          id:'point'+name,
+          latex:'\\left(X,Y\\right)',
+          showLabel:true
+        });
+     * ←————————————————————————————————————————————————————————————————→ */
+    fs.common.label.point = {};
+     (function(){
+      function storePoint(name,coord,named) {
+        return function() {
+          var o = hs.parseArgs(arguments);
+          var vars = vs[o.uniqueId];
+          vars.coords = vars.coords || {x:{},y:{}};
+
+          vars.coords[coord][name] = o.value;
+
+          var x = vars.coords.x[name] || 0;
+          var y = vars.coords.y[name] || 0;
+
+          o.desmos.setExpression({
+            id:'point'+name,
+            label:hs.latexToText((named?name:'')+'('+x+','+y+')')
+          });
+        };
+      }
+      var i;
+      var P;
+      for(i = 1; i <= 26; i += 1) {
+        P = hs.ALPHA[i];
+        fs.common.label.point[P] = {
+          x:storePoint(P,'x',false),
+          y:storePoint(P,'y',false),
+          x_named:storePoint(P,'x',true),
+          y_named:storePoint(P,'y',true)
+        };
+      }
+     }());
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
