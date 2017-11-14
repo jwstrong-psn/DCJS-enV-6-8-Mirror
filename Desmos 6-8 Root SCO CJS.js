@@ -503,6 +503,9 @@ PearsonGL.External.rootJS = (function() {
     var fs = {
         common:{
           label:{}
+        },
+        tool:{
+          histogram:{}
         }
        };
 
@@ -641,6 +644,48 @@ PearsonGL.External.rootJS = (function() {
           };
         }
        }());
+    // TOOL FUNCTIONS
+      // Freeform Histogram Tool
+      /* ←— updateVHandles ————————————————————————————————————————————————→ *\
+       | Updates the position of the handles that control the height
+       | of the bars in the histogram
+       | Call when the base handles change. Remember the base & height lists
+       | should be sorted by x-position
+       * ←—————————————————————————————————————————————————————————————————→ */
+      fs.tool.histogram.updateVHandles = function(){
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+
+        var bases = vars.bases;
+        var centers = [];
+
+        var i;
+        for (i = 1; i < bases.length; i += 1) {
+          centers.push((bases[i-1]+bases[i])/2);
+          if (i > heights.length) {
+            heights.push(1);
+          }
+        }
+
+        var heights = vars.heights;
+
+        o.desmos.setExpression({
+          id:'heights',
+          type:'table',
+          columns:[
+            {
+              latex:'x_3',
+              values:centers
+            },
+            {
+              latex:'h',
+              values:heights,
+              columnMode:Desmos.ColumnModes.POINT,
+              dragMode:Desmos.DragModes.Y
+            }
+          ]
+        });
+       };
 
     // SCO-SPECIFIC FUNCTIONS
       /* ←— A0633928 6-2-5-Example 1 —————————————————————————————————————→ *\
