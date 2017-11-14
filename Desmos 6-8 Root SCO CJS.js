@@ -39,26 +39,26 @@ PearsonGL.External.rootJS = (function() {
           black: '#000000',
           grey: '#58595B'
         }
-      },
+       },
       precision:{
         COORDINATES:2,
         DEGREES:0,
         EVAL:1,
         FLOAT:6
-      },
+       },
       lineType:{
         SOLID:((Desmos && Desmos.Styles)?Desmos.Styles.SOLID:'normal'),
         DASHED:((Desmos && Desmos.Styles)?Desmos.Styles.DASHED:'dashed')
-      },
+       },
       tolerance:{
         RESCALE:0.3 // Granularity of zoom levels, in powers of 2
-      }
-    };
+       }
+     };
   /* ←—PRIVATE HELPER FUNCTIONS————————————————————————————————————————————→ *\
        | Subroutines; access with hs.functionName(args)
        * ←—————————————————————————————————————————————————————————————————→ */
     var hs;
-    hs = {
+     hs = {
       /* ←— flattenFuncStruct —————————————————————————————————————————————→ *\
        ↑ Turn a nested function structure into a single layer; each function's   ↑
        |  name prefixed by its parent objects, connected by underscores.         |
@@ -172,8 +172,8 @@ PearsonGL.External.rootJS = (function() {
         hxs[uid] = hxs[uid] || {};
 
         if(hxs[uid].maker === undefined) {
-          hxs[uid].maker = function(){
-            return desmos.HelperExpression.apply(desmos,arguments);
+          hxs[uid].maker = function(expr){
+            return desmos.HelperExpression.call(desmos,{latex:expr});
           };
         }
 
@@ -245,7 +245,7 @@ PearsonGL.External.rootJS = (function() {
         expr = expr.replace(/\\(?:right|left)\\*([()\[\]|{}])/g,'$1');
         expr = expr.replace(/\\right/g,'');
         expr = expr.replace(/\\left/g,'');
-        expr = expr.replace(/([^\s \u202f(\[{])\-/g,'$1 − ');
+        expr = expr.replace(/([^\s \u202f(\[{|])\-|(\|[^|]*\|)-(?=\|)/g,'$1$2 − ');
         expr = expr.replace(/\-/g,'−');
         return expr;
        },
@@ -501,145 +501,263 @@ PearsonGL.External.rootJS = (function() {
        | recommended for production.
        * ←—————————————————————————————————————————————————————————————————→ */
     var fs = {
-      common:{
-        label:{}
-      }
-     };
+        common:{
+          label:{}
+        }
+       };
 
-    /* ←— observeZoom ———————————————————————————————————————————————————→ *\
-     | Keeps track of the zoom level by monitoring graph state
-     | Zoom level is saved to variables "x_{pxScale}" and "y_{pxScale}"
-     | Values are Units/Pixel, to optimise for scaling images onto the graph
-     |  e.g. size: 1024*x_{pxScale} × 768*y_{pxScale}.
-     |
-     | EXPRESSIONS MUST BE MANUALLY AUTHORED USING API:
-     |  calculator.setExpression({id:'x_pxScale',latex:'x_{pxScale}'});
-     |  calculator.setExpression({id:'y_pxScale',latex:'y_{pxScale}'});
-     |
-     | For testing, use option {log:console.log}, which will log whenever
-     |  the scale or aspect ratio changes by a significant amount.
-     * ←———————————————————————————————————————————————————————————————————→ */
-    fs.common.observeZoom = function(){
-      var o = hs.parseArgs(arguments);
+    // COMMON FUNCTIONS
+      /* ←— observeZoom ———————————————————————————————————————————————————→ *\
+       | Keeps track of the zoom level by monitoring graph state
+       | Zoom level is saved to variables "x_{pxScale}" and "y_{pxScale}"
+       | Values are Units/Pixel, to optimise for scaling images onto the graph
+       |  e.g. size: 1024*x_{pxScale} × 768*y_{pxScale}.
+       |
+       | EXPRESSIONS MUST BE MANUALLY AUTHORED USING API:
+       |  calculator.setExpression({id:'x_pxScale',latex:'x_{pxScale}'});
+       |  calculator.setExpression({id:'y_pxScale',latex:'y_{pxScale}'});
+       |
+       | For testing, use option {log:console.log}, which will log whenever
+       |  the scale or aspect ratio changes by a significant amount.
+       * ←———————————————————————————————————————————————————————————————————→ */
+      fs.common.observeZoom = function(){
+        var o = hs.parseArgs(arguments);
 
-      o.log('observeZoom activated on '+o.uniqueId);
+        o.log('observeZoom activated on '+o.uniqueId);
 
-      var v = vs[o.uniqueId];
+        var v = vs[o.uniqueId];
 
-      var desmos = o.desmos;
+        var desmos = o.desmos;
 
-      function unitsPerPixel() {
-        var pixelCoordinates = desmos.graphpaperBounds.pixelCoordinates;
-        var mathCoordinates = desmos.graphpaperBounds.mathCoordinates;
-        return {
-          x: mathCoordinates.width/pixelCoordinates.width,
-          y: mathCoordinates.height/pixelCoordinates.height
-        };
-       }
+        function unitsPerPixel() {
+          var pixelCoordinates = desmos.graphpaperBounds.pixelCoordinates;
+          var mathCoordinates = desmos.graphpaperBounds.mathCoordinates;
+          return {
+            x: mathCoordinates.width/pixelCoordinates.width,
+            y: mathCoordinates.height/pixelCoordinates.height
+          };
+         }
 
-      // function pixelsPerUnit() {
-      //   var pixelCoordinates = desmos.graphpaperBounds.pixelCoordinates;
-      //   var mathCoordinates = desmos.graphpaperBounds.mathCoordinates;
-      //   return {
-      //     x: pixelCoordinates.width/mathCoordinates.width,
-      //     y: pixelCoordinates.height/mathCoordinates.height
-      //   };
-      //  }
+        // function pixelsPerUnit() {
+        //   var pixelCoordinates = desmos.graphpaperBounds.pixelCoordinates;
+        //   var mathCoordinates = desmos.graphpaperBounds.mathCoordinates;
+        //   return {
+        //     x: pixelCoordinates.width/mathCoordinates.width,
+        //     y: pixelCoordinates.height/mathCoordinates.height
+        //   };
+        //  }
 
-      // record for posterity
-      v.oldScale = unitsPerPixel();
+        // record for posterity
+        v.oldScale = unitsPerPixel();
 
-      // Initialize the expressions
-      desmos.setExpression({id:'x_pxScale',latex:'x_{pxScale}=' + v.oldScale.x});
-      desmos.setExpression({id:'y_pxScale',latex:'y_{pxScale}=' + v.oldScale.y});
+        // Initialize the expressions
+        desmos.setExpression({id:'x_pxScale',latex:'x_{pxScale}=' + v.oldScale.x});
+        desmos.setExpression({id:'y_pxScale',latex:'y_{pxScale}=' + v.oldScale.y});
 
-      // Update whenever the bounds change.
-      o.desmos.observe('graphpaperBounds.observeZoom', function() {
-        var newScale = unitsPerPixel();
+        // Update whenever the bounds change.
+        o.desmos.observe('graphpaperBounds.observeZoom', function() {
+          var newScale = unitsPerPixel();
 
-        // If debugging, report on zooming when it passes the RESCALE threshold
-        if(o.log() !== false) {
-          if (Math.abs(Math.log2(newScale.x) - Math.log2(v.oldScale.x)) > cs.tolerance.RESCALE) {
-            o.log('x-scale change: ' +
-              Number(1/v.oldScale.x).toPrecision(3) + 'px/unit to ' +
-              Number(1/newScale.x).toPrecision(3) + 'px/unit'
-            );
-            v.oldScale.x = newScale.x;
+          // If debugging, report on zooming when it passes the RESCALE threshold
+          if(o.log() !== false) {
+            if (Math.abs(Math.log2(newScale.x) - Math.log2(v.oldScale.x)) > cs.tolerance.RESCALE) {
+              o.log('x-scale change: ' +
+                Number(1/v.oldScale.x).toPrecision(3) + 'px/unit to ' +
+                Number(1/newScale.x).toPrecision(3) + 'px/unit'
+              );
+              v.oldScale.x = newScale.x;
+            }
+            if (Math.abs(Math.log2(newScale.y) - Math.log2(v.oldScale.y)) > cs.tolerance.RESCALE) {
+              o.log('y-scale change: ' +
+                Number(1/v.oldScale.y).toPrecision(3) + 'px/unit to ' +
+                Number(1/newScale.y).toPrecision(3) + 'px/unit'
+              );
+              v.oldScale.y = newScale.y;
+            }
           }
-          if (Math.abs(Math.log2(newScale.y) - Math.log2(v.oldScale.y)) > cs.tolerance.RESCALE) {
-            o.log('y-scale change: ' +
-              Number(1/v.oldScale.y).toPrecision(3) + 'px/unit to ' +
-              Number(1/newScale.y).toPrecision(3) + 'px/unit'
-            );
-            v.oldScale.y = newScale.y;
+
+          desmos.setExpression({id:'x_pxScale',latex:'x_{pxScale}='+newScale.x});
+          desmos.setExpression({id:'y_pxScale',latex:'y_{pxScale}='+newScale.y});
+
+        });
+       };
+      /* ←— valueOnly —————————————————————————————————————————————————————→ *\
+       | Label a point according to the value of an expression.
+       | Use for labeling anonymous sliders, or e.g. side lengths.
+       |
+       | POINT MUST FIRST BE MANUALLY AUTHORED USING API:
+          calculator.setExpression({
+            id:'[expressionLaTeX]',
+            latex:'\\left(X,Y\\right)',
+            showLabel:true
+          });
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.label.valueOnly = function(){
+        var o = hs.parseArgs(arguments);
+        o.desmos.setExpression({id:o.name,label:hs.latexToText(o.value)});
+       };
+      /* ←— point —— point_A_x_named —— or —— point_A_x ———————————————————→ *\
+       | Label a point according to its coordinates.
+       | Substitute A with the point name.
+       | Use on both the x- and y-coordinates, obviously
+       | Add "_named" to the function to get the point's name at the front
+       |  e.g., "A(3,−4)" instead of "(3,−4)"
+       |
+       | POINT MUST FIRST BE MANUALLY AUTHORED USING API:
+          calculator.setExpression({
+            id:'point'+name,
+            latex:'\\left(X,Y\\right)',
+            showLabel:true
+          });
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.label.point = {};
+       (function(){
+        function storePoint(name,coord,named) {
+          return function() {
+            var o = hs.parseArgs(arguments);
+            var vars = vs[o.uniqueId];
+            vars.coords = vars.coords || {x:{},y:{}};
+
+            vars.coords[coord][name] = o.value;
+
+            var x = vars.coords.x[name] || 0;
+            var y = vars.coords.y[name] || 0;
+
+            o.desmos.setExpression({
+              id:'point'+name,
+              label:hs.latexToText((named?name:'')+'('+x+','+y+')')
+            });
+          };
+        }
+        var i;
+        var P;
+        for(i = 1; i <= 26; i += 1) {
+          P = hs.ALPHA[i];
+          fs.common.label.point[P] = {
+            x:storePoint(P,'x',false),
+            y:storePoint(P,'y',false),
+            x_named:storePoint(P,'x',true),
+            y_named:storePoint(P,'y',true)
+          };
+        }
+       }());
+
+    // SCO-SPECIFIC FUNCTIONS
+      /* ←— A0633928 6-2-5-Example 1 —————————————————————————————————————→ *\
+       | Widget shows calculations of horizontal distance
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633928 = {};
+      fs.A0633928.init = function(){
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        function updateLabel(a,helper) {
+          var which = helper.latex;
+
+          vars[which] = helper.numericValue;
+
+          var one = vars.x_1;
+          var two = vars.x_2;
+
+          var first;
+          var sign;
+          if (one*two > 0) {
+            sign = '-';
+            // Have to put the "larger" one first
+            first = ((one-two)*one >= 0 ? one : two);
+          } else {
+            sign = '+';
+            // LTR
+            first = (one > two ? two : one);
+          }
+          var second = (first === one ? two : one);
+
+          var expr = hs.latexToText(
+                       '|'+first+'|'+sign+'|'+second+'|='+
+                       Math.abs(first)+sign+Math.abs(second)+'='+
+                       (Math.abs(first - second))
+                     )+' units';
+
+          o.desmos.setExpression({
+            id:'horizontalCalc',
+            label:expr
+          });
+        }
+
+        hlps.x_1 = hlps.maker('x_1');
+        hlps.x_2 = hlps.maker('x_2');
+
+        hlps.x_1.observe('numericValue',updateLabel);
+        hlps.x_2.observe('numericValue',updateLabel);
+
+       };
+      /* ←— A0633929 6-2-5-KC ————————————————————————————————————————————→ *\
+       | Widget shows calculations of horizontal and vertical distance
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633929 = {};
+      fs.A0633929.init = function(){
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        function updateLabel(a,helper) {
+          var which = helper.latex;
+
+          vars[which] = helper.numericValue;
+
+          which = which[0];
+
+          var one = vars[which+'_1'];
+          var two = vars[which+'_2'];
+
+          var first;
+          var sign;
+          if (one*two > 0) {
+            sign = '-';
+            // Have to put the "larger" one first
+            first = ((one-two)*one >= 0 ? one : two);
+          } else {
+            sign = '+';
+            if (which === 'x') {
+              // LTR
+              first = (one > two ? two : one);
+            } else {
+              // Top-to-Bottom
+              first = (one > two ? one : two);
+            }
+          }
+          var second = (first === one ? two : one);
+
+          var expr = hs.latexToText(
+                       '|'+first+'|'+sign+'|'+second+'|='+
+                       (Math.abs(first - second))
+                     );//+' units';
+
+          if(which === 'x') {
+            o.desmos.setExpression({
+              id:'horizontalCalc',
+              label:expr
+            });
+          } else {
+            o.desmos.setExpression({
+              id:'verticalCalc',
+              label:'★ '+expr
+            });
           }
         }
 
-        desmos.setExpression({id:'x_pxScale',latex:'x_{pxScale}='+newScale.x});
-        desmos.setExpression({id:'y_pxScale',latex:'y_{pxScale}='+newScale.y});
+        hlps.x_1 = hlps.maker('x_1');
+        hlps.x_2 = hlps.maker('x_2');
+        hlps.y_1 = hlps.maker('y_1');
+        hlps.y_2 = hlps.maker('y_2');
 
-      });
-     };
-    /* ←— valueOnly —————————————————————————————————————————————————————→ *\
-     | Label a point according to the value of an expression.
-     | Use for labeling anonymous sliders, or e.g. side lengths.
-     |
-     | POINT MUST FIRST BE MANUALLY AUTHORED USING API:
-        calculator.setExpression({
-          id:'[expressionLaTeX]',
-          latex:'\\left(X,Y\\right)',
-          showLabel:true
-        });
-     * ←————————————————————————————————————————————————————————————————→ */
-    fs.common.label.valueOnly = function(){
-      var o = hs.parseArgs(arguments);
-      o.desmos.setExpression({id:o.name,label:hs.latexToText(o.value)});
-     };
-    /* ←— point —— point_A_x_named —— or —— point_A_x ———————————————————→ *\
-     | Label a point according to its coordinates.
-     | Substitute A with the point name.
-     | Use on both the x- and y-coordinates, obviously
-     | Add "_named" to the function to get the point's name at the front
-     |  e.g., "A(3,−4)" instead of "(3,−4)"
-     |
-     | POINT MUST FIRST BE MANUALLY AUTHORED USING API:
-        calculator.setExpression({
-          id:'point'+name,
-          latex:'\\left(X,Y\\right)',
-          showLabel:true
-        });
-     * ←————————————————————————————————————————————————————————————————→ */
-    fs.common.label.point = {};
-     (function(){
-      function storePoint(name,coord,named) {
-        return function() {
-          var o = hs.parseArgs(arguments);
-          var vars = vs[o.uniqueId];
-          vars.coords = vars.coords || {x:{},y:{}};
+        hlps.x_1.observe('numericValue',updateLabel);
+        hlps.x_2.observe('numericValue',updateLabel);
+        hlps.y_1.observe('numericValue',updateLabel);
+        hlps.y_2.observe('numericValue',updateLabel);
 
-          vars.coords[coord][name] = o.value;
-
-          var x = vars.coords.x[name] || 0;
-          var y = vars.coords.y[name] || 0;
-
-          o.desmos.setExpression({
-            id:'point'+name,
-            label:hs.latexToText((named?name:'')+'('+x+','+y+')')
-          });
-        };
-      }
-      var i;
-      var P;
-      for(i = 1; i <= 26; i += 1) {
-        P = hs.ALPHA[i];
-        fs.common.label.point[P] = {
-          x:storePoint(P,'x',false),
-          y:storePoint(P,'y',false),
-          x_named:storePoint(P,'x',true),
-          y_named:storePoint(P,'y',true)
-        };
-      }
-     }());
+       };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
@@ -1040,9 +1158,9 @@ PearsonGL.External.rootJS = (function() {
           var obj = hs.parseArgs(arguments);
           var hlps = hxs[obj.uniqueId];
           Object.assign(hlps,{
-            W:hlps.maker({latex:'W'}),
-            p:hlps.maker({latex:'p'}),
-            scalex:hlps.maker({latex:'t_{ickx}'})
+            W:hlps.maker('W'),
+            p:hlps.maker('p'),
+            scalex:hlps.maker('t_{ickx}')
           });
 
           function updateBar() {
@@ -1214,466 +1332,466 @@ PearsonGL.External.rootJS = (function() {
        }());
    
 
-  // Pre-DCJS Stuff
+// Pre-DCJS Stuff
    ;(function(){
-    // Define functions
+      // Define functions
 
-      function getUniqueRandom(arr,num) {
-        arr = arr.value;
-        num = num.value; // Added 2017-11-01 to match the rest of this stuff
-        var i;
-        var aTemp;
-        var num0;
-        var num1;
-        var aTemp2;
-        var randomIndex;
-        var itemAtIndex;
+        function getUniqueRandom(arr,num) {
+          arr = arr.value;
+          num = num.value; // Added 2017-11-01 to match the rest of this stuff
+          var i;
+          var aTemp;
+          var num0;
+          var num1;
+          var aTemp2;
+          var randomIndex;
+          var itemAtIndex;
 
-        if(String(arr).indexOf('|') !== -1) {
-          aTemp = String(arr).split('|');
-          num0 = Number(aTemp[0]);
-          num1 = Number(aTemp[1]);
-          aTemp2 = [];
-          for(i=num0;i<=num1;i+=1) {
-            aTemp2.push(i);
-          }
-          arr = aTemp2;
-        }
-
-        if(String(arr).indexOf('::') !== -1) {
-          aTemp = String(arr).split('::');
-          num0 = Number(aTemp[0]);
-          num1 = Number(aTemp[1]);
-          aTemp2 = [];
-          for(i=num0;i<=num1;i+=1) {
-            aTemp2.push(i);
-          }
-          arr = aTemp2;
-        }
-
-        for (i = arr.length-1; i >=0; i-=1) {
-
-              randomIndex = Math.floor(Math.random()*(i+1));
-              itemAtIndex = arr[randomIndex];
-
-              arr[randomIndex] = arr[i];
-              arr[i] = itemAtIndex;
+          if(String(arr).indexOf('|') !== -1) {
+            aTemp = String(arr).split('|');
+            num0 = Number(aTemp[0]);
+            num1 = Number(aTemp[1]);
+            aTemp2 = [];
+            for(i=num0;i<=num1;i+=1) {
+              aTemp2.push(i);
+            }
+            arr = aTemp2;
           }
 
-        var tempArr = arr;
-        var aSet = [];
-        for(i=0;i<num;i+=1) {
-          aSet.push(tempArr[i]);
-        }
-        if(typeof arr[0] === 'number') {
+          if(String(arr).indexOf('::') !== -1) {
+            aTemp = String(arr).split('::');
+            num0 = Number(aTemp[0]);
+            num1 = Number(aTemp[1]);
+            aTemp2 = [];
+            for(i=num0;i<=num1;i+=1) {
+              aTemp2.push(i);
+            }
+            arr = aTemp2;
+          }
+
+          for (i = arr.length-1; i >=0; i-=1) {
+
+                randomIndex = Math.floor(Math.random()*(i+1));
+                itemAtIndex = arr[randomIndex];
+
+                arr[randomIndex] = arr[i];
+                arr[i] = itemAtIndex;
+            }
+
+          var tempArr = arr;
+          var aSet = [];
+          for(i=0;i<num;i+=1) {
+            aSet.push(tempArr[i]);
+          }
+          if(typeof arr[0] === 'number') {
+            return new PearsonGL.Parameters.Parameter(aSet,"ordered","integer");
+          }
+          if(typeof arr[0] === 'string') {
+            return new PearsonGL.Parameters.Parameter(aSet,"ordered","string");
+          }
+         }
+
+        function textOnSVG_V1(width,height,xPos,yPos,text,style,canvasBgStyle) {
+
+          width = width.value;
+          height = height.value;
+          xPos = xPos.value;
+          yPos = yPos.value;
+          text = text.value;
+          style = style.value;
+          canvasBgStyle = canvasBgStyle.value;
+          var canvas = '';
+
+          var SVGObj = {
+              createLabel : function(x,y,text,style) {
+                  return '<text class="svg-text-on-table" x="' + x + '" y="' + y + '" style="'+style+'">'+text+'</text>';
+              }
+          };
+
+
+          canvas += SVGObj.createLabel(xPos,yPos,text,style);
+
+          var textSVG =  '<svg style="'+canvasBgStyle+'" width="'+width+'" height="'+height+'">'+canvas+'</svg>';
+          return new PearsonGL.Parameters.Parameter(textSVG,"single","string");
+         }
+
+        function FractionReduce(n,d) {
+
+          var numerator = (n<d)?n:d;
+          var denominator = (n<d)?d:n;
+          var remainder = numerator;
+          var lastRemainder = numerator;
+          var finalArr = [];
+
+          while (true){
+              lastRemainder = remainder;
+              remainder = denominator % numerator;
+              if (remainder === 0){
+                  break;
+              }
+              denominator = numerator;
+              numerator = remainder;
+          }
+          if(lastRemainder){
+            finalArr.push(n/lastRemainder);
+            finalArr.push(d/lastRemainder);
+
+            return new PearsonGL.Parameters.Parameter(finalArr,"ordered","integer");
+          }
+         }
+
+        function decimalToFraction(decimal) {
+          var answer = "";
+          var decimalArray = String(decimal).split("."); // 1.75
+          var leftDecimalPart = decimalArray[0]; // 1
+          var rightDecimalPart = decimalArray[1]; // 75
+
+          var numerator = leftDecimalPart + rightDecimalPart; // 175
+          var denominator = Math.pow(10, rightDecimalPart.length); // 100
+
+          answer = numerator + "/" + denominator;
+          return new PearsonGL.Parameters.Parameter(answer ,"single","string");
+         }
+
+        function splitNumaratorDeno(number) {
+          var str = number;
+          var result = str.toString().split("/");
+          return new PearsonGL.Parameters.Parameter(result,"ordered","string");
+         }
+
+        // Duplicated later—assuming exp.value is what we want to keep
+        // function parseStrToInt(exp) {
+          //   return new PearsonGL.Parameters.Parameter(parseInt(exp),"single","integer");
+          //  }
+
+        function arrayFilter(array1,array2) {
+          array1 = array1.value;
+          array2 = array2.value;
+            var aSet = array1.filter(function(obj) {
+                return array2.indexOf(obj) === -1;
+            });
           return new PearsonGL.Parameters.Parameter(aSet,"ordered","integer");
-        }
-        if(typeof arr[0] === 'string') {
-          return new PearsonGL.Parameters.Parameter(aSet,"ordered","string");
-        }
-       }
 
-      function textOnSVG_V1(width,height,xPos,yPos,text,style,canvasBgStyle) {
+         }
 
-        width = width.value;
-        height = height.value;
-        xPos = xPos.value;
-        yPos = yPos.value;
-        text = text.value;
-        style = style.value;
-        canvasBgStyle = canvasBgStyle.value;
-        var canvas = '';
+        function getUniqueRandomFloat(arr,num,increment,round) {
+          arr = arr.value;
+          num = num.value;
+          increment = increment.value;
+          round = round.value;
+          var i;
+          var randomIndex;
+          var itemAtIndex;
 
-        var SVGObj = {
-            createLabel : function(x,y,text,style) {
-                return '<text class="svg-text-on-table" x="' + x + '" y="' + y + '" style="'+style+'">'+text+'</text>';
+          if(String(arr).indexOf('::') !== -1) {
+            var aTemp = String(arr).split('::');
+            var num0 = Number(aTemp[0]);
+            var num1 = Number(aTemp[1]);
+            var aTemp2 = [];
+            for(i=num0;i<=num1;i=i+increment) {
+              aTemp2.push(i);
             }
-        };
-
-
-        canvas += SVGObj.createLabel(xPos,yPos,text,style);
-
-        var textSVG =  '<svg style="'+canvasBgStyle+'" width="'+width+'" height="'+height+'">'+canvas+'</svg>';
-        return new PearsonGL.Parameters.Parameter(textSVG,"single","string");
-       }
-
-      function FractionReduce(n,d) {
-
-        var numerator = (n<d)?n:d;
-        var denominator = (n<d)?d:n;
-        var remainder = numerator;
-        var lastRemainder = numerator;
-        var finalArr = [];
-
-        while (true){
-            lastRemainder = remainder;
-            remainder = denominator % numerator;
-            if (remainder === 0){
-                break;
-            }
-            denominator = numerator;
-            numerator = remainder;
-        }
-        if(lastRemainder){
-          finalArr.push(n/lastRemainder);
-          finalArr.push(d/lastRemainder);
-
-          return new PearsonGL.Parameters.Parameter(finalArr,"ordered","integer");
-        }
-       }
-
-      function decimalToFraction(decimal) {
-        var answer = "";
-        var decimalArray = String(decimal).split("."); // 1.75
-        var leftDecimalPart = decimalArray[0]; // 1
-        var rightDecimalPart = decimalArray[1]; // 75
-
-        var numerator = leftDecimalPart + rightDecimalPart; // 175
-        var denominator = Math.pow(10, rightDecimalPart.length); // 100
-
-        answer = numerator + "/" + denominator;
-        return new PearsonGL.Parameters.Parameter(answer ,"single","string");
-       }
-
-      function splitNumaratorDeno(number) {
-        var str = number;
-        var result = str.toString().split("/");
-        return new PearsonGL.Parameters.Parameter(result,"ordered","string");
-       }
-
-      // Duplicated later—assuming exp.value is what we want to keep
-      // function parseStrToInt(exp) {
-        //   return new PearsonGL.Parameters.Parameter(parseInt(exp),"single","integer");
-        //  }
-
-      function arrayFilter(array1,array2) {
-        array1 = array1.value;
-        array2 = array2.value;
-          var aSet = array1.filter(function(obj) {
-              return array2.indexOf(obj) === -1;
-          });
-        return new PearsonGL.Parameters.Parameter(aSet,"ordered","integer");
-
-       }
-
-      function getUniqueRandomFloat(arr,num,increment,round) {
-        arr = arr.value;
-        num = num.value;
-        increment = increment.value;
-        round = round.value;
-        var i;
-        var randomIndex;
-        var itemAtIndex;
-
-        if(String(arr).indexOf('::') !== -1) {
-          var aTemp = String(arr).split('::');
-          var num0 = Number(aTemp[0]);
-          var num1 = Number(aTemp[1]);
-          var aTemp2 = [];
-          for(i=num0;i<=num1;i=i+increment) {
-            aTemp2.push(i);
-          }
-          arr = aTemp2;
-        }
-
-        for (i = arr.length-1; i >=0; i-=1) {
-
-              randomIndex = Math.floor(Math.random()*(i+1));
-              itemAtIndex = arr[randomIndex];
-
-              arr[randomIndex] = arr[i];
-              arr[i] = itemAtIndex;
+            arr = aTemp2;
           }
 
-         var tempArr = arr;
-        var aSet = [];
-        for(i=0;i<num;i+=1) {
-          aSet.push(Number(tempArr[i].toFixed(round)));
-        }
-        if(typeof arr[0] === 'number') {
-            return new PearsonGL.Parameters.Parameter(aSet,"ordered","float");
-        }
+          for (i = arr.length-1; i >=0; i-=1) {
 
-       }
+                randomIndex = Math.floor(Math.random()*(i+1));
+                itemAtIndex = arr[randomIndex];
 
-      function getPlaceValue(num,placevalue) {
-
-
-        var numLength = String(num).length;
-        var placeValueNumber = parseInt(String(num).charAt(numLength-placevalue));
-
-        return new PearsonGL.Parameters.Parameter(placeValueNumber,"single","integer");
-       }
-
-      function sqrt(number) {
-        var sqart = Math.sqrt(number.value);
-        return new PearsonGL.Parameters.Parameter(sqart,"single","float");
-
-       }
-
-      function parseStrToInt(exp) {
-        return new PearsonGL.Parameters.Parameter(parseInt(exp.value),"single","integer");
-       }
-
-      function isSquare(n) {
-
-        var isTrue = n.value > 0 && Math.sqrt(n.value) % 1 === 0;
-        return new PearsonGL.Parameters.Parameter(isTrue,"single","boolean");
-
-       }
-
-      function createNumberLine_A0495260(dim,minXRange,maxXRange,ptArr,interval) {
-
-        dim = dim.value;
-        minXRange = minXRange.value;
-        maxXRange = maxXRange.value;
-        ptArr = ptArr.value;
-        interval = interval.value;
-
-        var canvas = '';
-        // var factor;
-        var offset = 0;
-        // var minValue = minXRange;
-        var dimentions = dim-(offset*2);
-        // var finalGrid;
-        // var SVGNS = 'http://www.w3.org/2000/svg'
-        // var container;
-        // var aPoints = ptArr;
-        var rightArrPos = dim - 18.67;
-        var SVGObj = {
-
-            createLine : function (x1, y1, x2, y2, color, w) {
-                return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="' + w + '"/>';
-            },
-            createCircle : function(x,y,r) {
-                return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#0092C8"/>';
-            },
-            createLabel : function(x,y,text,fontStyle) {
-                return '<text x="' + x + '" y="' + y + '" font-style="' + fontStyle + '" font-size="12"  style="font-size:18px;">'+text+'</text>';
-            }
-        };
-
-        // finalGrid = Math.abs(minXRange)+Math.abs(maxXRange);
-        // factor = Math.round(dimentions/finalGrid);
-        // for grid
-        canvas += '<polygon points="22.667,17 11.77,22.084 0,24.998 11.77,27.912 22.667,32.994 18.831,24.998"/>';
-        canvas += SVGObj.createLine(offset, 25, dimentions+(offset), 25, 'rgb(0,0,0)', 2);
-        var noOfParts = 10;
-        var partDistance = dimentions/(noOfParts+2);
-
-        var xPos = partDistance;
-        var posArr = [partDistance];
-
-        var i;
-
-        for(i=0;i<noOfParts+1;i+=1) {
-
-            canvas += SVGObj.createLine(xPos, 15, xPos, 35, 'rgb(0,0,0)', 1);
-            if(i===0){
-                canvas += SVGObj.createLabel(xPos-7, 55, minXRange ,"normal");
-            }else if(i === noOfParts){
-                canvas += SVGObj.createLabel(xPos-7, 55, parseInt(minXRange+interval) ,"normal");
-            }else{
-                canvas += SVGObj.createLabel(xPos-14, 55, minXRange.toFixed(1) ,"normal");
-            }
-            minXRange = minXRange+interval;
-            xPos = xPos+partDistance;
-            posArr.push(xPos);
-
-        }
-
-        var k;
-        var number1;
-
-        for(k=0;k<ptArr.length;k+=1){
-            //var numLength = String(ptArr[k]).length;
-           // var placeValueNumber = parseInt(String(ptArr[k]).charAt(numLength-1))+1;
-           // var multiplier = (ptArr[k]-minValue); // ! not used, according to jsHint
-            number1 = Number(ptArr[k].toFixed(2).substring(2, 4))*0.1;
-            debugLog("number1:: ",number1, typeof number1);
-            if(ptArr[k] === maxXRange){
-                canvas += SVGObj.createCircle(partDistance*11, 25, 7);
-            }else{
-                canvas += SVGObj.createCircle(partDistance*(number1+1), 25, 7);
+                arr[randomIndex] = arr[i];
+                arr[i] = itemAtIndex;
             }
 
-        }
+           var tempArr = arr;
+          var aSet = [];
+          for(i=0;i<num;i+=1) {
+            aSet.push(Number(tempArr[i].toFixed(round)));
+          }
+          if(typeof arr[0] === 'number') {
+              return new PearsonGL.Parameters.Parameter(aSet,"ordered","float");
+          }
+
+         }
+
+        function getPlaceValue(num,placevalue) {
 
 
-        canvas += '<polygon points="'+rightArrPos+' 32.79,'+(rightArrPos+10.9)+' 27.71,'+(rightArrPos+22.67)+' 24.80,'+(rightArrPos+10.9)+' 22.88,'+rightArrPos+' 16.80,'+(rightArrPos+3.84)+' 24.80,'+rightArrPos+' 32.79"/>';
-        var sNumberLine =  '<svg width="'+dim+'" height="80">'+canvas+'</svg>';
-        return new PearsonGL.Parameters.Parameter(sNumberLine,"single","string");
-       }
+          var numLength = String(num).length;
+          var placeValueNumber = parseInt(String(num).charAt(numLength-placevalue));
 
-      function getStrLength(str) {
-        return new PearsonGL.Parameters.Parameter(String(str).length,"single","integer");
-       }
+          return new PearsonGL.Parameters.Parameter(placeValueNumber,"single","integer");
+         }
 
-      function numberWithCommas(x) {
-        x = x.toString();
-        x= String(x);
-        var pattern = /(-?\d+)(\d{3})/;
-        while (pattern.test(x)) {
-          x = String(x).replace(pattern, "$1,$2");
-        }
-        return new PearsonGL.Parameters.Parameter(x,"single","string");
-       }
+        function sqrt(number) {
+          var sqart = Math.sqrt(number.value);
+          return new PearsonGL.Parameters.Parameter(sqart,"single","float");
 
-      function addzeroafter(var1, number) {
-        var sNum = String(var1);
-        var text = '';
-        var i;
-        for (i = 0; i < number; i+=1) {
-            if(sNum[i]) {
-                text += sNum[i];
-            }
-            else {
-                text += '0';
-            }
-        }
+         }
 
-        return new PearsonGL.Parameters.Parameter(text ,"single","string");
-       }
+        function parseStrToInt(exp) {
+          return new PearsonGL.Parameters.Parameter(parseInt(exp.value),"single","integer");
+         }
 
-      function addTrailFixZero(num,place) {
-        num = num.value;
-        place = place.value;
-        var n;
-        n = num.toFixed(place);
-        return new PearsonGL.Parameters.Parameter(n,"single","string");
+        function isSquare(n) {
 
-       }
+          var isTrue = n.value > 0 && Math.sqrt(n.value) % 1 === 0;
+          return new PearsonGL.Parameters.Parameter(isTrue,"single","boolean");
 
-      function StrToFloat(exp) {
-        var floatValue = Number(exp.value);
-        return new PearsonGL.Parameters.Parameter(floatValue,"single","float");
-       }
+         }
 
-      function strToFloat(str) {
-        var floatval = parseFloat(str.value);
-        return new PearsonGL.Parameters.Parameter(floatval ,"single","float");
+        function createNumberLine_A0495260(dim,minXRange,maxXRange,ptArr,interval) {
 
-       }
+          dim = dim.value;
+          minXRange = minXRange.value;
+          maxXRange = maxXRange.value;
+          ptArr = ptArr.value;
+          interval = interval.value;
 
-      function isInteger(exp) {
-        var num = Number(exp.value);
-        if (num === parseInt(num, 10)) {
-          return new PearsonGL.Parameters.Parameter(true,"single","boolean");
-        } else {
-          return new PearsonGL.Parameters.Parameter(false,"single","boolean");
-        }
-       }
+          var canvas = '';
+          // var factor;
+          var offset = 0;
+          // var minValue = minXRange;
+          var dimentions = dim-(offset*2);
+          // var finalGrid;
+          // var SVGNS = 'http://www.w3.org/2000/svg'
+          // var container;
+          // var aPoints = ptArr;
+          var rightArrPos = dim - 18.67;
+          var SVGObj = {
 
-      function arrToStrRand(myArray, length) {
-        myArray = myArray.value;
-        var hcount = 0;
-        var tcount = 0;
-        var retArr = [];
-        var str =  '';
-        var i;
-        var rand;
+              createLine : function (x1, y1, x2, y2, color, w) {
+                  return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="' + w + '"/>';
+              },
+              createCircle : function(x,y,r) {
+                  return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#0092C8"/>';
+              },
+              createLabel : function(x,y,text,fontStyle) {
+                  return '<text x="' + x + '" y="' + y + '" font-style="' + fontStyle + '" font-size="12"  style="font-size:18px;">'+text+'</text>';
+              }
+          };
 
-        for(i = 0; i < length; i+=1){
-          rand = myArray[Math.floor(Math.random() * myArray.length)];
-          if(str  !== '') {
-            str += ", "+rand;
+          // finalGrid = Math.abs(minXRange)+Math.abs(maxXRange);
+          // factor = Math.round(dimentions/finalGrid);
+          // for grid
+          canvas += '<polygon points="22.667,17 11.77,22.084 0,24.998 11.77,27.912 22.667,32.994 18.831,24.998"/>';
+          canvas += SVGObj.createLine(offset, 25, dimentions+(offset), 25, 'rgb(0,0,0)', 2);
+          var noOfParts = 10;
+          var partDistance = dimentions/(noOfParts+2);
+
+          var xPos = partDistance;
+          var posArr = [partDistance];
+
+          var i;
+
+          for(i=0;i<noOfParts+1;i+=1) {
+
+              canvas += SVGObj.createLine(xPos, 15, xPos, 35, 'rgb(0,0,0)', 1);
+              if(i===0){
+                  canvas += SVGObj.createLabel(xPos-7, 55, minXRange ,"normal");
+              }else if(i === noOfParts){
+                  canvas += SVGObj.createLabel(xPos-7, 55, parseInt(minXRange+interval) ,"normal");
+              }else{
+                  canvas += SVGObj.createLabel(xPos-14, 55, minXRange.toFixed(1) ,"normal");
+              }
+              minXRange = minXRange+interval;
+              xPos = xPos+partDistance;
+              posArr.push(xPos);
+
+          }
+
+          var k;
+          var number1;
+
+          for(k=0;k<ptArr.length;k+=1){
+              //var numLength = String(ptArr[k]).length;
+             // var placeValueNumber = parseInt(String(ptArr[k]).charAt(numLength-1))+1;
+             // var multiplier = (ptArr[k]-minValue); // ! not used, according to jsHint
+              number1 = Number(ptArr[k].toFixed(2).substring(2, 4))*0.1;
+              debugLog("number1:: ",number1, typeof number1);
+              if(ptArr[k] === maxXRange){
+                  canvas += SVGObj.createCircle(partDistance*11, 25, 7);
+              }else{
+                  canvas += SVGObj.createCircle(partDistance*(number1+1), 25, 7);
+              }
+
+          }
+
+
+          canvas += '<polygon points="'+rightArrPos+' 32.79,'+(rightArrPos+10.9)+' 27.71,'+(rightArrPos+22.67)+' 24.80,'+(rightArrPos+10.9)+' 22.88,'+rightArrPos+' 16.80,'+(rightArrPos+3.84)+' 24.80,'+rightArrPos+' 32.79"/>';
+          var sNumberLine =  '<svg width="'+dim+'" height="80">'+canvas+'</svg>';
+          return new PearsonGL.Parameters.Parameter(sNumberLine,"single","string");
+         }
+
+        function getStrLength(str) {
+          return new PearsonGL.Parameters.Parameter(String(str).length,"single","integer");
+         }
+
+        function numberWithCommas(x) {
+          x = x.toString();
+          x= String(x);
+          var pattern = /(-?\d+)(\d{3})/;
+          while (pattern.test(x)) {
+            x = String(x).replace(pattern, "$1,$2");
+          }
+          return new PearsonGL.Parameters.Parameter(x,"single","string");
+         }
+
+        function addzeroafter(var1, number) {
+          var sNum = String(var1);
+          var text = '';
+          var i;
+          for (i = 0; i < number; i+=1) {
+              if(sNum[i]) {
+                  text += sNum[i];
+              }
+              else {
+                  text += '0';
+              }
+          }
+
+          return new PearsonGL.Parameters.Parameter(text ,"single","string");
+         }
+
+        function addTrailFixZero(num,place) {
+          num = num.value;
+          place = place.value;
+          var n;
+          n = num.toFixed(place);
+          return new PearsonGL.Parameters.Parameter(n,"single","string");
+
+         }
+
+        function StrToFloat(exp) {
+          var floatValue = Number(exp.value);
+          return new PearsonGL.Parameters.Parameter(floatValue,"single","float");
+         }
+
+        function strToFloat(str) {
+          var floatval = parseFloat(str.value);
+          return new PearsonGL.Parameters.Parameter(floatval ,"single","float");
+
+         }
+
+        function isInteger(exp) {
+          var num = Number(exp.value);
+          if (num === parseInt(num, 10)) {
+            return new PearsonGL.Parameters.Parameter(true,"single","boolean");
           } else {
-            str += rand;
+            return new PearsonGL.Parameters.Parameter(false,"single","boolean");
           }
-            // 2017-11-01 don't know if this block is supposed to be part of else
-            if ( rand === 'H') {
-              hcount+=1;
+         }
+
+        function arrToStrRand(myArray, length) {
+          myArray = myArray.value;
+          var hcount = 0;
+          var tcount = 0;
+          var retArr = [];
+          var str =  '';
+          var i;
+          var rand;
+
+          for(i = 0; i < length; i+=1){
+            rand = myArray[Math.floor(Math.random() * myArray.length)];
+            if(str  !== '') {
+              str += ", "+rand;
             } else {
-              tcount+=1;
+              str += rand;
             }
-        }
-        retArr[0] = str;
-        retArr[1] = hcount;
-        retArr[2] = tcount;
-        return new PearsonGL.Parameters.Parameter(retArr,"ordered","string");
-       }
+              // 2017-11-01 don't know if this block is supposed to be part of else
+              if ( rand === 'H') {
+                hcount+=1;
+              } else {
+                tcount+=1;
+              }
+          }
+          retArr[0] = str;
+          retArr[1] = hcount;
+          retArr[2] = tcount;
+          return new PearsonGL.Parameters.Parameter(retArr,"ordered","string");
+         }
 
-      function arrayShuffle(arr) {
-        arr = arr.value;
-        var currentIndex = arr.length;
-        var temporaryValue;
-        var randomIndex;
-        // While there remain elements to shuffle...
-        while (0 !== currentIndex) {
-          // Pick a remaining element...
-          randomIndex = Math.floor(Math.random() * currentIndex);
-          currentIndex -= 1;
-          // And swap it with the current element.
-          temporaryValue = arr[currentIndex];
-          arr[currentIndex] = arr[randomIndex];
-          arr[randomIndex] = temporaryValue;
-        }
-        return new PearsonGL.Parameters.Parameter(arr,"ordered","integer");
-       }
+        function arrayShuffle(arr) {
+          arr = arr.value;
+          var currentIndex = arr.length;
+          var temporaryValue;
+          var randomIndex;
+          // While there remain elements to shuffle...
+          while (0 !== currentIndex) {
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            // And swap it with the current element.
+            temporaryValue = arr[currentIndex];
+            arr[currentIndex] = arr[randomIndex];
+            arr[randomIndex] = temporaryValue;
+          }
+          return new PearsonGL.Parameters.Parameter(arr,"ordered","integer");
+         }
 
-      function arrayToStr(arr) {
-        var str;
-        arr = arr.value;
-        str = arr.join(", ");
-        return new PearsonGL.Parameters.Parameter(str,"single","string");
-       }
+        function arrayToStr(arr) {
+          var str;
+          arr = arr.value;
+          str = arr.join(", ");
+          return new PearsonGL.Parameters.Parameter(str,"single","string");
+         }
 
-      function strletterRand(n, k) {
-        var retArr = [];
-          var letter = "";
-        var letterstr = "";
-          var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        var newletter = "";
-        var shuffled = "";
-        var flength = n/2;
-        var i;
-        if (flength === parseInt(flength, 10)) {
-          flength = parseInt(flength);
-        } else {
-          flength = parseInt(flength)+1;
-        }
-        letter = possible.charAt(Math.floor(Math.random() * possible.length));
-        for(i = 0; i < k; i+=1 ) {
-          letterstr += letter;
-        }
-        for(i = 0; i < n-k; i+=1 ){
-          newletter = possible.charAt(Math.floor(Math.random() * possible.length));
-          if(newletter !== letter) {
-            letterstr += newletter;
+        function strletterRand(n, k) {
+          var retArr = [];
+            var letter = "";
+          var letterstr = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+          var newletter = "";
+          var shuffled = "";
+          var flength = n/2;
+          var i;
+          if (flength === parseInt(flength, 10)) {
+            flength = parseInt(flength);
           } else {
-            i-=1;
+            flength = parseInt(flength)+1;
           }
-        }
-        var a = letterstr.split("");
-        n = a.length;
-        var j;
-        var tmp;
-          for(i = n - 1; i > 0; i-=1) {
-              j = Math.floor(Math.random() * (i + 1));
-              tmp = a[i];
-              a[i] = a[j];
-              a[j] = tmp;
+          letter = possible.charAt(Math.floor(Math.random() * possible.length));
+          for(i = 0; i < k; i+=1 ) {
+            letterstr += letter;
           }
-        shuffled = a.join("");
-        shuffled = shuffled.split('').sort(function(){
-          return 0.5-Math.random();
-        }).join('');
-          var Listtop = shuffled.slice(0, flength);
-          var Listbottom = shuffled.slice(flength, shuffled.length);
-        retArr[0] = letter;
-        retArr[1] = shuffled;
-        retArr[2] = Listtop;
-        retArr[3] = Listbottom;
+          for(i = 0; i < n-k; i+=1 ){
+            newletter = possible.charAt(Math.floor(Math.random() * possible.length));
+            if(newletter !== letter) {
+              letterstr += newletter;
+            } else {
+              i-=1;
+            }
+          }
+          var a = letterstr.split("");
+          n = a.length;
+          var j;
+          var tmp;
+            for(i = n - 1; i > 0; i-=1) {
+                j = Math.floor(Math.random() * (i + 1));
+                tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+          shuffled = a.join("");
+          shuffled = shuffled.split('').sort(function(){
+            return 0.5-Math.random();
+          }).join('');
+            var Listtop = shuffled.slice(0, flength);
+            var Listbottom = shuffled.slice(flength, shuffled.length);
+          retArr[0] = letter;
+          retArr[1] = shuffled;
+          retArr[2] = Listtop;
+          retArr[3] = Listbottom;
 
-        var pos = shuffled.lastIndexOf(letter);
-        var List2 = shuffled.substring(0,pos) + shuffled.substring(pos+1);
-        pos = List2.lastIndexOf(letter);
-        var List3 = List2.substring(0,pos) + List2.substring(pos+1);
-        retArr[4] = List2;
-        retArr[5] = List3;
-        return new PearsonGL.Parameters.Parameter(retArr,"ordered","string");
-         // return letterstr+"<br>"+shuffled+"<br>"+Listtop+"<br>"+Listbottom;
-       }
+          var pos = shuffled.lastIndexOf(letter);
+          var List2 = shuffled.substring(0,pos) + shuffled.substring(pos+1);
+          pos = List2.lastIndexOf(letter);
+          var List3 = List2.substring(0,pos) + List2.substring(pos+1);
+          retArr[4] = List2;
+          retArr[5] = List3;
+          return new PearsonGL.Parameters.Parameter(retArr,"ordered","string");
+           // return letterstr+"<br>"+shuffled+"<br>"+Listtop+"<br>"+Listbottom;
+         }
 
     // Assign functions to exports
       //
