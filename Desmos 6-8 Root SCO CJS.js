@@ -584,7 +584,7 @@ PearsonGL.External.rootJS = (function() {
 
         });
        };
-      /* ←— valueOnly —————————————————————————————————————————————————————→ *\
+      /* ←— label value —————————————————————————————————————————————————————→ *\
        | Label a point according to the value of an expression.
        | Use for labeling anonymous sliders, or e.g. side lengths.
        |
@@ -595,9 +595,9 @@ PearsonGL.External.rootJS = (function() {
             showLabel:true
           });
        * ←————————————————————————————————————————————————————————————————→ */
-      fs.common.label.valueOnly = function(){
+      fs.common.label.value = function(){
         var o = hs.parseArgs(arguments);
-        o.desmos.setExpression({id:o.name,label:hs.latexToText(o.value)});
+        o.desmos.setExpression({id:(o.id && (o.id !== '')? o.id : o.name),label:hs.latexToText(o.value)});
        };
       /* ←— point —— point_A_x_named —— or —— point_A_x ———————————————————→ *\
        | Label a point according to its coordinates.
@@ -1279,7 +1279,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.agaColors.black
+                    color:cs.color.mgmColors.black
                   },
                   {
                     id:'labelP_'+i,
@@ -1288,7 +1288,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.agaColors.black
+                    color:cs.color.mgmColors.black
                   },
                   {
                     id:'labelFrac_'+i,
@@ -1297,7 +1297,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.agaColors.black
+                    color:cs.color.mgmColors.black
                   },
                   {
                     id:'labelW_'+i,
@@ -1306,7 +1306,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.agaColors.black
+                    color:cs.color.mgmColors.black
                   }
                 );
               }
