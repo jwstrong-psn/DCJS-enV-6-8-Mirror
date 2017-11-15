@@ -597,7 +597,7 @@ PearsonGL.External.rootJS = (function() {
        * ←————————————————————————————————————————————————————————————————→ */
       fs.common.label.value = function(){
         var o = hs.parseArgs(arguments);
-        o.desmos.setExpression({id:(o.id && (o.id !== '')? o.id : o.name),label:hs.latexToText(o.value)});
+        o.desmos.setExpression({id:((o.id && (o.id !== ''))? o.id : o.name),label:hs.latexToText(o.value)});
        };
       /* ←— point —— point_A_x_named —— or —— point_A_x ———————————————————→ *\
        | Label a point according to its coordinates.
@@ -659,6 +659,8 @@ PearsonGL.External.rootJS = (function() {
         var bases = vars.bases;
         var centers = [];
 
+        var heights = vars.heights;
+
         var i;
         for (i = 1; i < bases.length; i += 1) {
           centers.push((bases[i-1]+bases[i])/2);
@@ -666,8 +668,6 @@ PearsonGL.External.rootJS = (function() {
             heights.push(1);
           }
         }
-
-        var heights = vars.heights;
 
         o.desmos.setExpression({
           id:'heights',
@@ -807,7 +807,7 @@ PearsonGL.External.rootJS = (function() {
        | Calculates the perimeter of a rectangle
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633931 = {};
-      fs.A0633931.init = function() {
+      fs.A0633931.init = function(){
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
 
