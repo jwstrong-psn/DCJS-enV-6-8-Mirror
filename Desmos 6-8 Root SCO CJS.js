@@ -803,6 +803,41 @@ PearsonGL.External.rootJS = (function() {
         hlps.y_2.observe('numericValue',updateLabel);
 
        };
+      /* ←— A0633931 6-2-6 Example 1 —————————————————————————————————————→ *\
+       | Calculates the perimeter of a rectangle
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633931 = {};
+      fs.A0633931.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        hlps.w = hlps.maker('x_4-x_3');
+        hlps.h = hlps.maker('y_4-y_3');
+
+        function updateLabels() {
+          var w = hlps.w.numericValue;
+          var h = hlps.h.numericValue;
+          o.desmos.setExpressions([
+          {
+            id:'x_4-x_3',
+            label:''+w+' units'
+          },
+          {
+            id:'y_4-y_3',
+            label:''+h+' units'
+          },
+          {
+            id:'perimeter',
+            label:'Perimeter of rectangle ABCD: '+hs.latexToText(
+              w+'+'+h+'+'+w+'+'+h+'='+(2*(w+h))
+              )+' units'
+          }
+          ]);
+        }
+
+        hlps.w.observe('numericValue',updateLabels);
+        hlps.h.observe('numericValue',updateLabels);
+       };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
