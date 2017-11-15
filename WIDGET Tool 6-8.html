@@ -542,6 +542,17 @@
         black: '#000000',
         grey: '#58595B'
       };
+      window.mgmColors = {
+        blue: '#0092C8',
+        red: '#F15A22',
+        green: '#0DB14B',
+        purple: '#812990',
+        black: '#000000',
+        purpleFill: '#941B81',
+        blueFill: '#229FEE',
+        orangeFill: '#F68B1F',
+        greenFill: '#62BA46'
+      };
       var defaultGraphSettings = {
         degreeMode:true,
         xAxisArrowMode:Desmos.AxisArrowModes.BOTH,
@@ -570,12 +581,13 @@
         window.pasteGraphLink={'pasteGraphLink':true};
         window.pasteTableData={'pasteTableData':true};
         window.degreeMode={'degreeMode':true};
-        window.colors={'colors':agaColors};
-        window.construct={};
-        window.construct.perpendicular={'construct.perpendicular':true};
-        window.construct.parallel={'construct.parallel':true};
-        window.construct.midpoint={'construct.midpoint':true};
-        window.construct.compass={'construct.compass':true};
+        window.colors={'colors':mgmColors};
+        window.construct={
+          perpendicular:{'construct.perpendicular':true},
+          parallel:{'construct.parallel':true},
+          midpoint:{'construct.midpoint':true},
+          compass:{'construct.compass':true}
+        };
         window.border={'border':true};
         window.labels={'labels':true};
         window.ruler={'ruler':true};
@@ -604,7 +616,7 @@
             'pasteGraphLink':false,
             'pasteTableData':true,
             'degreeMode':true,
-            'colors':agaColors
+            'colors':mgmColors
           },
           /* allOff: */
           allOff:{
@@ -628,7 +640,7 @@
             'pasteGraphLink':false,
             'pasteTableData':false, /**/
             'degreeMode':false, /**/
-            'colors':agaColors
+            'colors':mgmColors
           }
         }
         window.geoConstructors = {
@@ -1311,7 +1323,12 @@
         window.calculator.setState(state, options);
         autoSave();
         var screen = window.calculator.screenshot({width:previewWidth,height:previewHeight});
-        window.setTimeout(function(){if(screen != window.calculator.screenshot({width:previewWidth,height:previewHeight})) autoSave();},LOADING_TIME_ALLOTMENT);
+        var shotAsync = window.setInterval(function(){
+          if(screen != window.calculator.screenshot({width:previewWidth,height:previewHeight})) {
+            clearInterval(shotAsync);
+            autoSave();
+          }
+        },LOADING_TIME_ALLOTMENT);
       };
       window.copyState = function() {
         var currState = window.calculator.getState();//{stripDefaults: false});
