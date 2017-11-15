@@ -838,6 +838,74 @@ PearsonGL.External.rootJS = (function() {
         hlps.w.observe('numericValue',updateLabels);
         hlps.h.observe('numericValue',updateLabels);
        };
+      /* ←— A0633932 6-2-5-KC ————————————————————————————————————————————→ *\
+       | Widget shows calculations of length and width
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633932 = {};
+      fs.A0633932.init = function(){
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        function updateLabel(a,helper) {
+          var which = helper.latex;
+
+          vars[which] = helper.numericValue;
+
+          which = which[0];
+
+          var one = vars[which+'_1'];
+          var two = vars[which+'_2'];
+
+          var first;
+          var sign;
+          if (one*two > 0) {
+            sign = '-';
+            // Have to put the "larger" one first
+            first = ((one-two)*one >= 0 ? one : two);
+          } else {
+            sign = '+';
+            if (which === 'x') {
+              // LTR
+              first = (one > two ? two : one);
+            } else {
+              // Top-to-Bottom
+              first = (one > two ? one : two);
+            }
+          }
+          var second = (first === one ? two : one);
+
+          var expr = hs.latexToText(
+                       '|'+first+'|'+sign+'|'+second+'|='+
+                       (Math.abs(first - second))
+                     );//+' units';
+
+          if(which === 'x') {
+            o.desmos.setExpression({
+              id:'horizontalCalc',
+              label:'AB = CD = '+expr+' units',
+              color:((sign === '+')?cs.color.mgmColors.blue:cs.color.mgmColors.red)
+            });
+          } else {
+            o.desmos.setExpression({
+              id:'verticalCalc',
+              label:'★ BC = DA = '+expr+' units',
+              color:((sign === '+')?cs.color.mgmColors.blue:cs.color.mgmColors.red)
+            });
+          }
+        }
+
+        hlps.x_1 = hlps.maker('x_1');
+        hlps.x_2 = hlps.maker('x_2');
+        hlps.y_1 = hlps.maker('y_1');
+        hlps.y_2 = hlps.maker('y_2');
+
+        hlps.x_1.observe('numericValue',updateLabel);
+        hlps.x_2.observe('numericValue',updateLabel);
+        hlps.y_1.observe('numericValue',updateLabel);
+        hlps.y_2.observe('numericValue',updateLabel);
+
+       };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
