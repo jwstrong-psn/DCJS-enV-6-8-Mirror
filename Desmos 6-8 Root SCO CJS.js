@@ -505,7 +505,8 @@ PearsonGL.External.rootJS = (function() {
           label:{}
         },
         tool:{
-          histogram:{}
+          histogram:{},
+          table:{}
         }
        };
 
@@ -584,6 +585,40 @@ PearsonGL.External.rootJS = (function() {
 
         });
        };
+      /* ←— show/hide expression —————————————————————————————————————————→ *\
+       | Shows or hides an expression with a given ID
+       | ID is given or assumed to match variable name
+       | pass 0 to hide, 1 to show
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.showHide = function() {
+        var o = hs.parseArgs(arguments);
+        o.desmos.setExpression({
+          id:o.id || o.name,
+          hidden: !o.value
+        });
+       };
+      /* ←— set value —————————————————————————————————————————————————————→ *\
+       | Set the value of an variable.
+       | Use with slider.
+       |
+       | n.b.: Theoretically could be authored to interpret ID from Name,
+       |   in order that it could be used from the "Expressions" tab,
+       |   however either this would overwrite the variable's value with
+       |   itself (making it pointless), or, if used with an Expression,
+       |   would set a variable to the evaluation of an expression, which
+       |   should be done using the Expression List itself. Seriously, why
+       |   would you want to do that?
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.setValue = function(){
+        var o = hs.parseArgs(arguments);
+        if(!o.id) {
+          throw new Error('Cannot set variable without expression ID. Use the Expression List for setting variables to the evaluation of an expression.');
+        }
+        o.desmos.setExpression({
+          id:o.id,
+          latex:o.name+'='+o.value
+        });
+       };
       /* ←— label value —————————————————————————————————————————————————————→ *\
        | Label a point according to the value of an expression.
        | Use for labeling anonymous sliders, or e.g. side lengths.
@@ -598,6 +633,18 @@ PearsonGL.External.rootJS = (function() {
       fs.common.label.value = function(){
         var o = hs.parseArgs(arguments);
         o.desmos.setExpression({id:((o.id && (o.id !== ''))? o.id : o.name),label:hs.latexToText(o.value)});
+       };
+      /* ←— show/hide label ——————————————————————————————————————————————→ *\
+       | Shows or hides the label of an expression with a given ID
+       | ID is given or assumed to match variable name
+       | pass 0 to hide the label, 1 to show
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.label.showHide = function() {
+        var o = hs.parseArgs(arguments);
+        o.desmos.setExpression({
+          id:o.id || o.name,
+          showLabel: !!o.value
+        });
        };
       /* ←— point —— point_A_x_named —— or —— point_A_x ———————————————————→ *\
        | Label a point according to its coordinates.
@@ -684,6 +731,96 @@ PearsonGL.External.rootJS = (function() {
               dragMode:Desmos.DragModes.Y
             }
           ]
+        });
+       };
+      /* ←— add point to table ———————————————————————————————————————————→ *\
+       | adds (0,0) to a Table of coordinates
+       | table ID must be given, and should not have more than two columns
+       | Variable Name should be in the form (x,y), with x and y being the
+       |  LaTeX values of the table headers
+       | n.b. it is surprisingly arduous to take the output of listValue and
+       |  feed it back into the table column values, if any cells are empty
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.tool.table.addOriginPoint = function addOriginPoint() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        var vars = o.name.slice(1,o.name.length-1).split(',');
+        var xVar = vars[0];
+        var yVar = vars[1];
+      
+        hlps[xVar] = hlps[xVar] || hlps.maker(xVar);
+        hlps[yVar] = hlps[yVar] || hlps.maker(yVar);
+
+        var x = hlps[xVar];
+        var y = hlps[yVar];
+
+        var thisCall;
+        var cb;
+
+        if(x.numericValue === undefined || y.numericValue === undefined) {
+          thisCall = 'numericValue.'+Date.now();
+          cb = (function(theCall,args) {
+            return function() {
+              if(Number.isNaN(x.numericValue) && Number.isNaN(y.numericValue)) {
+                x.unobserve(theCall);
+                y.unobserve(theCall);
+                addOriginPoint(args);
+              }
+            };
+          }(thisCall,o));
+          x.observe(thisCall,cb);
+          y.observe(thisCall,cb);
+          return;
+        }
+
+        x = x.listValue;
+        y = y.listValue;
+
+        if (Array.isArray(x)) {
+          x = x.slice();
+        } else {
+          x = [];
+        }
+
+        if (Array.isArray(y)) {
+          y = y.slice();
+        } else {
+          y = [];
+        }
+
+        function parseNaN(v,i,a){
+          if(Number.isNaN(v)) {
+            a[i]='';
+          }
+        }
+
+        x.forEach(parseNaN);
+        y.forEach(parseNaN);
+
+        while(x.length < y.length) {
+          x.push('');
+        }
+
+        while(y.length < x.length) {
+          y.push('');
+        }
+
+        x.push(0);
+        y.push(0);
+
+        o.desmos.setExpression({
+          id:o.id,
+          type:'table',
+          columns:[
+          {
+            latex:xVar,
+            values:x
+          },
+          {
+            latex:yVar,
+            values:y
+          }]
         });
        };
 
