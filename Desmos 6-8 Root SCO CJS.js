@@ -1043,6 +1043,72 @@ PearsonGL.External.rootJS = (function() {
         hlps.y_2.observe('numericValue',updateLabel);
 
        };
+      /* ←— A0633934 6-4-10 Example 1 ————————————————————————————————————→ *\
+       | Selling pom poms!
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633934 = {};
+      fs.A0633934.pom_poms = function() {
+        var o = hs.parseArgs(arguments);
+
+        var poms = o.value;
+
+        o.desmos.setExpression({
+          id:'poms',
+          label:''+poms+' pom poms sold, $'+((45*poms)/100)+' raised'
+        });
+       };
+      /* ←— A0633961 7-2-5 Example 1 —————————————————————————————————————→ *\
+       | Change the graph based on the ticket cost.
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633961 = {};
+      fs.A0633961.changeCalc = function() {
+        var o = hs.parseArgs(arguments);
+
+        var dx = o.value;
+
+        o.desmos.setExpressions([
+        {
+          id:'rise',
+          label:'+'+((95*dx)/10)
+        },
+        {
+          id:'run',
+          label:'+'+dx
+        },
+        {
+          id:'m',
+          label:'Constant of Proportionality = '+((95*dx)/10)+' ÷ '+dx+' = 9.5'
+        }
+        ]);
+       };
+      /* ←— A0633963 7-2-5 KC ————————————————————————————————————————————→ *\
+       | Change the graph based on the ticket cost.
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633963 = {};
+      fs.A0633963.changeSlope = function() {
+        var o = hs.parseArgs(arguments);
+
+        var m = o.value;
+
+        o.desmos.setExpressions([
+        {
+          id:'slope',
+          label:'m='+m
+        },
+        {
+          id:'rise',
+          label:'+'+m
+        },
+        {
+          id:'one_more',
+          label:'1 more ticket increases total cost by $'+m+'.'
+        },
+        {
+          id:'m',
+          label:'1 ticket costs $'+m+'.'
+        }
+        ]);
+       };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
