@@ -229,24 +229,25 @@ PearsonGL.External.rootJS = (function() {
        ↓
        * ←—————————————————————————————————————————————————————————————————————→ */
       latexToText: function(expr){
-        expr = ''+expr;
-        expr = expr.replace(/\\cdot\s?/g,'\u22c5');
-        expr = expr.replace(/._\{([a-zA-Z])Var\}/g,'$1');
-        expr = expr.replace(/([+=÷×\u22c5])/g,' $1 ');
-        expr = expr.replace(/,/g,',\u202f');
-        expr = expr.replace(/\^2/g,'²');
-        expr = expr.replace(/\^3/g,'³');
-        expr = expr.replace(/\\sqrt\{([^{}]*?)\}/g,'√($1)');
-        expr = expr.replace(/\\theta\s?/g,'θ');
-        expr = expr.replace(/\\pi\s?/g,'π');
-        expr = expr.replace(/_0/g,'₀');
-        expr = expr.replace(/_1/g,'₁');
-        expr = expr.replace(/_2/g,'₂');
-        expr = expr.replace(/\\(?:right|left)\\*([()\[\]|{}])/g,'$1');
-        expr = expr.replace(/\\right/g,'');
-        expr = expr.replace(/\\left/g,'');
-        expr = expr.replace(/([^\s \u202f(\[{|])\-|(\|[^|]*\|)-(?=\|)/g,'$1$2 − ');
-        expr = expr.replace(/\-/g,'−');
+        expr = (''+expr);
+        expr = expr.
+          replace(/\\cdot\s?/g,'\u22c5').
+          replace(/._\{([a-zA-Z])Var\}/g,'$1').
+          replace(/([+=÷×\u22c5])/g,' $1 ').
+          replace(/,/g,',\u202f').
+          replace(/\^2/g,'²').
+          replace(/\^3/g,'³').
+          replace(/\\sqrt\{([^{}]*?)\}/g,'√($1)').
+          replace(/\\theta\s?/g,'θ').
+          replace(/\\pi\s?/g,'π').
+          replace(/_0/g,'₀').
+          replace(/_1/g,'₁').
+          replace(/_2/g,'₂').
+          replace(/\\(?:right|left)\\*([()\[\]|{}])/g,'$1').
+          replace(/\\right/g,'').
+          replace(/\\left/g,'').
+          replace(/([^\s \u202f(\[{|])\-|(\|[^|]*\|)-(?=\|)/g,'$1$2 − ').
+          replace(/\-/g,'−');
         return expr;
        },
       /* ←— number to letter (lowercase) —————————————————————————————————→ *\
@@ -463,7 +464,42 @@ PearsonGL.External.rootJS = (function() {
 
         return catalog[n].slice();
         };
-       }())
+       }()),
+      /* ←— easeFunc —————————————————————————————————————————————————→ *\
+       | Given a current value, current rate, destination, and target
+       |  ease time, returns parameters for f(t) = A sin(b * t - h) + k
+       |  NOTE: Assumes current time is 0, so f(0) = current value
+       |  Also returns t, expected time of ease completion.
+       * ←———————————————————————————————————————————————————————————————→ */
+      ease: function(now, rate, target, time) {
+        var out = {};
+        var diff = target - now;
+
+        if (diff === 0) {
+          return {
+            A: 0,
+            b: 1,
+            h: 0,
+            k: 0,
+            t: 0
+          };
+        }
+
+        out.b = Math.PI / time;
+        rate = rate / out.b;
+
+        out.k = (diff * diff - rate * rate) / (2 * diff);
+        out.h = Math.atan(out.k / rate);
+        var cosh = Math.cos(out.h);
+        out.A = (cosh === 0 ? diff / 2 : rate / Math.cos(out.h));
+        out.t = time / 2 + out.h / out.b;
+
+        if(out.A < 0) {
+          out.t += out.d;
+        }
+
+        return out;
+       }
      };
 
   /* ←— EXPORTS / PUBLIC FUNCTIONS ————————————————————————————————————————→ *\
@@ -733,6 +769,37 @@ PearsonGL.External.rootJS = (function() {
           ]
         });
        };
+      /* ←— Bar Diagram —————————————————————————————————————————————————→ *\
+       | Resizes the number line
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.tool.barDiagram = {};
+      fs.tool.barDiagram.init = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+      
+        hlps.w = hlps.maker('w');
+        hlps.W = hlps.maker('W');
+        hlps.p = hlps.maker('p');
+        hlps.P = hlps.maker('P');
+
+        o.desmos.observe('graphpaperBounds.barDiagramHeight',function() {
+          // stuff
+          var bounds = o.desmos.graphpaperBounds.mathCoordinates;
+          var unit = Math.max(bounds.width/12, hlps.p.numericValue/10, hlps.w.numericValue/10);
+
+          var newBounds = {
+            top: 10,
+            bottom: -5,
+            left: -unit,
+            right: 11*unit
+          };
+
+          o.log(bounds,newBounds);
+
+          o.desmos.setMathBounds(newBounds);
+        });
+       };
       /* ←— add point to table ———————————————————————————————————————————→ *\
        | adds (0,0) to a Table of coordinates
        | table ID must be given, and should not have more than two columns
@@ -825,262 +892,6 @@ PearsonGL.External.rootJS = (function() {
        };
 
     // SCO-SPECIFIC FUNCTIONS
-      /* ←— A0633928 6-2-5-Example 1 —————————————————————————————————————→ *\
-       | Widget shows calculations of horizontal distance
-       * ←————————————————————————————————————————————————————————————————→ */
-       fs.A0633928 = {};
-      fs.A0633928.init = function(){
-        var o = hs.parseArgs(arguments);
-        var vars = vs[o.uniqueId];
-        var hlps = hxs[o.uniqueId];
-
-        function updateLabel(a,helper) {
-          var which = helper.latex;
-
-          vars[which] = helper.numericValue;
-
-          var one = vars.x_1;
-          var two = vars.x_2;
-
-          var first;
-          var sign;
-          if (one*two > 0) {
-            sign = '-';
-            // Have to put the "larger" one first
-            first = ((one-two)*one >= 0 ? one : two);
-          } else {
-            sign = '+';
-            // LTR
-            first = (one > two ? two : one);
-          }
-          var second = (first === one ? two : one);
-
-          var expr = hs.latexToText(
-                       '|'+first+'|'+sign+'|'+second+'|='+
-                       Math.abs(first)+sign+Math.abs(second)+'='+
-                       (Math.abs(first - second))
-                     )+' units';
-
-          o.desmos.setExpression({
-            id:'horizontalCalc',
-            label:expr
-          });
-        }
-
-        hlps.x_1 = hlps.maker('x_1');
-        hlps.x_2 = hlps.maker('x_2');
-
-        hlps.x_1.observe('numericValue',updateLabel);
-        hlps.x_2.observe('numericValue',updateLabel);
-
-       };
-      /* ←— A0633929 6-2-5-KC ————————————————————————————————————————————→ *\
-       | Widget shows calculations of horizontal and vertical distance
-       * ←————————————————————————————————————————————————————————————————→ */
-       fs.A0633929 = {};
-      fs.A0633929.init = function(){
-        var o = hs.parseArgs(arguments);
-        var vars = vs[o.uniqueId];
-        var hlps = hxs[o.uniqueId];
-
-        function updateLabel(a,helper) {
-          var which = helper.latex;
-
-          vars[which] = helper.numericValue;
-
-          which = which[0];
-
-          var one = vars[which+'_1'];
-          var two = vars[which+'_2'];
-
-          var first;
-          var sign;
-          if (one*two > 0) {
-            sign = '-';
-            // Have to put the "larger" one first
-            first = ((one-two)*one >= 0 ? one : two);
-          } else {
-            sign = '+';
-            if (which === 'x') {
-              // LTR
-              first = (one > two ? two : one);
-            } else {
-              // Top-to-Bottom
-              first = (one > two ? one : two);
-            }
-          }
-          var second = (first === one ? two : one);
-
-          var expr = hs.latexToText(
-                       '|'+first+'|'+sign+'|'+second+'|='+
-                       (Math.abs(first - second))
-                     );//+' units';
-
-          if(which === 'x') {
-            o.desmos.setExpression({
-              id:'horizontalCalc',
-              label:expr
-            });
-          } else {
-            o.desmos.setExpression({
-              id:'verticalCalc',
-              label:'★ '+expr
-            });
-          }
-        }
-
-        hlps.x_1 = hlps.maker('x_1');
-        hlps.x_2 = hlps.maker('x_2');
-        hlps.y_1 = hlps.maker('y_1');
-        hlps.y_2 = hlps.maker('y_2');
-
-        hlps.x_1.observe('numericValue',updateLabel);
-        hlps.x_2.observe('numericValue',updateLabel);
-        hlps.y_1.observe('numericValue',updateLabel);
-        hlps.y_2.observe('numericValue',updateLabel);
-
-       };
-      /* ←— A0633931 6-2-6 Example 1 —————————————————————————————————————→ *\
-       | Calculates the perimeter of a rectangle
-       * ←————————————————————————————————————————————————————————————————→ */
-       fs.A0633931 = {};
-      fs.A0633931.init = function(){
-        var o = hs.parseArgs(arguments);
-        var hlps = hxs[o.uniqueId];
-
-        hlps.w = hlps.maker('x_4-x_3');
-        hlps.h = hlps.maker('y_4-y_3');
-
-        function updateLabels() {
-          var w = hlps.w.numericValue;
-          var h = hlps.h.numericValue;
-          o.desmos.setExpressions([
-          {
-            id:'x_4-x_3',
-            label:''+w+' units'
-          },
-          {
-            id:'y_4-y_3',
-            label:''+h+' units'
-          },
-          {
-            id:'perimeter',
-            label:'Perimeter of rectangle ABCD: '+hs.latexToText(
-              w+'+'+h+'+'+w+'+'+h+'='+(2*(w+h))
-              )+' units'
-          }
-          ]);
-        }
-
-        hlps.w.observe('numericValue',updateLabels);
-        hlps.h.observe('numericValue',updateLabels);
-       };
-      /* ←— A0633932 6-2-5-KC ————————————————————————————————————————————→ *\
-       | Widget shows calculations of length and width
-       * ←————————————————————————————————————————————————————————————————→ */
-       fs.A0633932 = {};
-      fs.A0633932.init = function(){
-        var o = hs.parseArgs(arguments);
-        var vars = vs[o.uniqueId];
-        var hlps = hxs[o.uniqueId];
-
-        function updateLabel(a,helper) {
-          var which = helper.latex;
-
-          vars[which] = helper.numericValue;
-
-          which = which[0];
-
-          var one = vars[which+'_1'];
-          var two = vars[which+'_2'];
-
-          var first;
-          var sign;
-          if (one*two > 0) {
-            sign = '-';
-            // Have to put the "larger" one first
-            first = ((one-two)*one >= 0 ? one : two);
-          } else {
-            sign = '+';
-            if (which === 'x') {
-              // LTR
-              first = (one > two ? two : one);
-            } else {
-              // Top-to-Bottom
-              first = (one > two ? one : two);
-            }
-          }
-          var second = (first === one ? two : one);
-
-          var expr = hs.latexToText(
-                       '|'+first+'|'+sign+'|'+second+'|='+
-                       (Math.abs(first - second))
-                     );//+' units';
-
-          if(which === 'x') {
-            o.desmos.setExpression({
-              id:'horizontalCalc',
-              label:'AB = CD = '+expr+' units',
-              color:((sign === '+')?cs.color.mgmColors.blue:cs.color.mgmColors.red)
-            });
-          } else {
-            o.desmos.setExpression({
-              id:'verticalCalc',
-              label:'★ BC = DA = '+expr+' units',
-              color:((sign === '+')?cs.color.mgmColors.blue:cs.color.mgmColors.red)
-            });
-          }
-        }
-
-        hlps.x_1 = hlps.maker('x_1');
-        hlps.x_2 = hlps.maker('x_2');
-        hlps.y_1 = hlps.maker('y_1');
-        hlps.y_2 = hlps.maker('y_2');
-
-        hlps.x_1.observe('numericValue',updateLabel);
-        hlps.x_2.observe('numericValue',updateLabel);
-        hlps.y_1.observe('numericValue',updateLabel);
-        hlps.y_2.observe('numericValue',updateLabel);
-
-       };
-      /* ←— A0633934 6-4-10 Example 1 ————————————————————————————————————→ *\
-       | Selling pom poms!
-       * ←————————————————————————————————————————————————————————————————→ */
-       fs.A0633934 = {};
-      fs.A0633934.pom_poms = function() {
-        var o = hs.parseArgs(arguments);
-
-        var poms = o.value;
-
-        o.desmos.setExpression({
-          id:'poms',
-          label:''+poms+' pom poms sold, $'+((45*poms)/100)+' raised'
-        });
-       };
-      /* ←— A0633961 7-2-5 Example 1 —————————————————————————————————————→ *\
-       | Change the graph based on the ticket cost.
-       * ←————————————————————————————————————————————————————————————————→ */
-       fs.A0633961 = {};
-      fs.A0633961.changeCalc = function() {
-        var o = hs.parseArgs(arguments);
-
-        var dx = o.value;
-
-        o.desmos.setExpressions([
-        {
-          id:'rise',
-          label:'+'+((95*dx)/10)
-        },
-        {
-          id:'run',
-          label:'+'+dx
-        },
-        {
-          id:'m',
-          label:'Constant of Proportionality = '+((95*dx)/10)+' ÷ '+dx+' = 9.5'
-        }
-        ]);
-       };
       /* ←— A0633963 7-2-5 KC ————————————————————————————————————————————→ *\
        | Change the graph based on the ticket cost.
        * ←————————————————————————————————————————————————————————————————→ */
@@ -1109,7 +920,25 @@ PearsonGL.External.rootJS = (function() {
         }
         ]);
        };
+      /* ←— A0633919 6-2-1 KC ————————————————————————————————————————————→ *\
+       | recolors the point based on the side of 0
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633919 = {};
+      fs.A0633919.color = function() {
+        var o = hs.parseArgs(arguments);
 
+        o.log(o.value);
+      
+        o.desmos.setExpressions([
+        {
+          id:'6',
+          color:(o.value >= 0 ? cs.color.mgmColors.blue : cs.color.mgmColors.red)
+        },
+        {
+          id:'7',
+          color:(o.value > 0 ? cs.color.mgmColors.red : cs.color.mgmColors.blue)
+        }]);
+       };
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
       /* ←— init —————————————————————————————————————————————————————————→ *\
