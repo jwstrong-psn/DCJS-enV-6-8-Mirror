@@ -71,6 +71,7 @@
           <tr><td style="text-align:right">Construct Compass: </td><td style="text-align:center"><button type="button" id="constructCompass">?</button></td></tr>
           <tr><td style="text-align:right">Border: </td><td style="text-align:center"><button type="button" id="geoBorder">?</button></td></tr>
           <tr><td style="text-align:right">Labels: </td><td style="text-align:center"><button type="button" id="labels">?</button></td></tr>
+          <tr><td style="text-align:right">Sidebar: </td><td style="text-align:center"><button type="button" id="sidebar">?</button></td></tr>
           <tr><td style="text-align:right">Ruler: </td><td style="text-align:center"><button type="button" id="ruler">?</button></td></tr>
           <tr><td style="text-align:right">Protractor: </td><td style="text-align:center"><button type="button" id="protractor">?</button></td></tr>
         </table>
@@ -309,6 +310,9 @@
         });
         $("#labels").click(function(){
           window.rebuild({'labels':!(window.currentGeoConstructors['labels'])});
+        });
+        $("#sidebar").click(function(){
+          window.rebuild({'sidebar':!(window.currentGeoConstructors['sidebar'])});
         });
         $("#ruler").click(function(){
           window.currentGeoConstructors.ruler = !(window.currentGeoConstructors['ruler']);
@@ -590,6 +594,7 @@
         };
         window.border={'border':true};
         window.labels={'labels':true};
+        window.sidebar={'sidebar':true};
         window.ruler={'ruler':true};
         window.protractor={'protractor':true};
         window.calcConstructors = {
@@ -644,7 +649,7 @@
           }
         }
         window.geoConstructors = {
-          /* default: perpendicular, parallel, midpoint, compass, border, labels */
+          /* default: perpendicular, parallel, midpoint, compass, border, labels, sidebar */
           default:{
             'construct.perpendicular':true,
             'construct.parallel':true,
@@ -652,6 +657,7 @@
             'construct.compass':true,
             'border':true,
             'labels':true,
+            'sidebar':true,
             'ruler':false,
             'protractor':false
           },
@@ -663,6 +669,7 @@
             'construct.compass':false,
             'border':false,
             'labels':false,
+            'sidebar':false,
             'ruler':false,
             'protractor':false
           }
@@ -675,6 +682,7 @@
       var toolType = 'graphing';
       var calcDefaultState = null;
       var geoDefaultState = null;
+      var geoConstructorsSansTools = null;
       var calcPrevState = null;
       var geoPrevState = null;
       var desWidth = 550;
@@ -1158,7 +1166,10 @@
           if (calcDefaultState) window.calculator.setDefaultState(calcDefaultState);
           else window.calculator.setDefaultState(window.calculator.getState());//{stripDefaults: false}));
         } else if (type == 'geometry') {
-          window.calculator = window.Geo = Desmos.Geometry($elt[0], window.currentGeoConstructors);
+          geoConstructorsSansTools = Object.assign({},currentGeoConstructors);
+          delete geoConstructorsSansTools.protractor;
+          delete geoConstructorsSansTools.ruler;
+          window.calculator = window.Geo = Desmos.Geometry($elt[0], geoConstructorsSansTools);
           if (geoPrevState) window.calculator.setState(geoPrevState);
           if (window.currentGeoConstructors.ruler) window.Geo.showRuler();
           if (window.currentGeoConstructors.protractor) window.Geo.showProtractor();
