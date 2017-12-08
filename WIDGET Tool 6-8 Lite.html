@@ -177,7 +177,15 @@
         purple: '#812990',
         black: '#000000',
         orange: '#EFA038'
-      }
+      };
+      window.geoColors = {
+        colors: Object.values(window.colors),
+        defaults: {
+          point: window.colors.blue,
+          line: window.colors.blue,
+          circle: window.colors.blue
+        }
+      };
       window.calculator = window.Calc = window.Geo = null;
 
       var toolType = 'graphing';
@@ -195,7 +203,6 @@
         window.calculator = null;
         if(window.Geo) {
           geoPrevState = window.Geo.getState({stripDefaults:false});
-          window.Geo.detach();
           delete window.Geo;
         }
         if(window.Calc) {
@@ -215,9 +222,9 @@
           if (calcDefaultState) window.calculator.setDefaultState(calcDefaultState);
           else window.calculator.setDefaultState(window.calculator.getState({stripDefaults:false}));
         } else if (type == 'geometry') {
-          window.calculator = window.Geo = Desmos.Geometry($elt[0]);
-          window.calculator.setState(geoPrevState);
-          window.calculator.setDefaultState(geoDefaultState);
+          window.calculator = window.Geo = Desmos.Geometry($elt[0],{colorMap:window.geoColors});
+          if (geoPrevState) window.calculator.setState(geoPrevState);
+          if (geoDefaultState) window.calculator.setDefaultState(geoDefaultState);
         };
         toolType = type;
         updateView();
