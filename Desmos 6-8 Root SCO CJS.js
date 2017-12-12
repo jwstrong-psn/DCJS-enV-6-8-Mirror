@@ -978,10 +978,8 @@ PearsonGL.External.rootJS = (function() {
             ]);
         }
 
-        o.desmos.observeEvent('graphReset.A0633935',newProblem);
-
         // Make sure [−10...10] is always visible
-        o.desmos.observe('graphpaperBounds.A0633935',function(){
+        function constrainBounds(){
           var mathCoordinates = Object.assign({},o.desmos.graphpaperBounds.mathCoordinates);
 
           // var pixelCoordinates = o.desmos.graphpaperBounds.pixelCoordinates;
@@ -1008,7 +1006,11 @@ PearsonGL.External.rootJS = (function() {
           delete mathCoordinates.width;
 
           o.desmos.setMathBounds(mathCoordinates);
-        });//*/
+        }
+
+        o.desmos.observeEvent('graphReset.A0633935',newProblem);
+        o.desmos.observe('graphpaperBounds.A0633935',constrainBounds);
+        constrainBounds();
        };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
