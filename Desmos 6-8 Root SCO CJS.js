@@ -940,7 +940,7 @@ PearsonGL.External.rootJS = (function() {
         }]);
        };
       /* ←— A0633935 6-4-10 Ex.2 —————————————————————————————————————————————————→ *\
-       | description
+       | WiP TK TODO
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633935 = {};
       fs.A0633935.init = function() {
@@ -1011,6 +1011,48 @@ PearsonGL.External.rootJS = (function() {
         o.desmos.observeEvent('graphReset.A0633935',newProblem);
         o.desmos.observe('graphpaperBounds.A0633935',constrainBounds);
         constrainBounds();
+       };
+      /* ←— A0633976 7-6-1 Ex.4 Try It! ——————————————————————————————————→ *\
+       | mirror work on page 1 onto page 2
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633976 = {};
+       vs.A0633976 = {};
+      fs.A0633976.init_a = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs.A0633976;
+        var hlps = hxs[o.uniqueId];
+
+        vars.h = hlps.maker('h');
+
+        if(vars.answer !== undefined) {
+          vars.h.observe('listValue',function(t,h){
+            vars.answer.setExpression({
+              id:'heights',
+              latex:'h=['+h[t]+']'
+            });
+          });
+        }
+       };
+      fs.A0633976.init_b = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs.A0633976;
+
+        vars.answer = o.desmos;
+
+        if(vars.h !== undefined) {
+          if(Array.isArray(vars.h.listValue)) {
+            vars.answer.setExpression({
+              id:'heights',
+              latex:'h=['+vars.h.listValue+']'
+            });
+          }
+          vars.h.observe('listValue',function(t,h){
+            vars.answer.setExpression({
+              id:'heights',
+              latex:'h=['+h[t]+']'
+            });
+          });
+        }
        };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
