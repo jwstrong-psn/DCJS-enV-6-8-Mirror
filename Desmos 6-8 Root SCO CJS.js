@@ -57,6 +57,26 @@ PearsonGL.External.rootJS = (function() {
   /* ←—PRIVATE HELPER FUNCTIONS————————————————————————————————————————————→ *\
        | Subroutines; access with hs.functionName(args)
        * ←—————————————————————————————————————————————————————————————————→ */
+      /* ←— mergeObjects —————————————————————————————————————————————————→ *\
+       | replaces Object.assign in case of *shudder* IE
+       * ←————————————————————————————————————————————————————————————————→ */
+       function mergeObjects() {
+          if (typeof Object.assign === "function") {
+            return Object.assign.apply(Object,arguments);
+          }
+
+          var obj = arguments[0];
+
+          [].forEach.call(arguments, function(arg,i) {
+            if(i > 0) {
+              Object.keys(arg).forEach(function(key) {
+                obj[key] = arg[key];
+              });
+            }
+          });
+
+          return obj;
+       }
     var hs;
      hs = {
       /* ←— flattenFuncStruct —————————————————————————————————————————————→ *\
@@ -77,7 +97,7 @@ PearsonGL.External.rootJS = (function() {
         Object.keys(funcStruct).forEach(function(key){
           var item = funcStruct[key];
           if (typeof item === 'object') {
-            Object.assign(functions,flattenFuncStruct(item,prefix+key+'_'));
+            mergeObjects(functions,flattenFuncStruct(item,prefix+key+'_'));
           } else if (typeof item === 'function') {
             functions[prefix+key] = item;
           } else {
@@ -153,7 +173,7 @@ PearsonGL.External.rootJS = (function() {
         };
 
         if (typeof arg === 'object') {
-          Object.assign(output,arg);
+          mergeObjects(output,arg);
          } else if (typeof arg === 'number') {
           // Expect (value, name, desmos)
           output.value = arg;
@@ -258,7 +278,7 @@ PearsonGL.External.rootJS = (function() {
         var func = function(x){
           return alphabet[x];
         };
-        Object.assign(func,alphabet);
+        mergeObjects(func,alphabet);
         return func;
        }()),
       /* ←— number to letter (uppercase) —————————————————————————————————→ *\
@@ -269,7 +289,7 @@ PearsonGL.External.rootJS = (function() {
         var func = function(x){
           return alphabet[x];
         };
-        Object.assign(func,alphabet);
+        mergeObjects(func,alphabet);
         return func;
        }()),
       /* ←— getPrimes(min,max) (memoized) —————————————————————————————————→ *\
@@ -286,7 +306,7 @@ PearsonGL.External.rootJS = (function() {
         //  Composites is an object so as to allow indexing by number,
         //  and is not an array, because length would be misleading
         var composites = {};
-        Object.assign(composites,{
+        mergeObjects(composites,{
           toArray: function() {
             return Object.keys(composites).filter(function(key) {
               return composites[key] === true;
@@ -368,7 +388,7 @@ PearsonGL.External.rootJS = (function() {
        | @Returns: array of products, in no particular order                  ↓
        * ←—————————————————————————————————————————————————————————————————→ */
       powerSet: function powerSet(factorization) {
-        factorization = Object.assign({},factorization);
+        factorization = mergeObjects({},factorization);
         var factorList = Object.keys(factorization);
 
         var factor;
@@ -421,7 +441,7 @@ PearsonGL.External.rootJS = (function() {
         }
 
         if (catalog[n]) {
-         return Object.assign({},catalog[n]);
+         return mergeObjects({},catalog[n]);
         }
 
         var factorList = hs.getPrimes(2,n);
@@ -442,7 +462,7 @@ PearsonGL.External.rootJS = (function() {
 
         catalog[n] = factorization;
 
-        return Object.assign({},factorization);
+        return mergeObjects({},factorization);
         };
        }()),
       /* ←— divisors(n) (memoized) ————————————————————————————————————————→ *\
@@ -980,7 +1000,7 @@ PearsonGL.External.rootJS = (function() {
 
         // Make sure [−10...10] is always visible
         function constrainBounds(){
-          var mathCoordinates = Object.assign({},o.desmos.graphpaperBounds.mathCoordinates);
+          var mathCoordinates = mergeObjects({},o.desmos.graphpaperBounds.mathCoordinates);
 
           // var pixelCoordinates = o.desmos.graphpaperBounds.pixelCoordinates;
 
@@ -1453,7 +1473,7 @@ PearsonGL.External.rootJS = (function() {
         return function(){
           var obj = hs.parseArgs(arguments);
           var hlps = hxs[obj.uniqueId];
-          Object.assign(hlps,{
+          mergeObjects(hlps,{
             W:hlps.maker('W'),
             p:hlps.maker('p'),
             scalex:hlps.maker('t_{ickx}')
@@ -2118,7 +2138,7 @@ PearsonGL.External.rootJS = (function() {
    // End Pre-DCJS Stuff
 
   // Export stuff
-    Object.assign(exports,hs.flattenFuncStruct(fs));
+    mergeObjects(exports,hs.flattenFuncStruct(fs));
        console.log("Root CJS loaded");
        return exports;
 }());
