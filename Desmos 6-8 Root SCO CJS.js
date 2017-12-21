@@ -206,7 +206,7 @@ PearsonGL.External.rootJS = (function() {
 
         return output;
        },
-      /* ←— eval ——————————————————————————————————————————————————————————→ *\
+      /* ←— calcEval ——————————————————————————————————————————————————————→ *\
        ↑ Evaluates a LaTeX expression using a given Desmos Calculator object  ↑
        |                                                                      |
        |                                                                      |
@@ -219,7 +219,7 @@ PearsonGL.External.rootJS = (function() {
        | @Returns: array of values if expression evaluates to a list          |
        ↓ @Returns: NaN if the expression does not evaluate                    ↓
        * ←—————————————————————————————————————————————————————————————————→ */
-      eval: function(expression,options,callback) {
+      calcEval: function(expression,options,callback) {
         var o = hs.parseArgs(options);
         var helpers = hxs[o.uniqueId];
         var helper = helpers[expression] || helpers.maker({latex:expression});
@@ -1833,7 +1833,7 @@ PearsonGL.External.rootJS = (function() {
 
 
           var numLength = String(num).length;
-          var placeValueNumber = parseInt(String(num).charAt(numLength-placevalue));
+          var placeValueNumber = parseInt(String(num).charAt(numLength-placevalue),10);
 
           return new PearsonGL.Parameters.Parameter(placeValueNumber,"single","integer");
          }
@@ -1845,7 +1845,7 @@ PearsonGL.External.rootJS = (function() {
          }
 
         function parseStrToInt(exp) {
-          return new PearsonGL.Parameters.Parameter(parseInt(exp.value),"single","integer");
+          return new PearsonGL.Parameters.Parameter(parseInt(exp.value,10),"single","integer");
          }
 
         function isSquare(n) {
@@ -1905,7 +1905,7 @@ PearsonGL.External.rootJS = (function() {
               if(i===0){
                   canvas += SVGObj.createLabel(xPos-7, 55, minXRange ,"normal");
               }else if(i === noOfParts){
-                  canvas += SVGObj.createLabel(xPos-7, 55, parseInt(minXRange+interval) ,"normal");
+                  canvas += SVGObj.createLabel(xPos-7, 55, parseInt(minXRange+interval,10) ,"normal");
               }else{
                   canvas += SVGObj.createLabel(xPos-14, 55, minXRange.toFixed(1) ,"normal");
               }
@@ -2061,9 +2061,9 @@ PearsonGL.External.rootJS = (function() {
           var flength = n/2;
           var i;
           if (flength === parseInt(flength, 10)) {
-            flength = parseInt(flength);
+            flength = parseInt(flength,10);
           } else {
-            flength = parseInt(flength)+1;
+            flength = parseInt(flength,10)+1;
           }
           letter = possible.charAt(Math.floor(Math.random() * possible.length));
           for(i = 0; i < k; i+=1 ) {
