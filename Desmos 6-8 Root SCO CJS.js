@@ -1,3 +1,15 @@
+/******************************************************************************
+* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! NOTICE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *
+* !!!!!!!!!! This file is managed through the DCJS/envision-6-8 !!!!!!!!!!!!! *
+* !!!!!!!!!!  repository on BitBucket. Changes made directly in !!!!!!!!!!!!! *
+* !!!!!!!!!!  DCAT will be overwritten periodically when new    !!!!!!!!!!!!! *
+* !!!!!!!!!!  versions are pushed.                              !!!!!!!!!!!!! *
+* !!!!!!!!!! If you need access to the BitBucket repository,    !!!!!!!!!!!!! *
+* !!!!!!!!!!  please contact: joseph.strong@pearson.com         !!!!!!!!!!!!! *
+* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *
+******************************************************************************/
+
+
 window.PearsonGL = window.PearsonGL || {};
 window.PearsonGL.External = window.PearsonGL.External || {};
 
@@ -806,11 +818,11 @@ PearsonGL.External.rootJS = (function() {
         o.desmos.observe('graphpaperBounds.barDiagramHeight',function() {
           // stuff
           var bounds = o.desmos.graphpaperBounds.mathCoordinates;
-          var unit = Math.max(bounds.width/12, hlps.p.numericValue/10, hlps.w.numericValue/10);
+          var unit = Math.max(bounds.width/12, hlps.P.numericValue/10, hlps.W.numericValue/10);
 
           var newBounds = {
             top: 10,
-            bottom: -5,
+            bottom: -10,
             left: -unit,
             right: 11*unit
           };
@@ -819,6 +831,84 @@ PearsonGL.External.rootJS = (function() {
 
           o.desmos.setMathBounds(newBounds);
         });
+       };
+      fs.tool.barDiagram.swapFix = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        // 1: fix amount
+        if(o.value === 1) {
+          if (typeof hlps.P.numericValue === "number" && !isNaN(hlps.P.numericValue)) {
+            o.desmos.setExpressions([
+              {
+                id:'part',
+                latex:'P='+hlps.P.numericValue
+              },
+              {
+                id:'final',
+                latex:'p=P\\frac{w}{W}'
+              },
+              {
+                id:'part_handle',
+                latex:'\\left(P,\\frac{s+h}{2}\\right)'
+              }
+            ]);
+          } else {
+            hlps.P.observe('numericValue.initialize',function(t,h){
+              h.unobserve('numericValue.initialize');
+              o.desmos.setExpressions([
+                {
+                  id:'part',
+                  latex:'P='+h[t]
+                },
+                {
+                  id:'final',
+                  latex:'p=P\\frac{w}{W}'
+                },
+                {
+                  id:'part_handle',
+                  latex:'\\left(P,\\frac{s+h}{2}\\right)'
+                }
+              ]);
+            });
+          }
+        // 0: fix percent
+        } else {
+          if (typeof hlps.p.numericValue === "number" && !isNaN(hlps.p.numericValue)) {
+            o.desmos.setExpressions([
+              {
+                id:'part',
+                latex:'P=p\\frac{W}{w}'
+              },
+              {
+                id:'final',
+                latex:'p='+hlps.p.numericValue
+              },
+              {
+                id:'part_handle',
+                latex:'\\left(\\frac{W}{w}p,\\frac{s+h}{2}\\right)'
+              }
+            ]);
+          } else {
+            hlps.p.observe('numericValue.initialize',function(t,h){
+              h.unobserve('numericValue.initialize');
+              o.desmos.setExpressions([
+                {
+                  id:'part',
+                  latex:'P=p\\frac{W}{w}'
+                },
+                {
+                  id:'final',
+                  latex:'p='+h[t]
+                },
+                {
+                  id:'part_handle',
+                  latex:'\\left(\\frac{W}{w}p,\\frac{s+h}{2}\\right)'
+                }
+              ]);
+            });
+          }
+        }
        };
       /* ←— add point to table ———————————————————————————————————————————→ *\
        | adds (0,0) to a Table of coordinates
@@ -1073,6 +1163,21 @@ PearsonGL.External.rootJS = (function() {
             });
           });
         }
+       };
+      /* ←— A0633959 6-2-1 KC ————————————————————————————————————————————→ *\
+       | recolors the point based on the side of 0
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633959 = {};
+      fs.A0633959.color = function() {
+        var o = hs.parseArgs(arguments);
+
+        o.log(o.name + ' = ' + o.value);
+      
+        o.desmos.setExpression(
+        {
+          id:(o.name === 'x_1' ? '6' : '7'),
+          color:((o.name === 'x_1' ? (o.value >= 0) : (o.value < 0)) ? cs.color.mgmColors.blue : cs.color.mgmColors.red)
+        });
        };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
