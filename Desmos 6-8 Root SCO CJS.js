@@ -821,8 +821,8 @@ PearsonGL.External.rootJS = (function() {
           var unit = Math.max(bounds.width/12, hlps.P.numericValue/10, hlps.W.numericValue/10);
 
           var newBounds = {
-            top: 10,
-            bottom: -10,
+            top: 8,
+            bottom: -12,
             left: -unit,
             right: 11*unit
           };
@@ -830,6 +830,15 @@ PearsonGL.External.rootJS = (function() {
           o.log(bounds,newBounds);
 
           o.desmos.setMathBounds(newBounds);
+          o.desmos.setExpressions([
+            {
+              id:"lower",
+              latex:"l_{ower}="+newBounds.bottom
+            },{
+              id:"right",
+              latex:"r_{ight}="+newBounds.right
+            }
+          ]);
         });
        };
       fs.tool.barDiagram.swapFix = function() {
