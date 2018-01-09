@@ -30,6 +30,17 @@ window.xs = { // Commonly useful Desmos expressions (in LaTeX string form)
    | Used for extending auxiliary lines and arcs, and drawing congruence markers
    * ←—————————————————————————————————————————————————————————————————→ */
    tick:[{"id":"tick","latex":"t_{ick}=18x_{pxScale}","hidden":"true"},{"id":"x_pxScale","latex":"x_{pxScale}"},{"id":"y_pxScale","latex":"y_{pxScale}"}],
+  /* — bracket —————————————————————————————————————————————————————————→ *\
+   | bracket: draws a horizontal bracket with a given width and curve radii
+   | 
+   | y = b_rac(x,r,theta,t)
+   | @args: x, r, theta, t
+   |  x: free variable
+   |  r: width of the bracket
+   |  theta: curve diameter (in x)
+   |  t: curve diameter (in y)
+   * ←—————————————————————————————————————————————————————————————————→ */
+   bracket:[{"id":"bracket","latex":"b_{rac}\\left(x,r,\\theta,t\\right)=t\\left\\{0\\le x\\le r:\\left\\{0\\le r\\le2\\theta:\\sqrt{1-\\frac{x-\\frac{r}{2}}{\\theta}^2},2\\theta<r\\le4\\theta:\\sqrt{\\frac{\\frac{r}{2\\theta}^2+1}{2}^2-\\frac{x-\\frac{r}{2}}{\\theta}^2}-\\sqrt{\\frac{\\frac{r}{2\\theta}^2+1}{2}^2-\\frac{r}{2\\theta}^2},0\\le x\\le\\theta:\\sqrt{1-\\frac{x-\\theta}{\\theta}^2},0\\le r-x\\le\\theta:\\sqrt{1-\\frac{x-\\left(r-\\theta\\right)}{\\theta}^2},\\left|\\frac{r}{2}-x\\right|\\le\\theta:2-\\sqrt{1-\\frac{x-\\left(\\frac{r}{2}-\\operatorname{sign}\\left(0.5+\\operatorname{sign}\\left(\\frac{r}{2}-x\\right)\\right)\\theta\\right)}{\\theta}^2},1\\right\\}\\right\\}"}],
   /* — cong —————————————————————————————————————————————————————————→ *\
    | cong: draws a congruence tick mark
    |

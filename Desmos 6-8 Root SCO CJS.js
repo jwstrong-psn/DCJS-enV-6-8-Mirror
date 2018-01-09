@@ -815,10 +815,13 @@ PearsonGL.External.rootJS = (function() {
         hlps.p = hlps.maker('p');
         hlps.P = hlps.maker('P');
 
-        o.desmos.observe('graphpaperBounds.barDiagramHeight',function() {
+        var updateBounds = function() {
           // stuff
           var bounds = o.desmos.graphpaperBounds.mathCoordinates;
           var unit = Math.max(bounds.width/12, hlps.P.numericValue/10, hlps.W.numericValue/10);
+          if(typeof unit !== "number" || Number.isNaN(unit)) {
+            unit = bounds.width/12;
+          }
 
           var newBounds = {
             top: 8,
@@ -839,7 +842,11 @@ PearsonGL.External.rootJS = (function() {
               latex:"r_{ight}="+newBounds.right
             }
           ]);
-        });
+        };
+
+        o.desmos.observe('graphpaperBounds.barDiagramHeight',updateBounds);
+        hlps.W.observe('numericValue',updateBounds);
+        hlps.P.observe('numericValue',updateBounds);
        };
       fs.tool.barDiagram.swapFix = function() {
         var o = hs.parseArgs(arguments);
@@ -847,7 +854,7 @@ PearsonGL.External.rootJS = (function() {
 
         // 1: fix amount
         if(o.value === 1) {
-          if (typeof hlps.P.numericValue === "number" && !isNaN(hlps.P.numericValue)) {
+          if (typeof hlps.P.numericValue === "number" && !Number.isNaN(hlps.P.numericValue)) {
             o.desmos.setExpressions([
               {
                 id:'part',
@@ -883,7 +890,7 @@ PearsonGL.External.rootJS = (function() {
           }
         // 0: fix percent
         } else {
-          if (typeof hlps.p.numericValue === "number" && !isNaN(hlps.p.numericValue)) {
+          if (typeof hlps.p.numericValue === "number" && !Number.isNaN(hlps.p.numericValue)) {
             o.desmos.setExpressions([
               {
                 id:'part',
@@ -1186,6 +1193,58 @@ PearsonGL.External.rootJS = (function() {
         {
           id:(o.name === 'x_1' ? '6' : '7'),
           color:((o.name === 'x_1' ? (o.value >= 0) : (o.value < 0)) ? cs.color.mgmColors.blue : cs.color.mgmColors.red)
+        });
+       };
+      /* ←— A0633965 7-3-2 Ex.1 ——————————————————————————————————————————→ *\
+       | Records score of hits & misses
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633965 = {};
+      fs.A0633965.reset = function() {
+        var o = hs.parseArgs(arguments);
+
+        o.desmos.setExpressions([
+          {
+            id:'misses',
+            latex:'M=0'
+          },{
+            id:'scores',
+            latex:'S=0'
+          }
+        ]);
+       };
+       /* ←— A0633965_record ————————————————————————————————————————————→ *\
+       | Call with id:"scores" or id:"misses"
+       * ←———————————————————————————————————————————————————————————————→ */
+      fs.A0633965.record = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        var expr;
+        if(o.id === 'scores') {
+          expr = 'S='+(hlps.P.numericValue+1)
+        } else {
+          expr = 'M='+(hlps.W.numericValue-hlps.P.numericValue+1)
+        }
+
+        if(hlps.W.numericValue === 0) {
+          o.desmos.setMathBounds({
+            top: 8,
+            bottom: -12,
+            left: -1,
+            right: 11
+          });
+        } else if(hlps.W.numericValue / o.desmos.graphpaperBounds.mathCoordinates.width > 0.7) {
+          o.desmos.setMathBounds({
+            top:8,
+            bottom:-12,
+            left:o.desmos.graphpaperBounds.mathCoordinates.left*1.5,
+            right:o.desmos.graphpaperBounds.mathCoordinates.right*1.5
+          });
+        }
+
+        o.desmos.setExpression({
+          id:o.id,
+          latex:expr
         });
        };
 
