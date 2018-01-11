@@ -170,20 +170,44 @@
 
       var $frame = $('#frame');
       var $elt = $('#calculator');
-      window.colors = {
+      window.agaColors = {
         blue: '#0092C8',
         red: '#F15A22',
         green: '#0AB14B',
         purple: '#812990',
         black: '#000000',
-        orange: '#EFA038'
+        // grey: '#58595B',
+        // teal: '#36C1CD',
+        orange: '#EFA038'//,
+        // lime: '#95CA59'
       };
+      window.mgmColors = {
+        blue: '#0092C8',
+        red: '#F15A22',
+        green: '#0DB14B',
+        purple: '#812990',
+        black: '#000000',
+        //purpleFill: '#941B81',
+        //blueFill: '#229FEE',
+        orangeFill: '#F68B1F'//,
+        //greenFill: '#62BA46',
+        //grey: '#58595B'
+      };
+      window.colors = window.mgmColors;
       window.geoColors = {
-        colors: Object.values(window.colors),
+        colors: [
+          '#0092C8', // blue
+          '#F15A22', // red
+          '#0DB14B', // green
+          '#812990', // purple
+          '#F68B1F', // orangeFill
+          '#000000', // black
+          '#58595B' // grey
+        ],
         defaults: {
-          point: window.colors.blue,
-          line: window.colors.blue,
-          circle: window.colors.blue
+          point: window.mgmColors.blue,
+          line: window.mgmColors.blue,
+          circle: window.mgmColors.blue
         }
       };
       window.calculator = window.Calc = window.Geo = null;

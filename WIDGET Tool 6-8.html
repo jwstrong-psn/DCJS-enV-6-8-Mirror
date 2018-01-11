@@ -545,12 +545,12 @@
         blue: '#0092C8',
         red: '#F15A22',
         green: '#0AB14B',
-        teal: '#36C1CD',
-        orange: '#EFA038',
-        lime: '#95CA59',
         purple: '#812990',
         black: '#000000',
-        grey: '#58595B'
+        // grey: '#58595B',
+        // teal: '#36C1CD',
+        orange: '#EFA038'//,
+        // lime: '#95CA59'
       };
       window.mgmColors = {
         blue: '#0092C8',
@@ -560,12 +560,21 @@
         black: '#000000',
         //purpleFill: '#941B81',
         //blueFill: '#229FEE',
-        //orangeFill: '#F68B1F',
+        orangeFill: '#F68B1F'//,
         //greenFill: '#62BA46',
-        grey: '#58595B'
+        //grey: '#58595B'
       };
+      window.colors = window.mgmColors;
       window.geoColors = {
-        colors: Object.values(window.mgmColors),
+        colors: [
+          '#0092C8', // blue
+          '#F15A22', // red
+          '#0DB14B', // green
+          '#812990', // purple
+          '#F68B1F', // orangeFill
+          '#000000', // black
+          '#58595B' // grey
+        ],
         defaults: {
           point: window.mgmColors.blue,
           line: window.mgmColors.blue,
