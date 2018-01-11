@@ -653,6 +653,49 @@ PearsonGL.External.rootJS = (function() {
 
         });
        };
+      /* ←— observeBounds ———————————————————————————————————————————————————→ *\
+       | Keeps track of the edges of the Desmos Gadget, in the following vars
+       |
+       | EXPRESSIONS MUST BE MANUALLY AUTHORED USING API:
+       |  o.desmos.setExpressions([
+       |    {id:'leftBound',   latex:'x_{leftBound}'   },
+       |    {id:'rightBound',  latex:'x_{rightBound}'  },
+       |    {id:'topBound',    latex:'y_{topBound}'    },
+       |    {id:'bottomBound', latex:'y_{bottomBound}' }
+       |  ]);
+       * ←———————————————————————————————————————————————————————————————————→ */
+      fs.common.observeBounds = function(){
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+
+        o.log('observeBounds activated on '+o.uniqueId);
+
+        o.desmos.observe('graphpaperBounds.observeBounds', function(t,h) {
+          vars.mathBounds = h[t].mathCoordinates;
+          vars.pixelFrame = h[t].pixelCoordinates;
+
+          var bounds = vars.mathBounds;
+
+          o.desmos.setExpressions([
+            {
+              id:'leftBound',
+              latex:'x_{leftBound}='+bounds.left
+            },
+            {
+              id:'rightBound',
+              latex:'x_{rightBound}='+bounds.right
+            },
+            {
+              id:'topBound',
+              latex:'y_{topBound}='+bounds.top
+            },
+            {
+              id:'bottomBound',
+              latex:'y_{bottomBound}='+bounds.bottom
+            }
+          ]);
+        });
+       };
       /* ←— show/hide expression —————————————————————————————————————————→ *\
        | Shows or hides an expression with a given ID
        | ID is given or assumed to match variable name
