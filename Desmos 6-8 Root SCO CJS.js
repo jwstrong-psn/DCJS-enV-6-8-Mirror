@@ -969,6 +969,53 @@ PearsonGL.External.rootJS = (function() {
           }
         }
        };
+      /* ←— Dot Plot ———————————————————————————————————————————→ *\
+       | ---
+       * ←————————————————————————————————————————————————————————————————→ */
+        fs.tool.dotPlot = {};
+      fs.tool.dotPlot.init = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        hlps.Ys = hlps.maker('y_1');
+        hlps.x1 = hlps.maker('x_1');
+        hlps.x2 = hlps.maker('x_2');
+        hlps.y2 = hlps.maker('y_2');
+        hlps.dir = hlps.maker('s_{ign}');
+
+        hlps.Ys.observe('listValue',function(t,h) {
+          vars.Ys = Array.from(h[t]);
+        });
+       };
+      fs.tool.dotPlot.addRemove = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        var newY = vars.Ys[hlps.x1.numericValue-1] + hlps.dir.numericValue;
+
+        if(newY >= 0) {
+          vars.Ys[hlps.x1.numericValue-1] = newY;
+        }
+
+        o.desmos.setExpression({
+          id:'33',
+          latex:'y_1=['+vars.Ys+']'
+        });
+       };
+      fs.tool.dotPlot.setHeight = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        vars.Ys[hlps.x2.numericValue-1] = hlps.y2.numericValue;
+
+        o.desmos.setExpression({
+          id:'33',
+          latex:'y_1=['+vars.Ys+']'
+        });
+       };
       /* ←— add point to table ———————————————————————————————————————————→ *\
        | adds (0,0) to a Table of coordinates
        | table ID must be given, and should not have more than two columns
