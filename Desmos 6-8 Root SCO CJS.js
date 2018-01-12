@@ -185,7 +185,7 @@ PearsonGL.External.rootJS = (function() {
         };
 
         if (typeof arg === 'object') {
-          mergeObjects(output,arg);
+          mergeObjects(output,{uniqueId:arg.desmos.guid},arg);
          } else if (typeof arg === 'number') {
           // Expect (value, name, desmos)
           output.value = arg;
