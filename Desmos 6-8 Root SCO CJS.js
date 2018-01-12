@@ -978,43 +978,91 @@ PearsonGL.External.rootJS = (function() {
         var vars = vs[o.uniqueId];
         var hlps = hxs[o.uniqueId];
 
-        hlps.Ys = hlps.maker('y_1');
-        hlps.x1 = hlps.maker('x_1');
+        // h[x] = number of dots at position X
+        vars.height = {};
+
+        hlps.xs = hlps.maker('x_1');
+        hlps.ys = hlps.maker('y_1');
         hlps.x2 = hlps.maker('x_2');
         hlps.y2 = hlps.maker('y_2');
-        hlps.dir = hlps.maker('s_{ign}');
 
-        hlps.Ys.observe('listValue',function(t,h) {
-          vars.Ys = Array.from(h[t]);
+        hlps.xs.observe('listValue.watch',function(t,h) {
+          if(!Array.isArray(h[t])) {
+            return;
+          }
+          var xs = Array.from(h[t]);
+          vars.xs = xs;
+          var height = {};
+          if(Array.isArray(vars.ys)) {
+            vars.ys.forEach(function(y,i) {
+              if(i < xs.length) {
+                height[xs[i]] = (height[xs[i]] || 0) + y;
+              }
+            });
+            vars.height = height;
+          }
         });
-       };
-      fs.tool.dotPlot.addRemove = function() {
-        var o = hs.parseArgs(arguments);
-        var vars = vs[o.uniqueId];
-        var hlps = hxs[o.uniqueId];
 
-        var newY = vars.Ys[hlps.x1.numericValue-1] + hlps.dir.numericValue;
-
-        if(newY >= 0) {
-          vars.Ys[hlps.x1.numericValue-1] = newY;
-        }
-
-        o.desmos.setExpression({
-          id:'33',
-          latex:'y_1=['+vars.Ys+']'
+        hlps.ys.observe('listValue.watch',function(t,h) {
+          if(!Array.isArray(h[t])) {
+            return;
+          }
+          var ys = Array.from(h[t]);
+          vars.ys = ys;
+          var height = {};
+          if(Array.isArray(vars.xs)) {
+            vars.xs.forEach(function(x,i) {
+              if(i < ys.length) {
+                height[x]= (height[x] || 0) + ys[i];
+              }
+            });
+            vars.height = height;
+          }
         });
+
        };
       fs.tool.dotPlot.setHeight = function() {
         var o = hs.parseArgs(arguments);
         var vars = vs[o.uniqueId];
         var hlps = hxs[o.uniqueId];
 
-        vars.Ys[hlps.x2.numericValue-1] = hlps.y2.numericValue;
+        // Record the new height
+        var height = vars.height;
+        height[hlps.x2.numericValue] = hlps.y2.numericValue;
 
-        o.desmos.setExpression({
-          id:'33',
-          latex:'y_1=['+vars.Ys+']'
+        // Do a little clean-up just in case
+        var xs = Object.keys(vars.height).filter(function(x){
+          if(height[x] > 0) {
+            return true;
+          } else {
+            delete height[x];
+            return false;
+          }
+        }).sort(function(a,b) {
+          return a - b;
         });
+
+        // Bad things happen if a variable is defined as an empty list.
+        if(xs.length === 0) {
+          xs = [0];
+        }
+
+        var ys = xs.map(function(x){
+          return (height[x] || 0);
+        });
+
+        vars.xs = Array.from(xs);
+        vars.ys = Array.from(ys);
+
+        o.desmos.setExpressions([
+          {
+            id:'values',
+            latex:'x_1=['+xs+']'
+          },{
+            id:'counts',
+            latex:'y_1=['+ys+']'
+          }
+        ]);
        };
       /* ←— add point to table ———————————————————————————————————————————→ *\
        | adds (0,0) to a Table of coordinates
