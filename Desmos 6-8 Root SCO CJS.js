@@ -1385,6 +1385,168 @@ PearsonGL.External.rootJS = (function() {
           latex:expr
         });
        };
+      /* ←— A0633981 7-7-7 Ex.3 ——————————————————————————————————————————→ *\
+       | description
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633981 = {};
+      fs.A0633981.init = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        var regIndex = /^[Bb]_{?([0-9]+)}?$/;
+
+        vars.B = [undefined];
+        vars.maxTrial = 0;
+        hlps.B = [];
+
+        var recalc = function() {
+          var successes = 0;
+          var trials = 0;
+
+          o.log('Recalculating experimental probability.');
+          vars.B.forEach(function(e,i){
+            if(i > 0) {
+              successes += (e ? 1 : 0);
+              trials += 1;
+            }
+          });
+
+          o.log('Experimental probability: '+successes+'/'+trials);
+          o.desmos.setExpressions([
+            {
+              id:'ratio',
+              latex:'\\frac{'+successes+'}{'+trials+'}'
+            },
+            {
+              id:'successes',
+              latex:'S='+successes
+            },
+            {
+              id:'trials',
+              latex:'T='+trials
+            }
+          ]);
+        };
+
+        var countCards = function(t,h) {
+          var id = regIndex.exec(h.latex)[1];
+          var list = h[t];
+          var label = 'Trial '+(id+':').padEnd(4,' ');
+
+          var point = '\\left(x_B,y_B-'+id+'d_y\\right)';
+          var exprs = [];
+          var collection = {};
+          var size = 0;
+          var i;
+
+          if(Array.isArray(list)) {
+            label += list.toString().replace(/,/g,', ');
+            o.log('Counting cards for '+label);
+            // Count'em
+            list.forEach(function(e) {
+              if(collection[e] !== true) {
+                collection[e] = true;
+                size += 1;
+              }
+            });
+
+            o.log(label+' has '+size+' different cards.');
+            // Make sure that all the labels for trials before this one are shown
+            for(i = vars.maxTrial + 1 ; i < id ; i += 1) {
+              o.log('Showing label for trial '+i);
+              exprs.push({
+                id:'trial_'+i,
+                showLabel:true
+              });
+            }
+            vars.maxTrial = Math.max(vars.maxTrial,id);
+            // Record whether the trial has 6 cards or not
+            if (size === 6) {
+              label = '\u2714 '+label;
+              vars.B[id] = true;
+            } else {
+              label = '\u2718 '+label;
+              vars.B[id] = false;
+            }
+          } else {
+            label = '… ' + label + '…';
+            o.log('Not counting cards for undefined '+label);
+            delete vars.B[id];
+            vars.maxTrial = Math.max.apply(this,Object.keys(vars.B));
+            // If there are other undefined lists before this one, hide their labels
+            for(i = vars.maxTrial + 1 ; i < id ; i += 1) {
+              o.log('Hiding label for trial '+i);
+              exprs.push({
+                id:'trial_'+i,
+                showLabel:false
+              });
+            }
+          }
+
+          exprs.push({
+            id:'topExpr',
+            latex:'y_B='+(vars.maxTrial + 1)+'d_y'
+          });
+
+          exprs.push({
+            id:'trial_'+id,
+            latex:point,
+            label:label,
+            showLabel:(id <= vars.maxTrial),
+            hidden:true,
+            secret:true,
+            color:cs.color.mgmColors.black
+          });
+
+          o.log('Setting expressions:',exprs);
+
+          o.desmos.setExpressions(exprs);
+
+          recalc();
+        };
+      
+        hlps.watchNew = function watchNew(n) {
+          o.log('Looking for B_'+n);
+          hlps.B[n] = hlps.maker('B_{'+n+'}');
+          hlps.B[n].observe('listValue.next',function(t,h) {
+            // Once the helperExpression is looking at a list
+            // Add that list to the samples and await the next
+            if (Array.isArray(h[t])) {
+              h.unobserve('listValue.next');
+
+              countCards(t,h);
+              o.log('Now observing B_'+n);
+              h.observe('listValue.recount',countCards);
+
+              watchNew(n+1);
+            }
+          });
+        };
+
+        hlps.watchNew(1);
+       };
+      fs.A0633981.addTrial = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+
+        var which = 1;
+
+        while(vars.B[which] !== undefined) {
+          which += 1;
+        }
+
+        var collection = [];
+
+        while(collection.length < 10) {
+          collection.push(Math.max(Math.ceil(6*Math.random()),1));
+        }
+
+        o.desmos.setExpression({
+          id:'B_'+which,
+          latex:'B_{'+which+'}=['+collection+']'
+        });
+       };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
