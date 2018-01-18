@@ -406,6 +406,10 @@
         if (sliderId == 'newSlider') {
           sliderRow = newSlider.clone(true,true).appendTo($('#sliderList'));
           sliderRow.prop("id",sliderId);
+          if(id !== '') sliderRow.find('.sliderId')[0].innerHTML = (id);
+          if(name !== '') sliderRow.find('.sliderVar')[0].innerHTML = (name);
+          if(func !== '') sliderRow.find('.sliderFunc')[0].innerHTML = (func);
+          if(value !== '') sliderRow.find('.sliderVal')[0].value = value;
 
           // Only need to create the slider once. No replacing w/o deleting.
           // try {
@@ -456,7 +460,7 @@
       });
 
       // Back up slider expression rows
-      newSlider = $('<tr id="newSlider"><td><span class="sliderId">N/A</span></td><td><span class="sliderVar">N/A</span></td><td><span class="sliderFunc">N/A</span></td><td><span class="sliderVal">N/A</span></td><td><button type="button" class="addSlider">Update</button></td><td><button type="button" class="deleteSlider">Delete</button></td></tr>');
+      newSlider = $('<tr id="newSlider"><td style="text-align:center;"><span class="sliderId">N/A</span></td><td style="text-align:center;"><span class="sliderVar">N/A</span></td><td style="text-align:center;"><span class="sliderFunc">N/A</span></td><td><input type="text" class="sliderVal" placeholder="Value…"></td><td><button type="button" class="addSlider">Update</button></td><td><button type="button" class="deleteSlider">Delete</button></td></tr>');
       // END TODO STUB WHATEVER //
 
       $(".addHelper").click(function(event){
