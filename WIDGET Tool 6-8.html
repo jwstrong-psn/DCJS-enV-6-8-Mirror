@@ -134,6 +134,27 @@
         </div>
       </td>
     </tr>
+    <tr style="background-color:grey;">
+      <td colspan="3">
+        <div id="sliders">
+          <table>
+          <thead>
+            <tr><th>Slider ID</th><th>Variable Name</th><th>Function Name</th><th>Value</th></tr>
+          </thead>
+          <tbody id="sliderList">
+            <tr id="newSlider">
+              <td><input type="text" class="sliderId" placeholder="Id…"></td>
+              <td><input type="text" class="sliderVar" placeholder="Variable…"></td>
+              <td><input type="text" class="sliderFunc" placeholder="Function…"></td>
+              <td><input type="text" class="sliderVal" placeholder="Value…"></td>
+              <td><button type="button" class="addSlider">Add</button></td>
+              <td><button type="button" class="deleteSlider">Clear</button></td>
+            </tr>
+          </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>
     <tr>
       <td colspan="3">
         <div id="helperExpressions" style="min-height:150px;">
@@ -200,6 +221,7 @@
       var previewWidth = 100;
       var $checkWarnGui = $('<div style="width:'+previewWidth+'px;"><p id="checkWarn"></p><button type="button" id="checkConfirm"></button><br><button type="button" id="checkCancel"></button></div>');
       var domIdIndex = 0;
+      var newSlider;
       var newHelper;
 
       $("#help").hide();
@@ -366,6 +388,76 @@
       $("#download").click(function(){
         window.download(window.calculator.getState());//{stripDefaults: false}));
       });
+
+
+      // TODO STUB WHATEVER //
+      $(".addSlider").click(function(event){
+        return; // TODO STUB WHATEVER
+        // <button> → <td> → <tr id="sliderId">
+        var sliderId = event.target.parentNode.parentNode.id;
+        var sliderRow = $('#'+sliderId);
+        var id = sliderRow.find('.sliderId')[0].value;
+        var name = sliderRow.find('.sliderVar')[0].value;
+        var func = sliderRow.find('.sliderFunc')[0].value;
+        var value = sliderRow.find('.sliderVal')[0].value;
+        var success = false;
+        var slider = null;
+
+        if (sliderId == 'newSlider') {
+          sliderRow = newSlider.clone(true,true).appendTo($('#sliderList'));
+          sliderRow.prop("id",sliderId);
+
+          // Only need to create the slider once. No replacing w/o deleting.
+          // try {
+          //   slider = new DCATslider({
+          //     id:id,
+          //     latex:name,
+          //     funcName:func,
+          //     value:value
+          //   }, sliderId);
+          // } catch (e) {
+          //   alert(e.message);
+          // }
+          if (slider === null) return;
+          // currentSliders[slider.id] = slider;
+
+        } // else currentSliders[sliderId].enforce(value);
+      });
+
+      $(".deleteSlider").click(function(event){
+        return; // TODO STUB WHATEVER
+        // <button> → <td> → <tr id="sliderId">
+        var sliderId = event.target.parentNode.parentNode.id;
+        var sliderRow = $('#'+sliderId);
+        if (sliderId == 'newSlider') {
+          // only clear fields when deleting the "new slider" row
+          sliderRow.find('.sliderId')[0].value = '';
+          sliderRow.find('.sliderVar')[0].value = '';
+          sliderRow.find('.sliderFunc')[0].value = '';
+          sliderRow.find('.sliderVal')[0].value = '';
+          sliderRow.find('.addSlider').prop("disabled",true);
+        } // else currentSliders[sliderId].destroy();
+      });
+
+      $('.sliderId').change(function(event){
+        $('#'+event.target.parentNode.parentNode.id).find('.addSlider').prop("disabled",false);
+      });
+
+      $('.sliderVar').change(function(event){
+        $('#'+event.target.parentNode.parentNode.id).find('.addSlider').prop("disabled",false);
+      });
+
+      $('.sliderFunc').change(function(event){
+        $('#'+event.target.parentNode.parentNode.id).find('.addSlider').prop("disabled",false);
+      });
+
+      $('.sliderVal').change(function(event){
+        $('#'+event.target.parentNode.parentNode.id).find('.addSlider').prop("disabled",false);
+      });
+
+      // Back up slider expression rows
+      newSlider = $('<tr id="newSlider"><td><span class="sliderId">N/A</span></td><td><span class="sliderVar">N/A</span></td><td><span class="sliderFunc">N/A</span></td><td><span class="sliderVal">N/A</span></td><td><button type="button" class="addSlider">Update</button></td><td><button type="button" class="deleteSlider">Delete</button></td></tr>');
+      // END TODO STUB WHATEVER //
 
       $(".addHelper").click(function(event){
         // <button> → <td> → <tr id="helperId">
@@ -995,7 +1087,7 @@
         this.id = (((id == 'newHelper')||(id === null)) ? (DOM_ID_PREFIX+(domIdIndex++)) : id);
         var latex;
         var value;
-        var funcName = funcName;
+        var funcName;
         var helper = null;
         var func;
         var $row;
