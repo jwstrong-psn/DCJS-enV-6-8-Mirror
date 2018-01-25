@@ -1713,12 +1713,12 @@ PearsonGL.External.rootJS = (function() {
 
         clearTimeout(vars.timeoutID);
 
-        var x0 = Math.random()*5;
-        var y0 = Math.random()*5 + 5*(1-o.value)/2;
-        var x1 = Math.random()*5 + 5;
-        var y1 = Math.random()*5 + 5*(o.value+1)/2;
-        var a = (y1 - y0) / (x1 - x0);
-        var b = y0 - a * x0;
+        var x0;
+        var y0;
+        var x1;
+        var y1;
+        var a;
+        var b;
 
         // Start with high variability; whittle down as much as we need
         var yJitter = 5;
@@ -1730,6 +1730,12 @@ PearsonGL.External.rootJS = (function() {
           if(o.value !== 0) {
             yJitter = yJitter * 0.5;
           }
+          x0 = Math.random()*5;
+          y0 = Math.random()*5 + 5*(1-o.value)/2;
+          x1 = Math.random()*5 + 5;
+          y1 = Math.random()*5 + 5*(o.value+1)/2;
+          a = (y1 - y0) / (x1 - x0);
+          b = y0 - a * x0;
           data = fs.A0634006.splat(a,b,{yJitter:yJitter,n:cs.A0634006.n});
           // add in a random point
           data.y[Math.floor(Math.random()*cs.A0634006.n)] = 10*Math.random();
@@ -1737,7 +1743,7 @@ PearsonGL.External.rootJS = (function() {
           o.log('('+Math.round(100*x0)/100+', '+Math.round(100*y0)/100+') to (' +
             Math.round(100*x1)/100+', '+Math.round(100*y1)/100+')');
           o.log('y ~ '+Math.round(100*a)/100+'x + '+Math.round(100*b)/100);
-        } while ((o.value !== 0) === (Math.abs(stats.r) < 0.5));
+        } while ((o.value !== 0) ? (Math.abs(stats.r) < 0.5) : (Math.abs(stats.r) > 0.25));
 
         var ids = [0,1,2,3,4,5,6,7,8,9].sort(function(a,b){return (data.x[a] > data.x[b]);});
         data.x = data.x.map(function(e,i,a){return a[ids[i]];});
