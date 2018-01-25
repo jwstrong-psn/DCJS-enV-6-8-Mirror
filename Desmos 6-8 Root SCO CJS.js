@@ -1743,6 +1743,8 @@ PearsonGL.External.rootJS = (function() {
         data.x = data.x.map(function(e,i,a){return a[ids[i]];});
         data.y = data.y.map(function(e,i,a){return a[ids[i]];});
 
+        /*/ OPTION A: uses table to hold data
+        // FOR SOME REASON table manipulation is hella laggy using the API
         hs.easePointList(hlps.X1.listValue,hlps.Y1.listValue,data.x,data.y,0,cs.A0634006.framerate,cs.A0634006.speed,function(x,y,tx,ty,t,dt,d,cb,id) {
           vars.timeoutID = id;
           o.desmos.setExpression({
@@ -1759,7 +1761,26 @@ PearsonGL.External.rootJS = (function() {
               }
             ]
           });
-        });
+        }); //*/
+
+        // OPTION B: uses individual points
+        hs.easePointList(hlps.X0.listValue,hlps.Y0.listValue,data.x,data.y,0,cs.A0634006.framerate,cs.A0634006.speed,function(x,y,tx,ty,t,dt,d,cb,id) {
+          vars.timeoutID = id;
+          var exprs = [];
+          x.forEach(function(e,i) {
+            exprs.push({
+              id:'u_'+i,
+              latex:'u_'+i+'='+e
+            });
+          });
+          y.forEach(function(e,i) {
+            exprs.push({
+              id:'v_'+i,
+              latex:'v_'+i+'='+e
+            });
+          });
+          o.desmos.setExpressions(exprs);
+        }); //*/
        };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
