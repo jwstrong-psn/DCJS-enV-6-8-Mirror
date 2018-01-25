@@ -531,7 +531,81 @@ PearsonGL.External.rootJS = (function() {
         }
 
         return out;
-       }
+       },
+      /* ←— easePointList ———————————————————————————————————————————————→ *\
+       | Given a list of x-values, a list of y-values, target values,
+       |  ease time (0–1), framerate (1/#frames), and timeout
+       |  between frames, calls a given callback function at each frame,
+       |  with arguments being the same, with the same arguments.
+       |  also sends a ninth argument, the timeoutID for the next iteration,
+       |  in case you want to cancel it.
+       * ←———————————————————————————————————————————————————————————————→ */
+      easePointList: function easePointList(currentX,currentY,targetX,targetY,t,dt,timeout,cb) {
+        var x = targetX;
+        var y = targetY;
+        var X = currentX;
+        var Y = currentY;
+        if(t + dt >= 1) {
+          X = Array.from(x);
+          Y = Array.from(y);
+        } else {
+          var ddt = (Math.cos(Math.PI*t) - Math.cos(Math.PI*(t+dt))) / (Math.cos(Math.PI*t) + 1);
+          X = X.map(function(e,i) {
+            var result = e + (x[i] - e)*ddt;
+            if ((result - x[i])*(e - x[i]) <= 0) {
+              result = x[i];
+            }
+            return result;
+          });
+          Y = Y.map(function(e,i) {
+            var result = e + (y[i] - e)*ddt;
+            if ((result - y[i])*(e - y[i]) <= 0) {
+              result = y[i];
+            }
+            return result;
+          });
+        }
+
+        var timeoutID;
+        if(t < 1) {
+          timeoutID = setTimeout(function(){
+            easePointList(X,Y,x,y,t+dt,dt,timeout,cb);
+          },timeout);
+        }
+        cb(X,Y,x,y,t,dt,timeout,cb,timeoutID);
+        return timeoutID;
+       },
+      /* ←— stats2D —————————————————————————————————————————————————————→ *\
+       | Generates various statistics for bivariate data
+       * ←———————————————————————————————————————————————————————————————→ */
+      stats2D: function(x,y){
+        var total = function(x) {
+          return x.reduce(function(acc,val) {
+            return acc + val;
+          }, 0);
+        }
+        var xBar = total(x) / x.length;
+        var yBar = total(y) / y.length;
+        var dxs = x.map(function(val) {return val - xBar;});
+        var dys = y.map(function(val) {return val - yBar;});
+        var xVars = dxs.map(function(val) {return val * val;});
+        var yVars = dys.map(function(val) {return val * val;});
+        var sx = Math.sqrt(total(xVars) / x.length);
+        var sy = Math.sqrt(total(yVars) / y.length);
+        var covars = x.map(function(val,i) {return val*y[i];});
+        var rxy = (total(covars) - x.length * xBar * yBar) / (x.length * sx * sy);
+        var B = rxy * sy / sx;
+        var A = yBar - B * xBar;
+        return {
+          a:B,
+          b:A,
+          r:rxy,
+          x_mean:xBar,
+          y_mean:yBar,
+          x_variance:total(xVars)/x.length,
+          y_variance:total(yVars)/y.length
+        };
+      }
      };
 
   /* ←— EXPORTS / PUBLIC FUNCTIONS ————————————————————————————————————————→ *\
@@ -1545,6 +1619,146 @@ PearsonGL.External.rootJS = (function() {
         o.desmos.setExpression({
           id:'B_'+which,
           latex:'B_{'+which+'}=['+collection+']'
+        });
+       };
+      /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
+       | generates random bivariate data with given properties
+       * ←————————————————————————————————————————————————————————————————→ */
+       cs.A0634006 = {
+        framerate: 0.1,
+        speed: 100,
+        n:10
+       };
+       fs.A0634006 = {};
+      fs.A0634006.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+      
+        hlps.X0 = hlps.maker('x_0');
+        hlps.Y0 = hlps.maker('y_0');
+
+        hlps.X1 = hlps.maker('x_1');
+        hlps.Y1 = hlps.maker('y_1');
+       };
+      /* ←— splat ————————————————————————————————————————————————————————→ *\
+       | throws paint at the wall (generates random data approximating a line)
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.A0634006.splat = function(a,b,opts) {
+        opts = Object.assign({
+          n:10,
+          xMin:0,
+          xMax:10,
+          yMin:0,
+          yMax:10,
+          xJitter:1,
+          yJitter:1
+        },opts);
+
+        var n = opts.n;
+        var xMin = opts.xMin;
+        var xMax = opts.xMax;
+        var yMin = opts.yMin;
+        var yMax = opts.yMax;
+        var yJitter = opts.yJitter;
+        var xJitter = opts.xJitter;
+
+        yMin = Math.max(yMin, a * ((a >= 0) ? xMin : xMax) + b - yJitter);
+        yMax = Math.min(yMax, a * ((a >= 0) ? xMax : xMin) + b + yJitter);
+
+        xMin = Math.max(xMin, (((a >= 0) ? yMin - yJitter : yMax + yJitter) - b) / a);
+        xMax = Math.min(xMax, (((a >= 0) ? yMax + yJitter : yMin - yJitter) - b) / a);
+
+        var xs = [];
+        var ys = [];
+
+        if ((xMin > xMax) || (yMin > yMax)) {
+          throw new Error('No values available within given range.');
+        }
+
+        var x;
+        var yUpper;
+        var yLower;
+        var xBase;
+        var xLower;
+        var xUpper;
+        var dx = (xMax-xMin)/(n+1);
+        while (xs.length < n) {
+          xBase = xMin + (xs.length + 0.5) * dx;
+          xUpper = xBase + Math.min(xJitter, xMax - xBase);
+          xLower = xBase - Math.min(xJitter, xBase - xMin);
+          x = Math.random()*(xUpper - xLower) + xLower;
+
+          yUpper = Math.min(a*x+b+yJitter,yMax);
+          yLower = Math.max(a*x+b-yJitter,yMin);
+
+          xs.push(x);
+          ys.push(Math.random()*(yUpper-yLower)+yLower);
+        }
+
+        return {
+          x:xs,
+          y:ys
+        };
+       };
+      /* ←— newData —————————————————————————————————————————————————→ *\
+       | value passed is the direction of association
+       |  1: positive association
+       |  −1: negative association
+       |  0: no association
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.A0634006.newData = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        clearTimeout(vars.timeoutID);
+
+        var x0 = Math.random()*5;
+        var y0 = Math.random()*5 + 5*(1-o.value)/2;
+        var x1 = Math.random()*5 + 5;
+        var y1 = Math.random()*5 + 5*(o.value+1)/2;
+        var a = (y1 - y0) / (x1 - x0);
+        var b = y0 - a * x0;
+
+        // Start with high variability; whittle down as much as we need
+        var yJitter = 5;
+
+        var data;
+        var stats;
+
+        do {
+          if(o.value !== 0) {
+            yJitter = yJitter * 0.5;
+          }
+          data = fs.A0634006.splat(a,b,{yJitter:yJitter,n:cs.A0634006.n});
+          // add in a random point
+          data.y[Math.floor(Math.random()*cs.A0634006.n)] = 10*Math.random();
+          stats = hs.stats2D(data.x,data.y);
+          o.log('('+Math.round(100*x0)/100+', '+Math.round(100*y0)/100+') to (' +
+            Math.round(100*x1)/100+', '+Math.round(100*y1)/100+')');
+          o.log('y ~ '+Math.round(100*a)/100+'x + '+Math.round(100*b)/100);
+        } while ((o.value !== 0) === (Math.abs(stats.r) < 0.5));
+
+        var ids = [0,1,2,3,4,5,6,7,8,9].sort(function(a,b){return (data.x[a] > data.x[b]);});
+        data.x = data.x.map(function(e,i,a){return a[ids[i]];});
+        data.y = data.y.map(function(e,i,a){return a[ids[i]];});
+
+        hs.easePointList(hlps.X1.listValue,hlps.Y1.listValue,data.x,data.y,0,cs.A0634006.framerate,cs.A0634006.speed,function(x,y,tx,ty,t,dt,d,cb,id) {
+          vars.timeoutID = id;
+          o.desmos.setExpression({
+            id:'table',
+            type:'table',
+            columns:[
+              {
+                latex:'x_1',
+                values:x
+              },
+              {
+                latex:'y_1',
+                values:y
+              }
+            ]
+          });
         });
        };
 
