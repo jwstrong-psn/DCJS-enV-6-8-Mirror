@@ -435,7 +435,7 @@
           name = sliderRow.find('.sliderVar')[0].innerText;
           func = sliderRow.find('.sliderFunc')[0].innerText;
           console.log('id: '+id+'; name: '+name+'; func: '+func+'; value: '+value);
-          if(func !== '') {
+          if(func !== 'N/A') {
             PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:value});
           } else if(id !== '' && name !== '' && value !== '') {
             calculator.setExpression({id:id,latex:name+'='+value});
