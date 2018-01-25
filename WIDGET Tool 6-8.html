@@ -413,6 +413,7 @@
           if(func !== '') sliderRow.find('.sliderFunc')[0].innerHTML = (func);
           if(value !== '') sliderRow.find('.sliderVal')[0].value = value;
           sliderRow.find('.addSlider').click(clickSlider);
+          sliderRow.find('.deleteSlider').click(deleteSlider);
 
           // Only need to create the slider once. No replacing w/o deleting.
           // try {
@@ -444,7 +445,7 @@
       // TODO STUB WHATEVER //
       $(".addSlider").click(clickSlider);
 
-      $(".deleteSlider").click(function(event){
+      function deleteSlider(event){
         // return; // TODO STUB WHATEVER
         // <button> → <td> → <tr id="sliderId">
         var sliderId = event.target.parentNode.parentNode.id;
@@ -460,7 +461,9 @@
         else {
           sliderRow.remove();
         }
-      });
+      }
+
+      $(".deleteSlider").click(deleteSlider);
 
       $('.sliderId').change(function(event){
         $('#'+event.target.parentNode.parentNode.id).find('.addSlider').prop("disabled",false);
