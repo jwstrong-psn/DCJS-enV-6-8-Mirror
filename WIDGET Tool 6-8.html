@@ -222,6 +222,7 @@
         function next() {
           processing = true;
           var image = imageQueue.pop();
+          console.log("Saving image; "+(imageQueue.length)+" remain.");
 
           if(typeof image.cb !== "function") {
             if(imageQueue.length > 0) setTimeout(next,0);
@@ -230,14 +231,18 @@
             cloudinaryUpload.one('fileuploaddone',function(e,data){
               var func;
               if(typeof image.cb === "function") image.cb(e,data);
-              if(images.length > 0) {
+              if(imageQueue.length > 0) {
+                // console.log("Image saved. Next…");
                 next();
               } else {
+                console.log("Done saving images.")
                 processing = false;
                 while(done_functions.length > 0) {
                   func = done_functions.pop();
-                  if(typeof func === "function") func();
-                  else throw new Error("Upload Error: "+func+" is not a function.");
+                  if(typeof func === "function") {
+                    console.log("Executing done function:",func);
+                    func();
+                  } else throw new Error("Upload Error: "+func+" is not a function.");
                 }
               }
             });
@@ -248,31 +253,83 @@
         }
 
         return function(data,cb,done_function) {
-          if(typeof cb !== "function") {
-            throw new Error("Upload Error: "+data+" cannot be uploaded, because "+cb+" is not a function.");
-          } else {
-            // Add the image to the queue
-            imageQueue.unshift({data:data,cb:cb});
+          if(typeof data === "string") {
+            if(typeof cb !== "function") {
+              throw new Error("Upload Error: "+data+" cannot be uploaded, because "+cb+" is not a function.");
+            } else {
+              // Add the image to the queue
+              imageQueue.unshift({data:data,cb:cb});
 
-            if(processing === false) {
-              processing = true;
-              setTimeout(next,0);
-            }
-
-            // Don't do the same done_function multiple times
-            var alreadyDoing = false;
-            if(typeof done_function === "function") {
-              done_functions.forEach(function(e){if(e === done_function) alreadyDoing = true;});
-              if(alreadyDoing === false) {
-                if(processing === true) done_functions.unshift(done_function);
-                else done_function();
+              if(processing === false) {
+                processing = true;
+                setTimeout(next,0);
               }
-            } else if(done_function !== undefined) throw new Error("Upload Error: "+done_function+" is not a function.");
+            }
+          }
+          // Add the done-function, but
+          // Don't do the same done_function multiple times
+          var alreadyDoing = false;
+          if(typeof done_function === "function") {
+            done_functions.forEach(function(e){if(e === done_function) alreadyDoing = true;});
+            if(alreadyDoing === false) {
+              if(processing === true) {
+                done_functions.unshift(done_function);
+              } else {
+                done_function();
+              }
+            }
+          } else if(done_function !== undefined) {
+            throw new Error("Upload Error: "+done_function+" is not a function.");
           }
         }
       }());
 
       // END CLOUDINARY INTEGRATION STUFF
+
+      // Taken from stackoverflow.com/questions/6150289/
+      function toDataURL(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function() {
+          var reader = new FileReader();
+          reader.onloadend = function() {
+            callback(reader.result);
+          }
+          reader.readAsDataURL(xhr.response);
+        };
+        xhr.open('GET', url);
+        xhr.responseType = 'blob';
+        xhr.send();
+      }
+
+      // Run a function (cb) on all image data for a package of images
+      // When done, execute a function
+      function getImageData(images, cb, done) {
+        var queue = {};
+
+        Object.keys(images).forEach(function(key){
+          var image = images[key];
+          if(image.data === undefined) {
+            if(image.url !== undefined) {
+              queue[key] = {
+                image:image,
+                cb:(function(key,image){return function(image_data){
+                  cb(image_data,image);
+                  delete queue[key];
+                  if(Object.keys(queue).length === 0) done();
+                };}(key,image))
+              };
+            } else {
+              console.log("Cannot get image data for image without URL:",image);
+            }
+          } else {
+            cb(image.data,image);
+          }
+        });
+
+        Object.keys(queue).forEach(function(key){
+          toDataURL(queue[key].image.url,queue[key].cb);
+        });
+      }
 
 
       var onbuttoncolor = "green";
@@ -431,18 +488,42 @@
         });
       }
       $("#copyState").click(function(){
-        var currState = window.copyState();
-        var field = $('#stateInput')[0];
-        field.value = JSON.stringify(currState);
-        field.focus()
-        field.setSelectionRange(0,field.value.length);
-        var succeed;
-        try {
-          succeed = document.execCommand('copy');
-          alert('Calculator state copied to clipboard.');
-        } catch(e) {
-          succeed = false;
-          alert('Failed to copy to clipboard. Select and copy manually from text field above \'Copy Current State\' button.');
+        var currState;
+        if(toolType === 'graphing') {
+          workingState.saveCurrent();
+          uploadImage(null,null,printState);
+        } else {
+          currState = window.copyState();
+          printState();
+        }
+
+        function updateImage(image_data,image) {
+          image.data = image_data;
+        }
+
+        function printState() {
+          var images;
+          if(toolType === 'graphing') {
+            images = workingState.getImages();
+            currState = window.calculator.getState();
+            currState.expressions.list.forEach(function(expr){
+              if(expr.type === "image") {
+                expr.image_url = images[expr.id].url.replace(/(?<=upload\/)(v[^\/]*\/|(?=[^\/]*\.(?:png|jpg)))/,"t_FPO/");
+              }
+            });
+          }
+          var field = $('#stateInput')[0];
+          field.value = JSON.stringify(currState);
+          field.focus()
+          field.setSelectionRange(0,field.value.length);
+          var succeed;
+          try {
+            succeed = document.execCommand('copy');
+            alert('Calculator state copied to clipboard.');
+          } catch(e) {
+            succeed = false;
+            alert('Failed to copy to clipboard. Select and copy manually from text field above \'Copy Current State\' button.');
+          }
         }
       });
 
@@ -921,6 +1002,8 @@
         var thumbnail;
         var images = {};
 
+        this.getImages = function() {return images;};
+
         this.saveCurrent = function(updateLibrary=true) {
           type = toolType;
           state = window.calculator.getState();//{stripDefaults: false});
@@ -938,7 +1021,7 @@
             // FPO TODO TK ETC SAVE DCAT SLIDERS
 
             // SAVE IMAGE DATA
-            state.expressions.list.forEach(function(expr,index){
+            if(cloudinaryUpload) state.expressions.list.forEach(function(expr,index){
               var img_data;
               var image;
               var update = false;
@@ -972,12 +1055,14 @@
                       var expr = state.expressions.list[index];
                       new_url = data.result.secure_url;
                       if(expr.image_url === img_data) {
+                        console.log("Updating state "+id+" with cloud backup for image id \""+image.id+"\" at "+new_url);
                         image.url = new_url;
                         expr.image_url = new_url;
+                        console.log(state);
                       } else {
                         throw new Error("Uploaded image with id \""+image.id+" no longer matches graph state. Aborting update of image at "+image.url);
                       }
-                    },updateStorage);
+                    },((name === "AutoSaved") ? load : updateStorage));
                   } else throw new Error("Expression \""+expr.id+" is image of unknown type. Aborting save.");
                   images[expr.id] = image;
                 }
@@ -987,9 +1072,12 @@
             // Make sure any old images are still represented. If not, delete their data.
             Object.keys(images).forEach(function(id){
               if(newImages[id] !== true) {
+                console.log("Deleting image with id:\""+id+"\".");
                 delete images[id];
               }
             });
+
+            if(Object.keys(images).length > 0) console.log("Current state has the following images:",images);
           }
 
           if (toolType == 'graphing') {
@@ -1197,6 +1285,14 @@
         }
 
         this.package = function() {
+          var imageURLs = [];
+          // console.log("Packing state with the following images:",images);
+          Object.keys(images).forEach(function(e){
+            // console.log("Image "+e+":",images[e]);
+            if(typeof images[e].url === "string" && images[e].url.startsWith("http")) {
+              imageURLs.push({id:images[e].id,url:images[e].url});
+            }
+          });
           return {
             name:name,
             type:type,
@@ -1206,7 +1302,8 @@
             width:width,
             height:height,
             preview:thumbnail,
-            previewCloud:(($('#'+id+'_img').attr("src")===thumbnail)?undefined:$('#'+id+'_img').attr("src"))
+            previewCloud:(($('#'+id+'_img').attr("src")===thumbnail)?undefined:$('#'+id+'_img').attr("src")),
+            images:imageURLs
           };
         }
 
@@ -1219,6 +1316,10 @@
           height = pack.height;
           helpers = Object.assign([],pack.helpers);
           thumbnail = pack.previewCloud ? pack.previewCloud : pack.preview;
+          images = {};
+          if(Array.isArray(pack.images)) pack.images.forEach(function(e){
+            images[e.id] = {id:e.id,url:e.url};
+          });
           buildGui();
 
           $('#'+id+'_img').attr("src",thumbnail);
