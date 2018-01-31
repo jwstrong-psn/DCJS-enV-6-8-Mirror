@@ -207,6 +207,71 @@
 
       // idea from https://github.com/cloudinary/cloudinary_js/issues/78
 
+
+      // uploadImage(data, cb, done_function):
+      //
+      // cb will be called when the image is uploaded (usually updateStorage)
+      //
+      // done_function is a function to execute when all images
+      // are uploaded.
+      var uploadImage = (function() {
+        var imageQueue = [];
+        var done_functions = [];
+        var processing = false;
+
+        function next() {
+          processing = true;
+          var image = imageQueue.pop();
+
+          if(typeof image.cb !== "function") {
+            if(imageQueue.length > 0) setTimeout(next,0);
+            throw new Error("Upload Error: "+image.data+" cannot be uploaded, because "+image.cb+" is not a function.");
+          } else {
+            cloudinaryUpload.one('fileuploaddone',function(e,data){
+              var func;
+              if(typeof image.cb === "function") image.cb(e,data);
+              if(images.length > 0) {
+                next();
+              } else {
+                processing = false;
+                while(done_functions.length > 0) {
+                  func = done_functions.pop();
+                  if(typeof func === "function") func();
+                  else throw new Error("Upload Error: "+func+" is not a function.");
+                }
+              }
+            });
+
+            cloudinaryUpload.fileupload('option','formData').file = image.data;
+            cloudinaryUpload.fileupload('add', { files: [ image.data ] });
+          }
+        }
+
+        return function(data,cb,done_function) {
+          if(typeof cb !== "function") {
+            throw new Error("Upload Error: "+data+" cannot be uploaded, because "+cb+" is not a function.");
+          } else {
+            // Add the image to the queue
+            imageQueue.unshift({data:data,cb:cb});
+
+            if(processing === false) {
+              processing = true;
+              setTimeout(next,0);
+            }
+
+            // Don't do the same done_function multiple times
+            var alreadyDoing = false;
+            if(typeof done_function === "function") {
+              done_functions.forEach(function(e){if(e === done_function) alreadyDoing = true;});
+              if(alreadyDoing === false) {
+                if(processing === true) done_functions.unshift(done_function);
+                else done_function();
+              }
+            } else if(done_function !== undefined) throw new Error("Upload Error: "+done_function+" is not a function.");
+          }
+        }
+      }());
+
       // END CLOUDINARY INTEGRATION STUFF
 
 
