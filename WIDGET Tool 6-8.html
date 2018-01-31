@@ -919,6 +919,7 @@
         var height;
         var $gui;
         var thumbnail;
+        var images = {};
 
         this.saveCurrent = function(updateLibrary=true) {
           type = toolType;
@@ -926,8 +927,70 @@
           width = desWidth;
           height = desHeight;
           helpers = [];
+          var newImages = {};
 
-          if (toolType == 'graphing') for (helper in currentHelpers) helpers.push(currentHelpers[helper].package());
+          if (toolType == 'graphing') {
+            // SAVE DCAT HELPERS
+            Object.keys(currentHelpers).forEach(function(helper) {
+              helpers.push(currentHelpers[helper].package());
+            });
+
+            // FPO TODO TK ETC SAVE DCAT SLIDERS
+
+            // SAVE IMAGE DATA
+            state.expressions.list.forEach(function(expr,index){
+              var img_data;
+              var image;
+              var update = false;
+              if(expr.type === "image") {
+                newImages[expr.id] = true;
+                img_data = expr.image_url;
+                image = images[expr.id];
+
+                // Image needs to be updated if:
+                //  * It is not stored yet
+                //  * It does not have a cloud backup
+                //  * Its backup is out of date
+                if(image === undefined) {
+                  image = {id:expr.id};
+                  update = true;
+                } else if(image.url === undefined) {
+                  console.log("Image with id:\""+expr.id+"\" was missing cloud backup. Updating now.")
+                  update = true;
+                } else if (image.url !== img_data) {
+                  console.log("Image with id:\""+expr.id+"\" changed URL from \""+image.url+"\" to \""+img_data+"");
+                  delete image.url;
+                  update = true;
+                }
+
+                if(update === true) {
+                  if(img_data.startsWith("http")) {
+                    image.url = img_data;
+                  } else if(img_data.startsWith("data:image")) {
+                    image.data = img_data;
+                    uploadImage(img_data,function(e,data){
+                      var expr = state.expressions.list[index];
+                      new_url = data.result.secure_url;
+                      if(expr.image_url === img_data) {
+                        image.url = new_url;
+                        expr.image_url = new_url;
+                      } else {
+                        throw new Error("Uploaded image with id \""+image.id+" no longer matches graph state. Aborting update of image at "+image.url);
+                      }
+                    },updateStorage);
+                  } else throw new Error("Expression \""+expr.id+" is image of unknown type. Aborting save.");
+                  images[expr.id] = image;
+                }
+              }
+            });
+
+            // Make sure any old images are still represented. If not, delete their data.
+            Object.keys(images).forEach(function(id){
+              if(newImages[id] !== true) {
+                delete images[id];
+              }
+            });
+          }
 
           if (toolType == 'graphing') {
             constructors = Object.assign({},window.currentCalcConstructors);
@@ -1016,7 +1079,12 @@
         }
 
         function download() {
-          var file = {name:name,type:type,state:state,helpers:helpers};
+          var file = {
+            name:name,
+            type:type,
+            state:state,
+            helpers:helpers
+          };
           window.download(file,name);
         }
 
