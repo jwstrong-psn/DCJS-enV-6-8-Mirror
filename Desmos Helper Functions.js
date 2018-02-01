@@ -265,12 +265,12 @@ window.xs = { // Commonly useful Desmos expressions (in LaTeX string form)
    reflectPL:[{"id":"reflectPL","latex":"P_{reflPL}\\left(x,y\\right)=I_{ll}\\left(U_{perp}\\left(y,x\\right),y+\\left[0,0,D_{pl}\\left(x,y\\right)\\right]\\right)","hidden":"true"}]
  }
 
-window.addHelper = function(name,desmos=(window["calculator"] || window["Calc"])) {
-  desmos.setExpressions(window.xs[name]);
-}
+ window.addHelper = function(name,desmos=(window["calculator"] || window["Calc"])) {
+   desmos.setExpressions(window.xs[name]);
+ }
 
-function drawTriangle(desmos=(window["calculator"] || window["Calc"])) {
-  desmos.setExpressions([
+ function drawTriangle(desmos=(window["calculator"] || window["Calc"])) {
+   desmos.setExpressions([
     {id:"vertexA",latex:"\\left(x_1,y_1\\right)"},
     {id:"vertexB",latex:"\\left(x_2,y_2\\right)"},
     {id:"vertexC",latex:"\\left(x_3,y_3\\right)"},
@@ -283,5 +283,291 @@ function drawTriangle(desmos=(window["calculator"] || window["Calc"])) {
     {id:"y2",latex:"y_2=2"},
     {id:"x3",latex:"x_3=2"},
     {id:"y3",latex:"y_3=1"}
-  ]);
-}
+    ]);
+ }
+
+ var optimalRatio = function(p, smalls, larges) {
+  var K = Math.min(p, 1/p);
+  // Find the smallest small number in the ratio that is closest
+  var small = Array.from(smalls).sort(function(a,b){
+    var first = Array.from(larges).sort(function(c,d){
+      if(Math.abs(a/c - K) < Math.abs(a/d - K)) {
+        return -1;
+      } else if (Math.abs(a/c - K) > Math.abs(a/d - K)) {
+        return 1;
+      } else if (c < d) {
+        return -1;
+      } else {
+        return 1;
+      }
+    })[0];
+    var second = Array.from(larges).sort(function(c,d){
+      if(Math.abs(b/c - K) < Math.abs(b/d - K)) {
+        return -1;
+      } else if (Math.abs(b/c - K) > Math.abs(b/d - K)) {
+        return 1;
+      } else if (c < d) {
+        return -1;
+      } else {
+        return 1;
+      }
+    })[0];
+    if (Math.abs(a/first - K) < Math.abs(b/second - K)) {
+      return -1;
+    } else if (Math.abs(a/first - K) > Math.abs(b/second - K)) {
+      return 1;
+    } else if (a < b) {
+      return -1;
+    } else {
+      return 1;
+    }
+  })[0];
+
+  var large = Array.from(larges).sort(function(a,b){
+    if(Math.abs(small/a - K) < Math.abs(small/b - K)) {
+      return -1;
+    } else {
+      return 1;
+    }
+  })[0];
+
+  if(K < p) {
+    return {
+      numerator: large,
+      denominator: small
+    };
+  } else {
+    return {
+      numerator: small,
+      denominator: large
+    };
+  }
+};
+
+var optimalOdds = function optimalOdds(p, smalls, larges) {
+  var K = Math.min(p, 1-p);
+  // Find the smallest small number in the ratio that is closest
+  var small = Array.from(smalls).sort(function(a,b){
+    var first = Array.from(larges).sort(function(c,d){
+      if(Math.abs(a/(a+c) - K) < Math.abs(a/(a+d) - K)) {
+        return -1;
+      } else if (Math.abs(a/(a+c) - K) > Math.abs(a/(a+d) - K)) {
+        return 1;
+      } else if (c < d) {
+        return -1;
+      } else {
+        return 1;
+      }
+    })[0];
+    var second = Array.from(larges).sort(function(c,d){
+      if(Math.abs(b/(b+c) - K) < Math.abs(b/(b+d) - K)) {
+        return -1;
+      } else if (Math.abs(b/(b+c) - K) > Math.abs(b/(b+d) - K)) {
+        return 1;
+      } else if (c < d) {
+        return -1;
+      } else {
+        return 1;
+      }
+    })[0];
+    if (Math.abs(a/(a+first) - K) < Math.abs(b/(b+second) - K)) {
+      return -1;
+    } else if (Math.abs(a/(a+first) - K) > Math.abs(b/(b+second) - K)) {
+      return 1;
+    } else if (a < b) {
+      return -1;
+    } else {
+      return 1;
+    }
+  })[0];
+
+  var large = Array.from(larges).sort(function(a,b){
+    if(Math.abs(small/(small+a) - K) < Math.abs(small/(small+b) - K)) {
+      return -1;
+    } else {
+      return 1;
+    }
+  })[0];
+
+  if(small/large < 1/3) {
+    smalls.push(1);
+  }
+
+  if(K < p) {
+    return {
+      first: large,
+      second: small
+    };
+  } else {
+    return {
+      first: small,
+      second: large
+    };
+  }
+};
+
+var easePointList = function easePointList(currentX,currentY,targetX,targetY,t,dt,timeout,cb) {
+  var x = targetX;
+  var y = targetY;
+  var X = currentX;
+  var Y = currentY;
+  if(t + dt >= 1) {
+    X = x;
+    Y = y;
+  } else {
+    var ddt = (Math.cos(Math.PI*t) - Math.cos(Math.PI*(t+dt))) / (Math.cos(Math.PI*t) + 1);
+    X = X.map(function(e,i,a) {
+      var result = e + (x[i] - e)*ddt;
+      if ((result - x[i])*(e - x[i]) <= 0) {
+        result = x[i];
+      }
+      return result;
+    });
+    Y = Y.map(function(e,i,a) {
+      var result = e + (y[i] - e)*ddt;
+      if ((result - y[i])*(e - y[i]) <= 0) {
+        result = y[i];
+      }
+      return result;
+    });
+  }
+  cb(X,Y,x,y,t,dt);
+  if(t < 1) setTimeout(function(){
+    easePointList(X,Y,x,y,t+dt,dt,timeout,cb);
+  },timeout);
+};
+
+var ease2 = function ease(x,y,t,dt) {
+  var X = window.X.listValue;
+  var Y = window.Y.listValue;
+  if(t + dt >= 1) {
+    X = x;
+    Y = y;
+  } else {
+    var ddt = (Math.cos(Math.PI*t) - Math.cos(Math.PI*(t+dt))) / (Math.cos(Math.PI*t) + 1);
+    X = X.map(function(e,i,a) {
+      var result = e + (x[i] - e)*ddt;
+      if ((result - x[i])*(e - x[i]) <= 0) {
+        result = x[i];
+      }
+      return result;
+    });
+    Y = Y.map(function(e,i,a) {
+      var result = e + (y[i] - e)*ddt;
+      if ((result - y[i])*(e - y[i]) <= 0) {
+        result = y[i];
+      }
+      return result;
+    });
+  }
+
+  var exprs = [];
+
+  X.forEach(function(e,i,a) {
+    exprs.push({
+      id:'u_'+i,
+      latex:'u_'+i+'='+e
+    });
+    exprs.push({
+      id:'v_'+i,
+      latex:'v_'+i+'='+Y[i]
+    });
+  });
+
+  Calc.setExpressions(exprs);
+
+  if(t < 1) setTimeout(function(){ease2(x,y,t+dt,dt);},200);
+};
+
+var stats2D = function(x,y){
+  var total = function(x) {
+    return x.reduce(function(acc,val) {
+      return acc + val;
+    }, 0);
+  }
+  var xBar = total(x) / x.length;
+  var yBar = total(y) / y.length;
+  var dxs = x.map(function(val) {return val - xBar;});
+  var dys = y.map(function(val) {return val - yBar;});
+  var xVars = dxs.map(function(val) {return val * val;});
+  var yVars = dys.map(function(val) {return val * val;});
+  var sx = Math.sqrt(total(xVars) / x.length);
+  var sy = Math.sqrt(total(yVars) / y.length);
+  var covars = x.map(function(val,i) {return val*y[i];});
+  var rxy = (total(covars) - x.length * xBar * yBar) / (x.length * sx * sy);
+  var B = rxy * sy / sx;
+  var A = yBar - B * xBar;
+  return {
+    a:B,
+    b:A,
+    r:rxy,
+    x_mean:xBar,
+    y_mean:yBar,
+    x_variance:total(xVars)/x.length,
+    y_variance:total(yVars)/y.length
+  };
+};
+
+var splat = function(a,b,opts) {
+  opts = Object.assign({
+    n:10,
+    xMin:0,
+    xMax:10,
+    yMin:0,
+    yMax:10,
+    xJitter:1,
+    yJitter:1,
+    strict:false
+  },opts);
+
+  var n = opts.n;
+  var xMin = opts.xMin;
+  var xMax = opts.xMax;
+  var yMin = opts.yMin;
+  var yMax = opts.yMax;
+  var yJitter = opts.yJitter;
+  var xJitter = opts.xJitter;
+  var strict = opts.strict;
+
+  yMin = Math.max(yMin, a * ((a >= 0) ? xMin : xMax) + b - yJitter);
+  yMax = Math.min(yMax, a * ((a >= 0) ? xMax : xMin) + b + yJitter);
+
+  xMin = Math.max(xMin, (((a >= 0) ? yMin - yJitter : yMax + yJitter) - b) / a);
+  xMax = Math.min(xMax, (((a >= 0) ? yMax + yJitter : yMin - yJitter) - b) / a);
+
+  console.log('X: ['+xMin+', '+xMax+'], Y: ['+yMin+', '+yMax+']');
+
+  var xs = [];
+  var ys = [];
+
+  if ((xMin > xMax) || (yMin > yMax)) {
+    throw new Error('No values available within given range.');
+  }
+
+  var x;
+  var y;
+  var yUpper;
+  var yLower;
+  var xBase;
+  var xLower;
+  var xUpper;
+  var dir;
+  var dx = (xMax-xMin)/(n+1);
+  while (xs.length < n) {
+    xBase = xMin + (xs.length + 0.5) * dx;
+    xUpper = xBase + Math.min(xJitter, xMax - xBase);
+    xLower = xBase - Math.min(xJitter, xBase - xMin);
+    x = Math.random()*(xUpper - xLower) + xLower;
+
+    yUpper = Math.min(a*x+b+yJitter,yMax);
+    yLower = Math.max(a*x+b-yJitter,yMin);
+
+    xs.push(x);
+    ys.push(Math.random()*(yUpper-yLower)+yLower);
+  }
+
+  return {
+    x:xs,
+    y:ys
+  };
+};

@@ -1711,6 +1711,7 @@ PearsonGL.External.rootJS = (function() {
         var vars = vs[o.uniqueId];
         var hlps = hxs[o.uniqueId];
 
+        o.log(arguments);
         clearTimeout(vars.timeoutID);
 
         var x0;
