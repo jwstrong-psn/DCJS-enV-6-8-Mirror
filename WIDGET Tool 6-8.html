@@ -303,7 +303,7 @@
 
       // Run a function (cb) on all image data for a package of images
       // When done, execute a function
-      function getImageData(images, cb, done) {
+      window.getImageData = function(images, cb, done) {
         var queue = {};
 
         Object.keys(images).forEach(function(key){
@@ -315,7 +315,7 @@
                 cb:(function(key,image){return function(image_data){
                   cb(image_data,image);
                   delete queue[key];
-                  if(Object.keys(queue).length === 0) done();
+                  if(Object.keys(queue).length === 0 && typeof done === "function") done();
                 };}(key,image))
               };
             } else {
@@ -327,7 +327,7 @@
         });
 
         Object.keys(queue).forEach(function(key){
-          toDataURL(queue[key].image.url,queue[key].cb);
+          toDataURL(queue[key].image.url.replace("upload/t_FPO","upload"),queue[key].cb);
         });
       }
 
@@ -1050,6 +1050,7 @@
                   if(img_data.startsWith("http")) {
                     image.url = img_data;
                   } else if(img_data.startsWith("data:image")) {
+                    console.log("Uploading "+expr.name+" to cloudinary…");
                     image.data = img_data;
                     uploadImage(img_data,function(e,data){
                       var expr = state.expressions.list[index];
@@ -1077,7 +1078,13 @@
               }
             });
 
-            if(Object.keys(images).length > 0) console.log("Current state has the following images:",images);
+            if(Object.keys(images).length > 0) {
+              getImageData(images,function(data,image){
+                image.data = data;
+              },function(){
+                console.log("Current state has the following images:",images);
+              });
+            }
           }
 
           if (toolType == 'graphing') {
