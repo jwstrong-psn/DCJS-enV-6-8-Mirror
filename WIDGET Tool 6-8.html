@@ -1186,6 +1186,7 @@
             $gui.css("background","silver");
 
             cloudinaryUpload.one('fileuploaddone',function(e,data){
+              thumbnail = data.result.secure_url;
               $('#'+id+'_img').attr("src",data.result.secure_url);
               $gui.css("background","white");
               if (updateLibrary) updateStorage();
@@ -1381,7 +1382,8 @@
               imageURLs.push({id:images[e].id,url:images[e].url});
             }
           });
-          return {
+
+          var pack = {
             name:name,
             type:type,
             constructors:constructors,
@@ -1393,6 +1395,8 @@
             previewCloud:(($('#'+id+'_img').attr("src")===thumbnail)?undefined:$('#'+id+'_img').attr("src")),
             images:imageURLs
           };
+
+          return pack;
         }
 
         function unpack(pack) {
