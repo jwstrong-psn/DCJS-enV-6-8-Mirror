@@ -393,17 +393,11 @@ var optimalOdds = function optimalOdds(p, smalls, larges) {
     smalls.push(1);
   }
 
-  if(K < p) {
-    return {
-      first: large,
-      second: small
-    };
-  } else {
-    return {
-      first: small,
-      second: large
-    };
-  }
+  return {
+    first: large,
+    second: small,
+    favor: (K < p)
+  };
 };
 
 var easePointList = function easePointList(currentX,currentY,targetX,targetY,t,dt,timeout,cb) {
