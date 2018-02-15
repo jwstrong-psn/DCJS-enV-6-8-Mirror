@@ -744,7 +744,7 @@ PearsonGL.External.rootJS = (function() {
 
         o.log('observeBounds activated on '+o.uniqueId);
 
-        o.desmos.observe('graphpaperBounds.observeBounds', function(t,h) {
+        function updateBounds(t,h) {
           vars.mathBounds = h[t].mathCoordinates;
           vars.pixelFrame = h[t].pixelCoordinates;
 
@@ -768,7 +768,11 @@ PearsonGL.External.rootJS = (function() {
               latex:'y_{bottomBound}='+bounds.bottom
             }
           ]);
-        });
+        }
+
+        o.desmos.observe('graphpaperBounds.observeBounds', updateBounds);
+
+        updateBounds('graphpaperBounds',o.desmos);
        };
       /* ←— show/hide expression —————————————————————————————————————————→ *\
        | Shows or hides an expression with a given ID
