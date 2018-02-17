@@ -1625,6 +1625,115 @@ PearsonGL.External.rootJS = (function() {
           latex:'B_{'+which+'}=['+collection+']'
         });
        };
+      /* ←— A0633992 7-8-5 KC ————————————————————————————————————————————→ *\
+       | Shows how to calculate circumference given diameter, and vice-versa
+       |  as well as the calculation of pi given both.
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633992 = {};
+      fs.A0633992.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+      
+        hlps.r = hlps.maker('r_0');
+        hlps.d = hlps.maker('d');
+        hlps.C = hlps.maker('C');
+       };
+      fs.A0633992.swapSlider = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        if(o.value === 0) {
+          o.desmos.setExpressions([
+            {
+              id:'slider',
+              latex:'s='+Math.min(Math.max(1,Math.round(hlps.d.numericValue)),50)
+            },
+            {
+              id:'radius',
+              latex:'r_0=\\frac{\\operatorname{round}\\left(50\\cdot\\frac{d}{2}\\right)}{50}'
+            },
+            {
+              id:'circumference',
+              latex:'C=\\frac{\\operatorname{round}\\left(50\\cdot2\\pi r_0\\right)}{50}'
+            },
+            {
+              id:'diameter',
+              latex:'d=s'
+            },
+            {
+              id:'label_r',
+              latex:'\\left(\\frac{R}{2}\\cos\\theta_0+t_{ick}\\cos\\theta_1+2.5t_{ick},\\frac{R}{2}\\sin\\theta_0+t_{ick}\\sin\\theta_1\\right)',
+              label:'r = {d} ÷ 2 = {r0}'
+            },
+            {
+              id:'label_d',
+              label:'Diameter = {d}'
+            },
+            {
+              id:'label_C(r)',
+              latex:'\\left(0,R+t_{ick}\\right)',
+              showLabel: true,
+              label:'C = 2π({r0}) ≈ {C}'
+            },
+            {
+              id:'label_C(d)',
+              latex:'\\left(0,R+2.5t_{ick}\\right)',
+              showLabel: true,
+              label:'C = π({d}) ≈ {C}'
+            },
+            {
+              id:'label_pi',
+              latex:'\\left(0,-\\sqrt{R^2-\\left(5t_{ick}\\right)^2}\\right)',
+              label:'π ≈ {C} ÷ {d} ≈ 3.14'
+            }
+          ]);
+        } else if (o.value === 1) {
+          o.desmos.setExpressions([
+            {
+              id:'slider',
+              latex:'s='+Math.min(Math.max(1,Math.round(hlps.C.numericValue)),50)
+            },
+            {
+              id:'radius',
+              latex:'r_0=\\frac{\\operatorname{round}\\left(50\\cdot\\frac{d}{2}\\right)}{50}'
+            },
+            {
+              id:'circumference',
+              latex:'C=s'
+            },
+            {
+              id:'diameter',
+              latex:'d=\\frac{\\operatorname{round}\\left(50\\cdot\\frac{C}{\\pi}\\right)}{50}'
+            },
+            {
+              id:'label_r',
+              latex:'\\left(\\frac{R}{2}\\cos\\theta_0+t_{ick}\\cos\\theta_1+3.5t_{ick},\\frac{R}{2}\\sin\\theta_0+t_{ick}\\sin\\theta_1\\right)',
+              label:'r = {C} ÷ (2π) ≈ {r0}'
+            },
+            {
+              id:'label_d',
+              label:'d = {C} ÷ π ≈ {d}'
+            },
+            {
+              id:'label_C(r)',
+              latex:'\\left(0,R+t_{ick}\\right)',
+              showLabel: false,
+              label:'Circumference = {C}'
+            },
+            {
+              id:'label_C(d)',
+              latex:'\\left(0,R+t_{ick}\\right)',
+              showLabel: true,
+              label:'Circumference = {C}'
+            },
+            {
+              id:'label_pi',
+              latex:'\\left(0,-\\sqrt{R^2-\\left(5t_{ick}\\right)^2}\\right)',
+              label:'π ≈ {C} ÷ {d} ≈ 3.14'
+            }
+          ]);
+        }
+       };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
        * ←————————————————————————————————————————————————————————————————→ */
