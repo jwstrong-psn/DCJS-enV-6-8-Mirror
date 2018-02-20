@@ -1838,9 +1838,9 @@ PearsonGL.External.rootJS = (function() {
         hlps.d = hlps.maker('d');
         hlps.C = hlps.maker('C');
 
-        o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
-          fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
-        });
+        // o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
+        //   fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+        // });
        };
       fs.A0633992.swapSlider = function() {
         var o = hs.parseArgs(arguments);
