@@ -605,7 +605,207 @@ PearsonGL.External.rootJS = (function() {
           x_variance:total(xVars)/x.length,
           y_variance:total(yVars)/y.length
         };
-      }
+       },
+      /* ←— optimalRatio ————————————————————————————————————————————————→ *\
+       | Calculates the closest fraction to a given number, given a list of
+       |  candidate numerators & denominators. The fraction returned is in
+       |  reduced form (down to the smallest given denominator with a corresponding
+       |  numerator).
+       |    {
+       |      numerator: Number,
+       |      denominator: Number,
+       |      integerPart: Number
+       |    }
+       | By default, the return value is a mixed number, i.e., only fractions
+       |  where the numerator is less than or equal to the denominator.
+       |  If `improper` is set to `true`, the choice will include options where
+       |  the numerator is greater than the denominator.
+       | If no list of numerators & denominators is included, or if falsey
+       |  values are passed, uses an arbitrary default.
+       |
+       | NOTE: if `improper` is set to `true`, the `integerPart` returned will
+       |  always be 0, even if a mixed number would be closer to the given value
+       |  than an improper fraction with the given numerators & denominators;
+       |  i.e., optimalRatio will NOT generate numerators not given in the list.
+       |  This means that for very large numbers, the optimalRatio will always
+       |  return the maximum given numerator and minimum given denominator.
+       * ←———————————————————————————————————————————————————————————————→ */
+       optimalRatio: function(x, numerators, denominators, improper) {
+        var mixed = !improper;
+        numerators = (Array.isArray(numerators) && Array.from(numerators).sort()) ||
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 15, 17, 19, 49, 99, 97];
+        denominators = (Array.isArray(denominators) && Array.from(denominators).sort()) ||
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 50, 100];
+        // Find the smallest numerator in the ratio that is closest
+        var numerator = Math.min.apply(null,numerators);
+        var denominator = Math.max.apply(null,denominators);
+
+        var output = {};
+
+        if(mixed) {
+          if(numerator > denominator) {
+            throw new Error("optimalRatio requires a numerator less than or equal to a " +
+              "denominator unless `improper` is `true`");
+          }
+          output.integerPart = Math.floor(x);
+          x = x % 1;
+        } else {
+          output.integerPart = 0;
+        }
+
+        var error = Math.abs(x - numerator/denominator);
+
+        numerators.forEach(function(n){
+          var d = denominator;
+          var e = Math.abs(x - n/d);
+          denominators.forEach(function(newDenominator){
+            if(mixed && n > newDenominator) {
+              return;
+            }
+            var newError = Math.abs(x - n/newDenominator);
+            // console.log(n+'/'+newDenominator+': '+(newError<e));
+            if(newError < e) {
+              d = newDenominator;
+              e = newError;
+            }
+          });
+
+          if(e < error || e === error && (d < denominator && n < numerator)) {
+            numerator = n;
+            denominator = d;
+            error = e;
+          }
+        });
+
+        output.numerator = numerator;
+        output.denominator = denominator;
+
+        return output;
+       },
+      /* ←— optimalOdds —————————————————————————————————————————————————→ *\
+       | Calculates the closest integer pair approximating the odds associated
+       |  with a given probability, given a catalog of candidate pairs, where the
+       |  keys are the possible values for the first number, and the values are
+       |  arrays of possible associated values for the second number. By default,
+       |  gives odds symmetrically, i.e. if the pair (key,val) is in the catalog,
+       |  the pair (val,key) will also be considered.
+       |
+       | Returns an object of the form:
+       |    {
+       |      first: Number,
+       |      second: Number,
+       |      favor: Boolean (true if p ≈ first/sum, false if p ≈ second/sum)
+       |    }
+       |
+       | If a catalog of candidate pairs is not given, then an arbitrary default
+       |  is used.
+       * ←———————————————————————————————————————————————————————————————→ */
+       optimalOdds: function(p, pairs, asymmetric) {
+        pairs = pairs || {
+          1:[1,2,3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100,1000,10000,100000,1000000,Infinity],
+          2:[3,5],
+          3:[4,5],
+          4:[5],
+          5:[6],
+          "Infinity":[1]
+        };
+
+        var keys = Object.keys(pairs).map(function(e){
+          return +e;
+        });
+
+        var first = keys[0];
+        var second = pairs[first][0];
+        var favor = true;
+        var error = Math.abs(p - first/(first+second));
+
+        // First test for even odds.
+        var even;
+        if(p === 0.5) {
+          even = Math.min.apply(null,keys.filter(function(e){
+            return (pairs[e].indexOf(e) > -1);
+          }));
+          if(even < Infinity || pairs[Infinity].indexOf(Infinity) > -1) {
+            return {
+              first: even,
+              second: even,
+              favor: true
+            };
+          }
+        }
+
+        // Then test for impossible/certain
+        if(Array.isArray(pairs[Infinity]) && pairs[Infinity].length > 0) {
+          if(asymmetric) {
+            if(p === 1) {
+              return {
+                first:Infinity,
+                second:Math.min.apply(null,pairs[Infinity]),
+                favor:true
+              };
+            }
+          } else if (p === 0 || p === 1) {
+            first = Infinity;
+            second = Math.min.apply(null,pairs[Infinity]);
+            favor = (p === 1);
+            error = 0;
+          }
+        }
+
+        var symmetric = !asymmetric;
+
+        // Now test for all the fuzzy stuff
+        keys.forEach(function(newFirst){
+          if(newFirst === Infinity) {
+            return;
+          } else {
+            pairs[newFirst].forEach(function(newSecond){
+              if(newSecond === Infinity) {
+                // Let's not deal with infinity arithmetic if we can help it
+                if((p === 0 || p === 1) &&
+                  // Only overwrite if this is the first infinity, or if
+                  // the non-infinity value decreases
+                   (error > 0 || newFirst < Math.min(first, second))) {
+                  first = newFirst;
+                  second = Infinity;
+                  favor = (p === 0);
+                  // p === 1 has already been handled for asymmetric
+                  error = 0;
+                }
+                return;
+              }
+              // Now that infinity is out of the way…
+              var ratio = newFirst / (newFirst + newSecond);
+              var newError = Math.abs(p - ratio);
+              if(newError < error || (newError === error &&
+                newFirst < (favor ? first : second))) {
+                first = newFirst;
+                second = newSecond;
+                favor = true;
+                error = newError;
+              }
+              if(symmetric) {
+                // NOTE: even odds are always in your favour
+                ratio = 1 - ratio;
+                newError = Math.abs(p - ratio);
+                if(newError < error || (newError === error &&
+                newFirst < (favor ? first : second))) {
+                  first = newFirst;
+                  second = newSecond;
+                  favor = false;
+                  error = newError;
+                }
+              }
+            });
+          }
+        });
+
+        return {
+          first: first,
+          second: second,
+          favor: favor
+        };
+       }
      };
 
   /* ←— EXPORTS / PUBLIC FUNCTIONS ————————————————————————————————————————→ *\
