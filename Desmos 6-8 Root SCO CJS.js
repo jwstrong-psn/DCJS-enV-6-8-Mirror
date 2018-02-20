@@ -583,7 +583,7 @@ PearsonGL.External.rootJS = (function() {
           return x.reduce(function(acc,val) {
             return acc + val;
           }, 0);
-        }
+        };
         var xBar = total(x) / x.length;
         var yBar = total(y) / y.length;
         var dxs = x.map(function(val) {return val - xBar;});
@@ -630,7 +630,7 @@ PearsonGL.External.rootJS = (function() {
        |  This means that for very large numbers, the optimalRatio will always
        |  return the maximum given numerator and minimum given denominator.
        * ←———————————————————————————————————————————————————————————————→ */
-       optimalRatio: function(x, numerators, denominators, improper) {
+      optimalRatio: function(x, numerators, denominators, improper) {
         var mixed = !improper;
         numerators = (Array.isArray(numerators) && Array.from(numerators).sort()) ||
           [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 15, 17, 19, 49, 99, 97];
@@ -700,7 +700,7 @@ PearsonGL.External.rootJS = (function() {
        | If a catalog of candidate pairs is not given, then an arbitrary default
        |  is used.
        * ←———————————————————————————————————————————————————————————————→ */
-       optimalOdds: function(p, pairs, asymmetric) {
+      optimalOdds: function(p, pairs, asymmetric) {
         pairs = pairs || {
           1:[1,2,3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100,1000,10000,100000,1000000,Infinity],
           2:[3,5],
@@ -1637,9 +1637,9 @@ PearsonGL.External.rootJS = (function() {
 
         var expr;
         if(o.id === 'scores') {
-          expr = 'S='+(hlps.P.numericValue+1)
+          expr = 'S='+(hlps.P.numericValue+1);
         } else {
-          expr = 'M='+(hlps.W.numericValue-hlps.P.numericValue+1)
+          expr = 'M='+(hlps.W.numericValue-hlps.P.numericValue+1);
         }
 
         if(hlps.W.numericValue === 0) {
@@ -1837,6 +1837,10 @@ PearsonGL.External.rootJS = (function() {
         hlps.r = hlps.maker('r_0');
         hlps.d = hlps.maker('d');
         hlps.C = hlps.maker('C');
+
+        o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
+          fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+        });
        };
       fs.A0633992.swapSlider = function() {
         var o = hs.parseArgs(arguments);
@@ -1933,6 +1937,46 @@ PearsonGL.External.rootJS = (function() {
             }
           ]);
         }
+       };
+      fs.A0633992.updateFrame = function() {
+        var o = hs.parseArgs(arguments);
+        var math = o.desmos.graphpaperBounds.mathCoordinates;
+        var pixels = o.desmos.graphpaperBounds.pixelCoordinates;
+
+        var newBounds = {};
+
+        newBounds.top = Math.min(2*o.value,o.value + 70*math.height/pixels.height);
+        newBounds.bottom = -Math.min(4*o.value, o.value + 130*math.height/pixels.height);
+        newBounds.right = Math.min(2*o.value, o.value + 10*math.width/pixels.width);
+        newBounds.left = -newBounds.right;
+
+        var newHeight = newBounds.top - newBounds.bottom;
+        var newWidth = newBounds.right - newBounds.left;
+
+        var newAspect = +((newWidth / newHeight).toExponential(2));
+        var aspect = +((pixels.width / pixels.height).toExponential(2));
+
+        o.log("Changing "+newWidth+":"+newHeight+" to "+pixels.width+":"+pixels.height);
+        o.log(" or "+newAspect+" to "+aspect);
+
+        // Pixel frame is narrower than required → buffer the height to keep
+        //  the aspect ratio matching the pixel dimensions
+        if(newAspect > aspect) {
+          newBounds.top = +((newBounds.top*newAspect/aspect).toExponential(3));
+          newBounds.bottom = +((newBounds.bottom*newAspect/aspect).toExponential(3));
+          newBounds.left = +(newBounds.left.toExponential(3));
+          newBounds.right = +(newBounds.right.toExponential(3));
+        } else if (newAspect < aspect) {
+          newBounds.left = +((newBounds.left*aspect/newAspect).toExponential(3));
+          newBounds.right = +((newBounds.right*aspect/newAspect).toExponential(3));
+          newBounds.top = +(newBounds.top.toExponential(3));
+          newBounds.bottom = +(newBounds.bottom.toExponential(3));
+        }
+
+        o.log("Now "+(newBounds.right-newBounds.left)+":"+(newBounds.top-newBounds.bottom));
+        o.log(" or "+((newBounds.right-newBounds.left)/(newBounds.top-newBounds.bottom)));
+
+        o.desmos.setMathBounds(newBounds);
        };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
