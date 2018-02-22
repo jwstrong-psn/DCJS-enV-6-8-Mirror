@@ -1839,7 +1839,9 @@ PearsonGL.External.rootJS = (function() {
         hlps.C = hlps.maker('C');
 
         o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
-          fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+          window.setTimeout(function(){
+            fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+          },100);
         });
        };
       fs.A0633992.swapSlider = function() {
@@ -1940,6 +1942,7 @@ PearsonGL.External.rootJS = (function() {
        };
       fs.A0633992.updateFrame = function() {
         var o = hs.parseArgs(arguments);
+
         var math = o.desmos.graphpaperBounds.mathCoordinates;
         var pixels = o.desmos.graphpaperBounds.pixelCoordinates;
 
@@ -1963,24 +1966,23 @@ PearsonGL.External.rootJS = (function() {
         var newHeight = newBounds.top - newBounds.bottom;
         var newWidth = newBounds.right - newBounds.left;
 
-        var newAspect = +((newWidth / newHeight).toExponential(2));
-        var aspect = +((pixels.width / pixels.height).toExponential(2));
+        var newAspect = +((newWidth / newHeight).toPrecision(3));
+        var aspect = +((pixels.width / pixels.height).toPrecision(3));
 
-        o.log("Changing "+newWidth+":"+newHeight+" to "+pixels.width+":"+pixels.height);
-        o.log(" or "+newAspect+" to "+aspect);
+        o.log("Changing aspect "+newAspect+" to "+aspect);
 
         // Pixel frame is narrower than required → buffer the height to keep
         //  the aspect ratio matching the pixel dimensions
         if(newAspect > aspect) {
-          newBounds.top = +((newBounds.top*newAspect/aspect).toExponential(3));
-          newBounds.bottom = +((newBounds.bottom*newAspect/aspect).toExponential(3));
-          newBounds.left = +(newBounds.left.toExponential(3));
-          newBounds.right = +(newBounds.right.toExponential(3));
+          newBounds.top = +((newBounds.top*newAspect/aspect).toPrecision(4));
+          newBounds.bottom = +((newBounds.bottom*newAspect/aspect).toPrecision(4));
+          newBounds.left = +(newBounds.left.toPrecision(4));
+          newBounds.right = +(newBounds.right.toPrecision(4));
         } else if (newAspect < aspect) {
-          newBounds.left = +((newBounds.left*aspect/newAspect).toExponential(3));
-          newBounds.right = +((newBounds.right*aspect/newAspect).toExponential(3));
-          newBounds.top = +(newBounds.top.toExponential(3));
-          newBounds.bottom = +(newBounds.bottom.toExponential(3));
+          newBounds.left = +((newBounds.left*aspect/newAspect).toPrecision(4));
+          newBounds.right = +((newBounds.right*aspect/newAspect).toPrecision(4));
+          newBounds.top = +(newBounds.top.toPrecision(4));
+          newBounds.bottom = +(newBounds.bottom.toPrecision(4));
         }
 
         o.log("Now "+(newBounds.right-newBounds.left)+":"+(newBounds.top-newBounds.bottom));
