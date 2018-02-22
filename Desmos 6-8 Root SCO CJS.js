@@ -1985,8 +1985,8 @@ PearsonGL.External.rootJS = (function() {
           newBounds.bottom = +(newBounds.bottom.toPrecision(4));
         }
 
-        o.log("Now "+(newBounds.right-newBounds.left)+":"+(newBounds.top-newBounds.bottom));
-        o.log(" or "+((newBounds.right-newBounds.left)/(newBounds.top-newBounds.bottom)));
+        // o.log("Now "+(newBounds.right-newBounds.left)+":"+(newBounds.top-newBounds.bottom));
+        // o.log(" or "+((newBounds.right-newBounds.left)/(newBounds.top-newBounds.bottom)));
 
         o.desmos.setMathBounds(newBounds);
        };
