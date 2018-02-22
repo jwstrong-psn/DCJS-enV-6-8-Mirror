@@ -1838,9 +1838,9 @@ PearsonGL.External.rootJS = (function() {
         hlps.d = hlps.maker('d');
         hlps.C = hlps.maker('C');
 
-        // o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
-        //   fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
-        // });
+        o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
+          fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+        });
        };
       fs.A0633992.swapSlider = function() {
         var o = hs.parseArgs(arguments);
@@ -1945,10 +1945,20 @@ PearsonGL.External.rootJS = (function() {
 
         var newBounds = {};
 
-        newBounds.top = Math.min(2*o.value,o.value + 70*math.height/pixels.height);
-        newBounds.bottom = -Math.min(4*o.value, o.value + 130*math.height/pixels.height);
-        newBounds.right = Math.min(2*o.value, o.value + 10*math.width/pixels.width);
+        newBounds.top = Math.min(o.value+70*2*o.value/(pixels.height-200),2*o.value);
+        newBounds.bottom = -Math.min(o.value+130*2*o.value/(pixels.height-200),4*o.value);
+        newBounds.right = Math.min(o.value+10*2*o.value/(pixels.width-20),3*o.value);
         newBounds.left = -newBounds.right;
+
+        if(newBounds.top < o.value) {
+          newBounds.top = 2*o.value;
+          newBounds.bottom = -4*o.value;
+        }
+
+        if(newBounds.right < o.value) {
+          newBounds.right = 3*o.value;
+          newBounds.left = -3*o.value;
+        }
 
         var newHeight = newBounds.top - newBounds.bottom;
         var newWidth = newBounds.right - newBounds.left;
