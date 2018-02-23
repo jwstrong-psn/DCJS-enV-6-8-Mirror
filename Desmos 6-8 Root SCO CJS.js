@@ -1485,8 +1485,13 @@ PearsonGL.External.rootJS = (function() {
        | WiP TK TODO
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633935 = {};
+       cs.A0633935 = {pixelTolerance:5};
       fs.A0633935.init = function() {
         var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        hlps.init = hlps.maker('i_{nit}');
+        hlps.init.observe('numericValue',newProblem);
 
         // returns a random number from 1 and n with equal probability of each
         function randInt(n) {
@@ -1503,19 +1508,22 @@ PearsonGL.External.rootJS = (function() {
           o.desmos.setExpression({
             id:'equation',
             latex:'('+x2+'-'+x1+')('+y2+'-y)=('+y2+'-'+y1+')('+x2+'-x)',
-            color:cs.color.mgmColors.blue
+            color:cs.color.mgmColors.blue,
+            hidden:false
           });
 
           o.desmos.setExpressions([
             {
               id:'p1',
               latex:'('+x1+','+y1+')',
-              color:cs.color.mgmColors.blue
+              color:cs.color.mgmColors.blue,
+              hidden:true
             },
             {
               id:'p2',
               latex:'('+x2+','+y2+')',
-              color:cs.color.mgmColors.blue
+              color:cs.color.mgmColors.blue,
+              hidden:true
             }
             ]);
         }
@@ -1524,23 +1532,24 @@ PearsonGL.External.rootJS = (function() {
         function constrainBounds(){
           var mathCoordinates = mergeObjects({},o.desmos.graphpaperBounds.mathCoordinates);
 
-          // var pixelCoordinates = o.desmos.graphpaperBounds.pixelCoordinates;
+          var pixelCoordinates = o.desmos.graphpaperBounds.pixelCoordinates;
 
           if (mathCoordinates.left === -mathCoordinates.right &&
               mathCoordinates.bottom === -mathCoordinates.top &&
-              Math.min(mathCoordinates.height, mathCoordinates.width) === 20) {
+              Math.min(mathCoordinates.height, mathCoordinates.width) === 20 &&
+              Math.abs(pixelCoordinates.height - mathCoordinates.height/mathCoordinates.width * pixelCoordinates.width) <= cs.A0633935.pixelTolerance) {
             return;
           }
 
-          if (mathCoordinates.height > mathCoordinates.width) {
+          if (pixelCoordinates.height > pixelCoordinates.width) {
             mathCoordinates.left = -10;
             mathCoordinates.right = 10;
-            mathCoordinates.top = mathCoordinates.height*10/mathCoordinates.width;
+            mathCoordinates.top = pixelCoordinates.height*10/pixelCoordinates.width;
             mathCoordinates.bottom = -mathCoordinates.top;
           } else {
             mathCoordinates.bottom = -10;
             mathCoordinates.top = 10;
-            mathCoordinates.right = mathCoordinates.width*10/mathCoordinates.height;
+            mathCoordinates.right = pixelCoordinates.width*10/pixelCoordinates.height;
             mathCoordinates.left = -mathCoordinates.right;
           }
 
