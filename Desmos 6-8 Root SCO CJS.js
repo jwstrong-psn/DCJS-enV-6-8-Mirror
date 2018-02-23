@@ -1491,7 +1491,12 @@ PearsonGL.External.rootJS = (function() {
         var hlps = hxs[o.uniqueId];
 
         hlps.init = hlps.maker('i_{nit}');
-        hlps.init.observe('numericValue',newProblem);
+        hlps.init.observe('numericValue.init',function(t,h) {
+          if(h[t] === 0) {
+            h.unobserve(t);
+            newProblem();
+          }
+        });
 
         // returns a random number from 1 and n with equal probability of each
         function randInt(n) {
@@ -1847,7 +1852,7 @@ PearsonGL.External.rootJS = (function() {
         hlps.d = hlps.maker('d');
         hlps.C = hlps.maker('C');
 
-        o.desmos.observe('graphpaperBounds.updateFrame',function(t,h) {
+        o.desmos.observe('graphpaperBounds.updateFrame',function() {
           window.setTimeout(function(){
             fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
           },100);
@@ -1952,7 +1957,7 @@ PearsonGL.External.rootJS = (function() {
       fs.A0633992.updateFrame = function() {
         var o = hs.parseArgs(arguments);
 
-        var math = o.desmos.graphpaperBounds.mathCoordinates;
+        // var math = o.desmos.graphpaperBounds.mathCoordinates;
         var pixels = o.desmos.graphpaperBounds.pixelCoordinates;
 
         var newBounds = {};
