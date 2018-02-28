@@ -286,62 +286,106 @@ window.xs = { // Commonly useful Desmos expressions (in LaTeX string form)
     ]);
  }
 
- var optimalRatio = function(p, smalls, larges) {
-  var K = Math.min(p, 1/p);
-  // Find the smallest small number in the ratio that is closest
-  var small = Array.from(smalls).sort(function(a,b){
-    var first = Array.from(larges).sort(function(c,d){
-      if(Math.abs(a/c - K) < Math.abs(a/d - K)) {
-        return -1;
-      } else if (Math.abs(a/c - K) > Math.abs(a/d - K)) {
-        return 1;
-      } else if (c < d) {
-        return -1;
-      } else {
-        return 1;
-      }
-    })[0];
-    var second = Array.from(larges).sort(function(c,d){
-      if(Math.abs(b/c - K) < Math.abs(b/d - K)) {
-        return -1;
-      } else if (Math.abs(b/c - K) > Math.abs(b/d - K)) {
-        return 1;
-      } else if (c < d) {
-        return -1;
-      } else {
-        return 1;
-      }
-    })[0];
-    if (Math.abs(a/first - K) < Math.abs(b/second - K)) {
-      return -1;
-    } else if (Math.abs(a/first - K) > Math.abs(b/second - K)) {
-      return 1;
-    } else if (a < b) {
-      return -1;
-    } else {
-      return 1;
-    }
-  })[0];
+ var optimalRatio = function(p, larges, smalls) {
+  smalls = (Array.isArray(smalls) && Array.from(smalls)) ||
+    [1, 2, 3, 4, 5];
+  larges = (Array.isArray(larges) && Array.from(larges)) ||
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30, 40, 50,
+      100, 1000, 10000, 100000, 1000000, 1000000000, 1/0];
 
-  var large = Array.from(larges).sort(function(a,b){
-    if(Math.abs(small/a - K) < Math.abs(small/b - K)) {
-      return -1;
-    } else {
-      return 1;
-    }
-  })[0];
-
-  if(K < p) {
-    return {
-      numerator: large,
-      denominator: small
-    };
-  } else {
-    return {
-      numerator: small,
-      denominator: large
-    };
+  if(p < 0 || p > 1) {
+    throw new Error("Cannot calculate odds for probabilities outside [0,1].");
   }
+
+  if(p === 0 || p === 1) {
+    if(smalls.find(0)) {
+      if(larges.find(Infinity)) {
+        return {
+          small: 0,
+          large: Infinity,
+          favor: (p === 1)
+        };
+      } else {
+        return {
+          small: 0,
+          large: Math.min.apply(null,larges.filter(function(e){
+            return e > 0;
+          })),
+          favor: (p === 1)
+        };
+      }
+    } else if (larges.find(Infinity)) {
+      return {
+        small: Math.min.apply(null,smalls.filter(function(e){
+          return e > 0;
+        })),
+        large: Infinity,
+        favor: (p === 1)
+      };
+    } else {
+      return {
+        small: Math.min.apply(null,smalls.filter(function(e){
+          return e > 0;
+        })),
+        large: Math.max.apply(null,larges),
+        favor: (p === 1)
+      };
+    }
+  }
+
+  smalls = smalls.filter(function(e){
+    return (e > 0 && e < Infinity);
+  });
+  var small = Math.min.apply(null,smalls);
+
+  larges = larges.filter(function(e){
+    return (e > small && e < Infinity);
+  });
+  var large = Math.max.apply(null,larges);
+
+  if(small > large) {
+    throw new Error("optimalOdds requires a smaller number less than " +
+      "or equal to a large number");
+  }
+
+  var output = {};
+  var x;
+
+  if(p >= 0.5) {
+    output.favor = true;
+    x = 1 - p;
+  } else {
+    output.favor = false;
+    x = p;
+  }
+
+  var error = Math.abs(x - small/(small + large));
+
+  smalls.forEach(function(s){
+    var l = large;
+    var e = Math.abs(x - s/(s+l));
+    larges.forEach(function(newLarge){
+      if(s > newLarge) {
+        return;
+      }
+      var newError = Math.abs(x - s/(s + newLarge));
+      if(newError < e) {
+        l = newLarge;
+        e = newError;
+      }
+    });
+
+    if(e < error || e === error && (l < large && s < small)) {
+      small = s;
+      large = l;
+      error = e;
+    }
+  });
+
+  output.small = small;
+  output.large = large;
+
+  return output;
 };
 
 var optimalOdds = function optimalOdds(p, smalls, larges) {
