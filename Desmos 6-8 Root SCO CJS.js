@@ -974,6 +974,13 @@ PearsonGL.External.rootJS = (function() {
 
         updateBounds('graphpaperBounds',o.desmos);
        };
+      /* ←— record value —————————————————————————————————————————————————→ *\
+       | Simply saves the value of a variable to the variable cache.
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.record = function() {
+        var o = hs.parseArgs(arguments);
+        vs[o.uniqueId][o.name] = o.value;
+       };
       /* ←— show/hide expression —————————————————————————————————————————→ *\
        | Shows or hides an expression with a given ID
        | ID is given or assumed to match variable name
@@ -987,8 +994,9 @@ PearsonGL.External.rootJS = (function() {
         });
        };
       /* ←— set value —————————————————————————————————————————————————————→ *\
-       | Set the value of an variable.
-       | Use with slider.
+       | Set the value of a variable.
+       | Does the same thing as a slider without a function would do, but
+       |  doesn't update the position of the slider when the variable changes.
        |
        | n.b.: Theoretically could be authored to interpret ID from Name,
        |   in order that it could be used from the "Expressions" tab,
