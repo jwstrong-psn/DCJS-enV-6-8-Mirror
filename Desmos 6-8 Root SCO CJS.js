@@ -632,9 +632,9 @@ PearsonGL.External.rootJS = (function() {
        * ←———————————————————————————————————————————————————————————————→ */
       optimalRatio: function(x, numerators, denominators, improper) {
         var mixed = !improper;
-        numerators = (Array.isArray(numerators) && Array.from(numerators).sort()) ||
+        numerators = (Array.isArray(numerators) && Array.from(numerators).sort(function(a,b){return (a - b);})) ||
           [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 15, 17, 19, 49, 99, 97];
-        denominators = (Array.isArray(denominators) && Array.from(denominators).sort()) ||
+        denominators = (Array.isArray(denominators) && Array.from(denominators).sort(function(a,b){return (a - b);})) ||
           [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 50, 100];
         // Find the smallest numerator in the ratio that is closest
         var numerator = Math.min.apply(null,numerators);
@@ -1676,6 +1676,148 @@ PearsonGL.External.rootJS = (function() {
           id:o.id,
           latex:expr
         });
+       };
+      /* ←— A0633979 7-6-3 Ex.1 ——————————————————————————————————————————→ *\
+       | generates a new set of data between 0 and 50
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633979 = {};
+      fs.A0633979.newData = function() {
+        var o = hs.parseArgs(arguments);
+
+        o.desmos.setExpression({
+          id:'answer',
+          hidden:true
+        });
+
+        if(typeof o.value !== "number" || o.value <= 0 || o.value % 1 !== 0) {
+          o.value = 20;
+        }
+
+        if(typeof o.id !== "string" || o.id === '') {
+          o.id = "data";
+        }
+
+        if(typeof o.name !== "string" || o.name === '') {
+          o.name = "S"
+        }
+
+        var expr = o.name + "=\\left[";
+
+        var data = [];
+        while(data.length < o.value) {
+          data.push(Math.round((1-Math.random()*Math.random())*25+Math.random()*Math.random()*25));
+        }
+
+        data.sort(function(a,b){
+          return (a - b);
+        });
+        
+        expr += data;
+        expr += "\\right]";
+
+        o.desmos.setExpression({
+          id:o.id,
+          latex:expr
+        });
+       };
+      /* ←— A0633980 7-7-1 KC ————————————————————————————————————————————→ *\
+       | description
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633980 = {};
+       cs.A0633980 = {
+        even_threshold:0.07,
+        likely_threshold:0.3,
+        very_likely_threshold: 0.48,
+        practically_impossible_threshold:0.0035,
+        impossible_threshold:0.0005
+       };
+      fs.A0633980.updateP = function() {
+        var o = hs.parseArgs(arguments);
+
+        var p = o.value;
+
+        var ratio = hs.optimalRatio(p, undefined, undefined, true);
+        var odds = hs.optimalOdds(p);
+
+        var temp;
+        if(odds.second > odds.first) {
+          temp = odds.first;
+          odds.first = odds.second;
+          odds.second = temp;
+          odds.favor = !(odds.favor);
+        }
+
+        var description;
+        if(Math.abs(p-0.5) < cs.A0633980.even_threshold) {
+          description = 'coin flip';
+        } else if (p > 0.5) {
+          if (p < 0.5 + cs.A0633980.likely_threshold) {
+            description = 'likely';
+          } else if (p < 0.5 + cs.A0633980.very_likely_threshold) {
+            description = 'very likely';
+          } else if (p < 1) {
+            description = 'almost certain';
+          } else {
+            description = 'certain';
+          }
+        } else {
+          if (p > 0.5 - cs.A0633980.likely_threshold) {
+            description = 'unlikely';
+          } else if (p > 0.5 - cs.A0633980.very_likely_threshold) {
+            description = 'very unlikely';
+          } else if (p > 0) {
+            description = 'practically impossible';
+          } else {
+            description = 'impossible';
+          }
+        }
+
+        var exprs = [
+          {
+            id:'numerator',
+            latex:'f_n='+ratio.numerator
+          },
+          {
+            id:'denominator',
+            latex:'f_d='+ratio.denominator
+          },
+          {
+            id:'odds_first',
+            latex:'o_l='+odds.first
+          },
+          {
+            id:'odds_second',
+            latex:'o_r='+odds.second
+          },
+          {
+            id:'descriptive',
+            label:description
+          }
+        ];
+
+        if (odds.first === odds.second) {
+          exprs.push({
+            id:'odds',
+            label:'1:1 (even) odds'
+          });
+        } else if (p < cs.A0633980.impossible_threshold || p >= 1-cs.A0633980.impossible_threshold) {
+          exprs.push({
+            id:'odds',
+            label:'1,000,000:1 odds '+(p > 0.5 ? 'in favor' : 'against')
+          });
+        } else if (p < cs.A0633980.practically_impossible_threshold || p >= 1-cs.A0633980.practically_impossible_threshold) {
+          exprs.push({
+            id:'odds',
+            label:'1,000:1 odds '+(p > 0.5 ? 'in favor' : 'against')
+          });
+        } else {
+          exprs.push({
+            id:'odds',
+            label:'{o_l}:{o_r} odds '+(p >= 0.5 ? 'in favor' : 'against')
+          });
+        }
+
+        o.desmos.setExpressions(exprs);
        };
       /* ←— A0633981 7-7-7 Ex.3 ——————————————————————————————————————————→ *\
        | description
