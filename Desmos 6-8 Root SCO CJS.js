@@ -1861,20 +1861,22 @@ PearsonGL.External.rootJS = (function() {
 
         vars.invalidated = false;
 
+        var n = hlps.N.numericValue;
+        var percents = vars.percents;
+
         var exprs = [
           {
             id:'n',
-            latex:'n='+hlps.N.numericValue
+            latex:'n='+n
           },
           {
             id:'distribution',
-            latex:'d=\\left['+vars.percents+'\\right]'
+            latex:'d=\\left['+percents+'\\right]'
           }
         ];
 
         // Generate the population based on the percent distribution and population size
-        var n = hlps.N.numericValue;
-        var population = hs.distributeByProportion(n,vars.percents);
+        var population = hs.distributeByProportion(n,percents);
         exprs.push({
           id:'population',
           latex:'P=\\left['+population+'\\right]'
@@ -1913,6 +1915,10 @@ PearsonGL.External.rootJS = (function() {
           {
             id:'remainder',
             latex:'R=\\left['+population+'\\right]'
+          },
+          {
+            id:'sample_distribution',
+            latex:'D=\\left['+hs.distributeByProportion(100,sample)+'\\right]'
           }
         );
 
