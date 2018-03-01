@@ -1845,15 +1845,18 @@ PearsonGL.External.rootJS = (function() {
         // Initial validation—only need to do this once, because the left
         //  widget will handle it from here.
         hlps.n.observe('numericValue.validate',function(t,h){
-          h.unobserve(t+'validate');
+          h.unobserve(t+'.validate');
           fs.A0633977.validate();
+          o.log('Initial validation 1/2 complete.');
         });
         hlps.distribution.observe('listValue.validate',function(t,h){
-          h.unobserve(t+'validate');
+          h.unobserve(t+'.validate');
           fs.A0633977.validate();
+          o.log('Initial validation 2/2 complete.');
         });
        };
       fs.A0633977.sample = function() {
+        // A0633977_sample
         var o = hs.parseArgs(arguments);
 
         var vars = vs.A0633977;
