@@ -1755,7 +1755,7 @@ PearsonGL.External.rootJS = (function() {
        };
       fs.A0633977.validateAccumulator = function(s,t,i) {
         // Assume it's called on the left's percents, check with the right's distribution
-        return (s && (t === vs.A0633977.distribution.listValue[i]));
+        return (s && (t === hxs.A0633977.distribution.listValue[i]));
        };
       fs.A0633977.validate = function() {
         var vars = vs.A0633977;
@@ -1919,6 +1919,10 @@ PearsonGL.External.rootJS = (function() {
           {
             id:'sample_distribution',
             latex:'D=\\left['+hs.distributeByProportion(100,sample)+'\\right]'
+          },
+          {
+            id:'dots',
+            hidden:false
           }
         );
 
