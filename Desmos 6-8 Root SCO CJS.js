@@ -1819,6 +1819,7 @@ PearsonGL.External.rootJS = (function() {
         });
 
         fs.A0633977.validate();
+        o.log('Initial population validation complete.');
        };
       fs.A0633977.initRight = function() {
         var o = hs.parseArgs(arguments);
@@ -1837,6 +1838,12 @@ PearsonGL.External.rootJS = (function() {
 
         // Sample size
         hlps.k = hxs[o.uniqueId].maker('k');
+        hlps.k.observe('numericValue.validate',function(){
+          // Don't automatically invalidate on initialization
+          hlps.k.unobserve('numericValue.validate');
+          // But do invalidate whenever k changes from then on
+          hlps.k.observe('numericValue.invalidate',fs.A0633977.invalidate);
+        });
 
         // Validation will look for these
         hlps.n = hxs[o.uniqueId].maker('n');
@@ -1847,12 +1854,12 @@ PearsonGL.External.rootJS = (function() {
         hlps.n.observe('numericValue.validate',function(t,h){
           h.unobserve(t+'.validate');
           fs.A0633977.validate();
-          o.log('Initial validation 1/2 complete.');
+          o.log('Initial sample validation 1/2 complete.');
         });
         hlps.distribution.observe('listValue.validate',function(t,h){
           h.unobserve(t+'.validate');
           fs.A0633977.validate();
-          o.log('Initial validation 2/2 complete.');
+          o.log('Initial sample validation 2/2 complete.');
         });
        };
       fs.A0633977.sample = function() {
@@ -1864,13 +1871,18 @@ PearsonGL.External.rootJS = (function() {
 
         vars.invalidated = false;
 
-        var n = hlps.N.numericValue;
+        if (hlps.left === undefined || hlps.N.numericValue === undefined) {
+          fs.A0633977.invalidate;
+          return;
+        }
+
+        var N = hlps.N.numericValue;
         var percents = vars.percents;
 
         var exprs = [
           {
             id:'n',
-            latex:'n='+n
+            latex:'n='+N
           },
           {
             id:'distribution',
@@ -1879,7 +1891,7 @@ PearsonGL.External.rootJS = (function() {
         ];
 
         // Generate the population based on the percent distribution and population size
-        var population = hs.distributeByProportion(n,percents);
+        var population = hs.distributeByProportion(N,percents);
         exprs.push({
           id:'population',
           latex:'P=\\left['+population+'\\right]'
@@ -1889,9 +1901,10 @@ PearsonGL.External.rootJS = (function() {
         var sample = population.map(function(){return 0;});
         var order = [];
 
+        var n = N;
         var random;
         var i;
-        while(order.length < k && order.length < n) {
+        while(order.length < k && order.length < N) {
           i = 0;
           // Pick a random member of the population and add it to the sample
           random = n*Math.random();
