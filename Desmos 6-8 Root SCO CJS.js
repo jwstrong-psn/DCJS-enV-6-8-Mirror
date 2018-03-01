@@ -805,6 +805,58 @@ PearsonGL.External.rootJS = (function() {
           second: second,
           favor: favor
         };
+       },
+      /* ←— reroundError —————————————————————————————————————————————————→ *\
+       | gives the relative observable error from switching the rounding
+       |  direction of a given number.
+       * ←————————————————————————————————————————————————————————————————→ */
+      reroundError: function(x) {
+        // (x + 0.5)%1 - 0.5 is the relative location of x from its rounded value
+        //  If x = *.5, this value is −0.5, if x = *.95, it is −0.05, etc.
+        // (0.5 - |…|) is how close it is from being rounded the other way.
+        //  If x = *.5, this value is 0, if x = *.95, it is 0.05, etc.
+        return (0.5 - Math.abs((x + 0.5)%1 - 0.5)) / Math.abs(x);
+       },
+      /* ←— distributeByProportion ———————————————————————————————————————→ *\
+       | Given a number of items n and an array, returns an array of integers
+       |  with total n, closely approximating the distribution of the given array.
+       | If a simple rounded product does not add to n, adds or subtracts items
+       |  from each section in order of relative error.
+       * ←————————————————————————————————————————————————————————————————→ */
+      distributeByProportion: function(n,proportions) {
+        var total = proportions.reduce(function(s,t){return s + t;});
+        var distribution = proportions.map(function(p){return n * p/total});
+
+        // Round everything
+        var rounded = distribution.map(function(x) {return Math.round(x);});
+        total = rounded.reduce(function(s,t) {return s + t;});
+
+        // Switch roundings until the total is n (hopefully no more than k/2 where
+        //  k is the number of buckets.
+
+        // List the distribution in descending (.pop() = lowest) order of relative error
+        //  in switching roundings.
+        var order = Object.keys(distribution).sort(function(a,b){
+          return hs.reroundError(distribution[b]) - hs.reroundError(distribution[a]);
+        });
+
+        var i;
+        while(total > n) {
+          i = order.pop();
+          if(distribution[i]%1 >= 0.5) {
+            rounded[i] -= 1;
+            total -= 1;
+          }
+        }
+        while(total < n) {
+          i = order.pop();
+          if(distribution[i]%1 < 0.5) {
+            rounded[i] += 1;
+            total += 1;
+          }
+        }
+
+        return rounded;
        }
      };
 
@@ -1684,6 +1736,187 @@ PearsonGL.External.rootJS = (function() {
           id:o.id,
           latex:expr
         });
+       };
+      /* ←— A0633977 7-6-1 KC ————————————————————————————————————————————→ *\
+       | Approximates a given percent distribution with a random sample
+       | Distribution is defined in a histogram on the left
+       | Sample is generated in a dot plot on the right
+       |  TODO: Animate the picking of the sample
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633977 = {};
+      fs.A0633977.invalidate = function() {
+        if(hxs.A0633977 !== undefined && hxs.A0633977.right !== undefined) {
+          vs.A0633977.invalidated = true;
+          hxs.A0633977.right.setExpression({
+            id:'dots',
+            hidden:true
+          });
+        }
+       };
+      fs.A0633977.validateAccumulator = function(s,t,i) {
+        // Assume it's called on the left's percents, check with the right's distribution
+        return (s && (t === vs.A0633977.distribution.listValue[i]));
+       };
+      fs.A0633977.validate = function() {
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        if(vars.invalidated === true) {
+          return;
+        }
+
+        // Only invalidate if both widgets have loaded
+        if(hlps.left !== undefined && hlps.right !== undefined) {
+          if (
+            // If the left has a different number of elements than the right thinks it does
+            (hlps.N !== undefined && hlps.n !== undefined &&
+              hlps.N.numericValue !== undefined && hlps.n.numericValue !== undefined &&
+              hlps.N.numericValue !== hlps.n.numericValue) ||
+            // If the percents on the left are different than the right's distribution
+            (Array.isArray(vars.percents) && hlps.distribution !== undefined &&
+              Array.isArray(vars.distribution.listValue) &&
+              (vars.percents.length !== vars.distribution.listValue.length ||
+                !(vars.percents.reduce(fs.A0633977.validateAccumulator,true))))
+          ) {
+            fs.A0633977.invalidate();
+          }
+        }
+       };
+      fs.A0633977.initLeft = function() {
+        var o = hs.parseArgs(arguments);
+
+        // Until proper o.uniqueId happens, we have to use our own
+        vs.A0633977 = vs.A0633977 || {};
+        hxs.A0633977 = hxs.A0633977 || {};
+
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        hlps.left = o.desmos;
+
+        hlps.N = hxs[o.uniqueId].maker('n');
+
+        hlps.N.observe('numericValue.validate',fs.A0633977.validate);
+
+        hlps.p = hxs[o.uniqueId].maker('p');
+
+        hlps.p.observe('listValue.updatePercents', function(t,h){
+
+          var percents = Array.from(h[t]);
+
+          // Round everything
+          var rounded = hs.distributeByProportion(100,percents);
+
+          // Save the rounded percents so the dot plot can grab 'em.
+          vars.percents = rounded;
+
+          fs.A0633977.validate();
+
+          o.desmos.setExpression({
+            id:'percents',
+            latex:'P=\\left['+rounded+'\\right]'
+          });
+        });
+
+        fs.A0633977.validate();
+       };
+      fs.A0633977.initRight = function() {
+        var o = hs.parseArgs(arguments);
+
+        // Until proper o.uniqueId happens, we have to use our own
+        vs.A0633977 = vs.A0633977 || {};
+        hxs.A0633977 = hxs.A0633977 || {};
+
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        // Don't invalidate if we're just resuming from a saved state.
+        vars.invalidated = false;
+
+        hlps.right = o.desmos;
+
+        // Sample size
+        hlps.k = hxs[o.uniqueId].maker('k');
+
+        // Validation will look for these
+        hlps.n = hxs[o.uniqueId].maker('n');
+        hlps.distribution = hxs[o.uniqueId].maker('d');
+
+        // Initial validation—only need to do this once, because the left
+        //  widget will handle it from here.
+        hlps.n.observe('numericValue.validate',function(t,h){
+          h.unobserve(t+'validate');
+          fs.A0633977.validate();
+        });
+        hlps.distribution.observe('listValue.validate',function(t,h){
+          h.unobserve(t+'validate');
+          fs.A0633977.validate();
+        });
+       };
+      fs.A0633977.sample = function() {
+        var o = hs.parseArgs(arguments);
+
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        vars.invalidated = false;
+
+        var exprs = [
+          {
+            id:'n',
+            latex:'n='+hlps.N.numericValue
+          },
+          {
+            id:'distribution',
+            latex:'d=\\left['+vars.percents+'\\right]'
+          }
+        ];
+
+        // Generate the population based on the percent distribution and population size
+        var n = hlps.N.numericValue;
+        var population = hs.distributeByProportion(n,vars.percents);
+        exprs.push({
+          id:'population',
+          latex:'P=\\left['+population+'\\right]'
+        });
+
+        var k = hlps.k.numericValue;
+        var sample = population.map(function(){return 0;});
+        var order = [];
+
+        var random;
+        var i;
+        while(order.length < k && order.length < n) {
+          i = 0;
+          // Pick a random member of the population and add it to the sample
+          random = n*Math.random();
+          while(population[i] < random) {
+            random -= population[i];
+            i += 1;
+          }
+
+          population[i] -= 1;
+          n -= 1;
+          sample[i] += 1;
+          order.push(i);
+        }
+
+        exprs.push(
+          {
+            id:'order',
+            latex:'o=\\left['+order+'\\right]'
+          },
+          {
+            id:'sample',
+            latex:'S=\\left['+sample+'\\right]'
+          },
+          {
+            id:'remainder',
+            latex:'R=\\left['+population+'\\right]'
+          }
+        );
+
+        o.desmos.setExpressions(exprs);
        };
       /* ←— A0633979 7-6-3 Ex.1 ——————————————————————————————————————————→ *\
        | generates a new set of data between 0 and 50
