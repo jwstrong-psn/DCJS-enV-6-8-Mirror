@@ -1774,8 +1774,8 @@ PearsonGL.External.rootJS = (function() {
               hlps.N.numericValue !== hlps.n.numericValue) ||
             // If the percents on the left are different than the right's distribution
             (Array.isArray(vars.percents) && hlps.distribution !== undefined &&
-              Array.isArray(vars.distribution.listValue) &&
-              (vars.percents.length !== vars.distribution.listValue.length ||
+              Array.isArray(hlps.distribution.listValue) &&
+              (vars.percents.length !== hlps.distribution.listValue.length ||
                 !(vars.percents.reduce(fs.A0633977.validateAccumulator,true))))
           ) {
             fs.A0633977.invalidate();
