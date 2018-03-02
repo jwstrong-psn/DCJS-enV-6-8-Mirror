@@ -1188,16 +1188,31 @@ PearsonGL.External.rootJS = (function() {
        fs.tool.barDiagram = {};
       fs.tool.barDiagram.init = function() {
         var o = hs.parseArgs(arguments);
-        //var vars = vs[o.uniqueId];
+        
         var hlps = hxs[o.uniqueId];
-      
+
+        // I should be unobserving everything here, but it seems like I'm not.
+        o.desmos.unobserve('graphpaperBounds.barDiagramHeight');
+        o.desmos.unobserveEvent('reset.unobserve');
+        if(hlps.W !== undefined) {
+          hlps.W.unobserve('numericValue.updateBounds');
+        }
+        if(hlps.P !== undefined) {
+          hlps.P.unobserve('numericValue.updateBounds');
+        }
+
+        // JUST TO BE ABSOLUTELY SURE
+        delete hxs[o.uniqueId];
+        o = hs.parseArgs(arguments);
+        hlps = hxs[o.uniqueId];
+
         hlps.w = hlps.maker('w');
         hlps.W = hlps.maker('W');
         hlps.p = hlps.maker('p');
         hlps.P = hlps.maker('P');
 
         var updateBounds = function() {
-          // stuff
+          // Expand the view if the bar is wider than 10/12ths the width of the view.
           var bounds = o.desmos.graphpaperBounds.mathCoordinates;
           var unit = Math.max(bounds.width/12, hlps.P.numericValue/10, hlps.W.numericValue/10);
           if(typeof unit !== "number" || Number.isNaN(unit)) {
@@ -1226,8 +1241,17 @@ PearsonGL.External.rootJS = (function() {
         };
 
         o.desmos.observe('graphpaperBounds.barDiagramHeight',updateBounds);
-        hlps.W.observe('numericValue',updateBounds);
-        hlps.P.observe('numericValue',updateBounds);
+        hlps.W.observe('numericValue.updateBounds',updateBounds);
+        hlps.P.observe('numericValue.updateBounds',updateBounds);
+
+        // Prevent bounds from being remembered when the graph is reset
+        o.desmos.observeEvent('reset.unobserve',function(){
+          o.desmos.unobserveEvent('reset.unobserve');
+          o.desmos.unobserve('graphpaperBounds.barDiagramHeight');
+          hlps.W.unobserve('numericValue.updateBounds');
+          hlps.P.unobserve('numericValue.updateBounds');
+          delete hxs[o.uniqueId];
+        });
        };
       fs.tool.barDiagram.swapFix = function() {
         var o = hs.parseArgs(arguments);
