@@ -583,7 +583,7 @@ PearsonGL.External.rootJS = (function() {
           return x.reduce(function(acc,val) {
             return acc + val;
           }, 0);
-        }
+        };
         var xBar = total(x) / x.length;
         var yBar = total(y) / y.length;
         var dxs = x.map(function(val) {return val - xBar;});
@@ -605,7 +605,259 @@ PearsonGL.External.rootJS = (function() {
           x_variance:total(xVars)/x.length,
           y_variance:total(yVars)/y.length
         };
-      }
+       },
+      /* ←— optimalRatio ————————————————————————————————————————————————→ *\
+       | Calculates the closest fraction to a given number, given a list of
+       |  candidate numerators & denominators. The fraction returned is in
+       |  reduced form (down to the smallest given denominator with a corresponding
+       |  numerator).
+       |    {
+       |      numerator: Number,
+       |      denominator: Number,
+       |      integerPart: Number
+       |    }
+       | By default, the return value is a mixed number, i.e., only fractions
+       |  where the numerator is less than or equal to the denominator.
+       |  If `improper` is set to `true`, the choice will include options where
+       |  the numerator is greater than the denominator.
+       | If no list of numerators & denominators is included, or if falsey
+       |  values are passed, uses an arbitrary default.
+       |
+       | NOTE: if `improper` is set to `true`, the `integerPart` returned will
+       |  always be 0, even if a mixed number would be closer to the given value
+       |  than an improper fraction with the given numerators & denominators;
+       |  i.e., optimalRatio will NOT generate numerators not given in the list.
+       |  This means that for very large numbers, the optimalRatio will always
+       |  return the maximum given numerator and minimum given denominator.
+       * ←———————————————————————————————————————————————————————————————→ */
+      optimalRatio: function(x, numerators, denominators, improper) {
+        var mixed = !improper;
+        numerators = (Array.isArray(numerators) && Array.from(numerators).sort(function(a,b){return (a - b);})) ||
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 15, 17, 19, 49, 99, 97];
+        denominators = (Array.isArray(denominators) && Array.from(denominators).sort(function(a,b){return (a - b);})) ||
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 50, 100];
+        // Find the smallest numerator in the ratio that is closest
+        var numerator = Math.min.apply(null,numerators);
+        var denominator = Math.max.apply(null,denominators);
+
+        var output = {};
+
+        if(mixed) {
+          if(numerator > denominator) {
+            throw new Error("optimalRatio requires a numerator less than or equal to a " +
+              "denominator unless `improper` is `true`");
+          }
+          output.integerPart = Math.floor(x);
+          x = x % 1;
+        } else {
+          output.integerPart = 0;
+        }
+
+        var error = Math.abs(x - numerator/denominator);
+
+        numerators.forEach(function(n){
+          var d = denominator;
+          var e = Math.abs(x - n/d);
+          denominators.forEach(function(newDenominator){
+            if(mixed && n > newDenominator) {
+              return;
+            }
+            var newError = Math.abs(x - n/newDenominator);
+            // console.log(n+'/'+newDenominator+': '+(newError<e));
+            if(newError < e) {
+              d = newDenominator;
+              e = newError;
+            }
+          });
+
+          if(e < error || e === error && (d < denominator && n < numerator)) {
+            numerator = n;
+            denominator = d;
+            error = e;
+          }
+        });
+
+        output.numerator = numerator;
+        output.denominator = denominator;
+
+        return output;
+       },
+      /* ←— optimalOdds —————————————————————————————————————————————————→ *\
+       | Calculates the closest integer pair approximating the odds associated
+       |  with a given probability, given a catalog of candidate pairs, where the
+       |  keys are the possible values for the first number, and the values are
+       |  arrays of possible associated values for the second number. By default,
+       |  gives odds symmetrically, i.e. if the pair (key,val) is in the catalog,
+       |  the pair (val,key) will also be considered.
+       |
+       | Returns an object of the form:
+       |    {
+       |      first: Number,
+       |      second: Number,
+       |      favor: Boolean (true if p ≈ first/sum, false if p ≈ second/sum)
+       |    }
+       |
+       | If a catalog of candidate pairs is not given, then an arbitrary default
+       |  is used.
+       * ←———————————————————————————————————————————————————————————————→ */
+      optimalOdds: function(p, pairs, asymmetric) {
+        pairs = pairs || {
+          1:[1,2,3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100,1000,10000,100000,1000000,Infinity],
+          2:[3,5],
+          3:[4,5],
+          4:[5],
+          5:[6],
+          "Infinity":[1]
+        };
+
+        var keys = Object.keys(pairs).map(function(e){
+          return +e;
+        });
+
+        var first = keys[0];
+        var second = pairs[first][0];
+        var favor = true;
+        var error = Math.abs(p - first/(first+second));
+
+        // First test for even odds.
+        var even;
+        if(p === 0.5) {
+          even = Math.min.apply(null,keys.filter(function(e){
+            return (pairs[e].indexOf(e) > -1);
+          }));
+          if(even < Infinity || pairs[Infinity].indexOf(Infinity) > -1) {
+            return {
+              first: even,
+              second: even,
+              favor: true
+            };
+          }
+        }
+
+        // Then test for impossible/certain
+        if(Array.isArray(pairs[Infinity]) && pairs[Infinity].length > 0) {
+          if(asymmetric) {
+            if(p === 1) {
+              return {
+                first:Infinity,
+                second:Math.min.apply(null,pairs[Infinity]),
+                favor:true
+              };
+            }
+          } else if (p === 0 || p === 1) {
+            first = Infinity;
+            second = Math.min.apply(null,pairs[Infinity]);
+            favor = (p === 1);
+            error = 0;
+          }
+        }
+
+        var symmetric = !asymmetric;
+
+        // Now test for all the fuzzy stuff
+        keys.forEach(function(newFirst){
+          if(newFirst === Infinity) {
+            return;
+          } else {
+            pairs[newFirst].forEach(function(newSecond){
+              if(newSecond === Infinity) {
+                // Let's not deal with infinity arithmetic if we can help it
+                if((p === 0 || p === 1) &&
+                  // Only overwrite if this is the first infinity, or if
+                  // the non-infinity value decreases
+                   (error > 0 || newFirst < Math.min(first, second))) {
+                  first = newFirst;
+                  second = Infinity;
+                  favor = (p === 0);
+                  // p === 1 has already been handled for asymmetric
+                  error = 0;
+                }
+                return;
+              }
+              // Now that infinity is out of the way…
+              var ratio = newFirst / (newFirst + newSecond);
+              var newError = Math.abs(p - ratio);
+              if(newError < error || (newError === error &&
+                newFirst < (favor ? first : second))) {
+                first = newFirst;
+                second = newSecond;
+                favor = true;
+                error = newError;
+              }
+              if(symmetric) {
+                // NOTE: even odds are always in your favour
+                ratio = 1 - ratio;
+                newError = Math.abs(p - ratio);
+                if(newError < error || (newError === error &&
+                newFirst < (favor ? first : second))) {
+                  first = newFirst;
+                  second = newSecond;
+                  favor = false;
+                  error = newError;
+                }
+              }
+            });
+          }
+        });
+
+        return {
+          first: first,
+          second: second,
+          favor: favor
+        };
+       },
+      /* ←— reroundError —————————————————————————————————————————————————→ *\
+       | gives the relative observable error from switching the rounding
+       |  direction of a given number.
+       * ←————————————————————————————————————————————————————————————————→ */
+      reroundError: function(x) {
+        // (x + 0.5)%1 - 0.5 is the relative location of x from its rounded value
+        //  If x = *.5, this value is −0.5, if x = *.95, it is −0.05, etc.
+        // (0.5 - |…|) is how close it is from being rounded the other way.
+        //  If x = *.5, this value is 0, if x = *.95, it is 0.05, etc.
+        return (0.5 - Math.abs((x + 0.5)%1 - 0.5)) / Math.abs(x);
+       },
+      /* ←— distributeByProportion ———————————————————————————————————————→ *\
+       | Given a number of items n and an array, returns an array of integers
+       |  with total n, closely approximating the distribution of the given array.
+       | If a simple rounded product does not add to n, adds or subtracts items
+       |  from each section in order of relative error.
+       * ←————————————————————————————————————————————————————————————————→ */
+      distributeByProportion: function(n,proportions) {
+        var total = proportions.reduce(function(s,t){return s + t;});
+        var distribution = proportions.map(function(p){return n * p/total});
+
+        // Round everything
+        var rounded = distribution.map(function(x) {return Math.round(x);});
+        total = rounded.reduce(function(s,t) {return s + t;});
+
+        // Switch roundings until the total is n (hopefully no more than k/2 where
+        //  k is the number of buckets.
+
+        // List the distribution in descending (.pop() = lowest) order of relative error
+        //  in switching roundings.
+        var order = Object.keys(distribution).sort(function(a,b){
+          return hs.reroundError(distribution[b]) - hs.reroundError(distribution[a]);
+        });
+
+        var i;
+        while(total > n) {
+          i = order.pop();
+          if(distribution[i]%1 >= 0.5) {
+            rounded[i] -= 1;
+            total -= 1;
+          }
+        }
+        while(total < n) {
+          i = order.pop();
+          if(distribution[i]%1 < 0.5) {
+            rounded[i] += 1;
+            total += 1;
+          }
+        }
+
+        return rounded;
+       }
      };
 
   /* ←— EXPORTS / PUBLIC FUNCTIONS ————————————————————————————————————————→ *\
@@ -744,7 +996,7 @@ PearsonGL.External.rootJS = (function() {
 
         o.log('observeBounds activated on '+o.uniqueId);
 
-        o.desmos.observe('graphpaperBounds.observeBounds', function(t,h) {
+        function updateBounds(t,h) {
           vars.mathBounds = h[t].mathCoordinates;
           vars.pixelFrame = h[t].pixelCoordinates;
 
@@ -768,7 +1020,18 @@ PearsonGL.External.rootJS = (function() {
               latex:'y_{bottomBound}='+bounds.bottom
             }
           ]);
-        });
+        }
+
+        o.desmos.observe('graphpaperBounds.observeBounds', updateBounds);
+
+        updateBounds('graphpaperBounds',o.desmos);
+       };
+      /* ←— record value —————————————————————————————————————————————————→ *\
+       | Simply saves the value of a variable to the variable cache.
+       * ←————————————————————————————————————————————————————————————————→ */
+      fs.common.record = function() {
+        var o = hs.parseArgs(arguments);
+        vs[o.uniqueId][o.name] = o.value;
        };
       /* ←— show/hide expression —————————————————————————————————————————→ *\
        | Shows or hides an expression with a given ID
@@ -783,8 +1046,9 @@ PearsonGL.External.rootJS = (function() {
         });
        };
       /* ←— set value —————————————————————————————————————————————————————→ *\
-       | Set the value of an variable.
-       | Use with slider.
+       | Set the value of a variable.
+       | Does the same thing as a slider without a function would do, but
+       |  doesn't update the position of the slider when the variable changes.
        |
        | n.b.: Theoretically could be authored to interpret ID from Name,
        |   in order that it could be used from the "Expressions" tab,
@@ -1281,8 +1545,18 @@ PearsonGL.External.rootJS = (function() {
        | WiP TK TODO
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633935 = {};
+       cs.A0633935 = {pixelTolerance:5};
       fs.A0633935.init = function() {
         var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        hlps.init = hlps.maker('i_{nit}');
+        hlps.init.observe('numericValue.init',function(t,h) {
+          if(h[t] === 0) {
+            h.unobserve(t);
+            newProblem();
+          }
+        });
 
         // returns a random number from 1 and n with equal probability of each
         function randInt(n) {
@@ -1299,19 +1573,22 @@ PearsonGL.External.rootJS = (function() {
           o.desmos.setExpression({
             id:'equation',
             latex:'('+x2+'-'+x1+')('+y2+'-y)=('+y2+'-'+y1+')('+x2+'-x)',
-            color:cs.color.mgmColors.blue
+            color:cs.color.mgmColors.blue,
+            hidden:false
           });
 
           o.desmos.setExpressions([
             {
               id:'p1',
               latex:'('+x1+','+y1+')',
-              color:cs.color.mgmColors.blue
+              color:cs.color.mgmColors.blue,
+              hidden:true
             },
             {
               id:'p2',
               latex:'('+x2+','+y2+')',
-              color:cs.color.mgmColors.blue
+              color:cs.color.mgmColors.blue,
+              hidden:true
             }
             ]);
         }
@@ -1320,23 +1597,24 @@ PearsonGL.External.rootJS = (function() {
         function constrainBounds(){
           var mathCoordinates = mergeObjects({},o.desmos.graphpaperBounds.mathCoordinates);
 
-          // var pixelCoordinates = o.desmos.graphpaperBounds.pixelCoordinates;
+          var pixelCoordinates = o.desmos.graphpaperBounds.pixelCoordinates;
 
           if (mathCoordinates.left === -mathCoordinates.right &&
               mathCoordinates.bottom === -mathCoordinates.top &&
-              Math.min(mathCoordinates.height, mathCoordinates.width) === 20) {
+              Math.min(mathCoordinates.height, mathCoordinates.width) === 20 &&
+              Math.abs(pixelCoordinates.height - mathCoordinates.height/mathCoordinates.width * pixelCoordinates.width) <= cs.A0633935.pixelTolerance) {
             return;
           }
 
-          if (mathCoordinates.height > mathCoordinates.width) {
+          if (pixelCoordinates.height > pixelCoordinates.width) {
             mathCoordinates.left = -10;
             mathCoordinates.right = 10;
-            mathCoordinates.top = mathCoordinates.height*10/mathCoordinates.width;
+            mathCoordinates.top = pixelCoordinates.height*10/pixelCoordinates.width;
             mathCoordinates.bottom = -mathCoordinates.top;
           } else {
             mathCoordinates.bottom = -10;
             mathCoordinates.top = 10;
-            mathCoordinates.right = mathCoordinates.width*10/mathCoordinates.height;
+            mathCoordinates.right = pixelCoordinates.width*10/pixelCoordinates.height;
             mathCoordinates.left = -mathCoordinates.right;
           }
 
@@ -1433,9 +1711,9 @@ PearsonGL.External.rootJS = (function() {
 
         var expr;
         if(o.id === 'scores') {
-          expr = 'S='+(hlps.P.numericValue+1)
+          expr = 'S='+(hlps.P.numericValue+1);
         } else {
-          expr = 'M='+(hlps.W.numericValue-hlps.P.numericValue+1)
+          expr = 'M='+(hlps.W.numericValue-hlps.P.numericValue+1);
         }
 
         if(hlps.W.numericValue === 0) {
@@ -1458,6 +1736,355 @@ PearsonGL.External.rootJS = (function() {
           id:o.id,
           latex:expr
         });
+       };
+      /* ←— A0633977 7-6-1 KC ————————————————————————————————————————————→ *\
+       | Approximates a given percent distribution with a random sample
+       | Distribution is defined in a histogram on the left
+       | Sample is generated in a dot plot on the right
+       |  TODO: Animate the picking of the sample
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633977 = {};
+      fs.A0633977.invalidate = function() {
+        if(hxs.A0633977 !== undefined && hxs.A0633977.right !== undefined) {
+          vs.A0633977.invalidated = true;
+          hxs.A0633977.right.setExpression({
+            id:'dots',
+            hidden:true
+          });
+        }
+       };
+      fs.A0633977.validateAccumulator = function(s,t,i) {
+        // Assume it's called on the left's percents, check with the right's distribution
+        return (s && (t === hxs.A0633977.distribution.listValue[i]));
+       };
+      fs.A0633977.validate = function() {
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        if(vars.invalidated === true) {
+          return;
+        }
+
+        // Only invalidate if both widgets have loaded
+        if(hlps.left !== undefined && hlps.right !== undefined) {
+          if (
+            // If the left has a different number of elements than the right thinks it does
+            (hlps.N !== undefined && hlps.n !== undefined &&
+              hlps.N.numericValue !== undefined && hlps.n.numericValue !== undefined &&
+              hlps.N.numericValue !== hlps.n.numericValue) ||
+            // If the percents on the left are different than the right's distribution
+            (Array.isArray(vars.percents) && hlps.distribution !== undefined &&
+              Array.isArray(hlps.distribution.listValue) &&
+              (vars.percents.length !== hlps.distribution.listValue.length ||
+                !(vars.percents.reduce(fs.A0633977.validateAccumulator,true))))
+          ) {
+            fs.A0633977.invalidate();
+          }
+        }
+       };
+      fs.A0633977.initLeft = function() {
+        var o = hs.parseArgs(arguments);
+
+        // Until proper o.uniqueId happens, we have to use our own
+        vs.A0633977 = vs.A0633977 || {};
+        hxs.A0633977 = hxs.A0633977 || {};
+
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        hlps.left = o.desmos;
+
+        hlps.N = hxs[o.uniqueId].maker('n');
+
+        hlps.N.observe('numericValue.validate',fs.A0633977.validate);
+
+        hlps.p = hxs[o.uniqueId].maker('p');
+
+        hlps.p.observe('listValue.updatePercents', function(t,h){
+
+          var percents = Array.from(h[t]);
+
+          // Round everything
+          var rounded = hs.distributeByProportion(100,percents);
+
+          // Save the rounded percents so the dot plot can grab 'em.
+          vars.percents = rounded;
+
+          fs.A0633977.validate();
+
+          o.desmos.setExpression({
+            id:'percents',
+            latex:'P=\\left['+rounded+'\\right]'
+          });
+        });
+
+        fs.A0633977.validate();
+        o.log('Initial population validation complete.');
+       };
+      fs.A0633977.initRight = function() {
+        var o = hs.parseArgs(arguments);
+
+        // Until proper o.uniqueId happens, we have to use our own
+        vs.A0633977 = vs.A0633977 || {};
+        hxs.A0633977 = hxs.A0633977 || {};
+
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        // Don't invalidate if we're just resuming from a saved state.
+        vars.invalidated = false;
+
+        hlps.right = o.desmos;
+
+        // Sample size
+        hlps.k = hxs[o.uniqueId].maker('k');
+        hlps.k.observe('numericValue.validate',function(){
+          // Don't automatically invalidate on initialization
+          hlps.k.unobserve('numericValue.validate');
+          // But do invalidate whenever k changes from then on
+          hlps.k.observe('numericValue.invalidate',fs.A0633977.invalidate);
+        });
+
+        // Validation will look for these
+        hlps.n = hxs[o.uniqueId].maker('n');
+        hlps.distribution = hxs[o.uniqueId].maker('d');
+
+        // Initial validation—only need to do this once, because the left
+        //  widget will handle it from here.
+        hlps.n.observe('numericValue.validate',function(t,h){
+          h.unobserve(t+'.validate');
+          fs.A0633977.validate();
+          o.log('Initial sample validation 1/2 complete.');
+        });
+        hlps.distribution.observe('listValue.validate',function(t,h){
+          h.unobserve(t+'.validate');
+          fs.A0633977.validate();
+          o.log('Initial sample validation 2/2 complete.');
+        });
+       };
+      fs.A0633977.sample = function() {
+        // A0633977_sample
+        var o = hs.parseArgs(arguments);
+
+        var vars = vs.A0633977;
+        var hlps = hxs.A0633977;
+
+        vars.invalidated = false;
+
+        if (hlps.left === undefined || hlps.N.numericValue === undefined) {
+          fs.A0633977.invalidate;
+          return;
+        }
+
+        var N = hlps.N.numericValue;
+        var percents = vars.percents;
+
+        var exprs = [
+          {
+            id:'n',
+            latex:'n='+N
+          },
+          {
+            id:'distribution',
+            latex:'d=\\left['+percents+'\\right]'
+          }
+        ];
+
+        // Generate the population based on the percent distribution and population size
+        var population = hs.distributeByProportion(N,percents);
+        exprs.push({
+          id:'population',
+          latex:'P=\\left['+population+'\\right]'
+        });
+
+        var k = hlps.k.numericValue;
+        var sample = population.map(function(){return 0;});
+        var order = [];
+
+        var n = N;
+        var random;
+        var i;
+        while(order.length < k && order.length < N) {
+          i = 0;
+          // Pick a random member of the population and add it to the sample
+          random = n*Math.random();
+          while(population[i] < random) {
+            random -= population[i];
+            i += 1;
+          }
+
+          population[i] -= 1;
+          n -= 1;
+          sample[i] += 1;
+          order.push(i);
+        }
+
+        exprs.push(
+          {
+            id:'order',
+            latex:'o=\\left['+order+'\\right]'
+          },
+          {
+            id:'sample',
+            latex:'S=\\left['+sample+'\\right]'
+          },
+          {
+            id:'remainder',
+            latex:'R=\\left['+population+'\\right]'
+          },
+          {
+            id:'sample_distribution',
+            latex:'D=\\left['+hs.distributeByProportion(100,sample)+'\\right]'
+          },
+          {
+            id:'dots',
+            hidden:false
+          }
+        );
+
+        o.desmos.setExpressions(exprs);
+       };
+      /* ←— A0633979 7-6-3 Ex.1 ——————————————————————————————————————————→ *\
+       | generates a new set of data between 0 and 50
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633979 = {};
+      fs.A0633979.newData = function() {
+        var o = hs.parseArgs(arguments);
+
+        o.desmos.setExpression({
+          id:'answer',
+          hidden:true
+        });
+
+        if(typeof o.value !== "number" || o.value <= 0 || o.value % 1 !== 0) {
+          o.value = 20;
+        }
+
+        if(typeof o.id !== "string" || o.id === '') {
+          o.id = "data";
+        }
+
+        if(typeof o.name !== "string" || o.name === '') {
+          o.name = "S"
+        }
+
+        var expr = o.name + "=\\left[";
+
+        var data = [];
+        while(data.length < o.value) {
+          data.push(Math.round((1-Math.random()*Math.random())*25+Math.random()*Math.random()*25));
+        }
+
+        data.sort(function(a,b){
+          return (a - b);
+        });
+        
+        expr += data;
+        expr += "\\right]";
+
+        o.desmos.setExpression({
+          id:o.id,
+          latex:expr
+        });
+       };
+      /* ←— A0633980 7-7-1 KC ————————————————————————————————————————————→ *\
+       | description
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633980 = {};
+       cs.A0633980 = {
+        even_threshold:0.07,
+        likely_threshold:0.3,
+        very_likely_threshold: 0.48,
+        practically_impossible_threshold:0.0035,
+        impossible_threshold:0.0005
+       };
+      fs.A0633980.updateP = function() {
+        var o = hs.parseArgs(arguments);
+
+        var p = o.value;
+
+        var ratio = hs.optimalRatio(p, undefined, undefined, true);
+        var odds = hs.optimalOdds(p);
+
+        var temp;
+        if(odds.second > odds.first) {
+          temp = odds.first;
+          odds.first = odds.second;
+          odds.second = temp;
+          odds.favor = !(odds.favor);
+        }
+
+        var description;
+        if(Math.abs(p-0.5) < cs.A0633980.even_threshold) {
+          description = 'coin flip';
+        } else if (p > 0.5) {
+          if (p < 0.5 + cs.A0633980.likely_threshold) {
+            description = 'likely';
+          } else if (p < 0.5 + cs.A0633980.very_likely_threshold) {
+            description = 'very likely';
+          } else if (p < 1) {
+            description = 'almost certain';
+          } else {
+            description = 'certain';
+          }
+        } else {
+          if (p > 0.5 - cs.A0633980.likely_threshold) {
+            description = 'unlikely';
+          } else if (p > 0.5 - cs.A0633980.very_likely_threshold) {
+            description = 'very unlikely';
+          } else if (p > 0) {
+            description = 'practically impossible';
+          } else {
+            description = 'impossible';
+          }
+        }
+
+        var exprs = [
+          {
+            id:'numerator',
+            latex:'f_n='+ratio.numerator
+          },
+          {
+            id:'denominator',
+            latex:'f_d='+ratio.denominator
+          },
+          {
+            id:'odds_first',
+            latex:'o_l='+odds.first
+          },
+          {
+            id:'odds_second',
+            latex:'o_r='+odds.second
+          },
+          {
+            id:'descriptive',
+            label:description
+          }
+        ];
+
+        if (odds.first === odds.second) {
+          exprs.push({
+            id:'odds',
+            label:'1:1 (even) odds'
+          });
+        } else if (p < cs.A0633980.impossible_threshold || p >= 1-cs.A0633980.impossible_threshold) {
+          exprs.push({
+            id:'odds',
+            label:'1,000,000:1 odds '+(p > 0.5 ? 'in favor' : 'against')
+          });
+        } else if (p < cs.A0633980.practically_impossible_threshold || p >= 1-cs.A0633980.practically_impossible_threshold) {
+          exprs.push({
+            id:'odds',
+            label:'1,000:1 odds '+(p > 0.5 ? 'in favor' : 'against')
+          });
+        } else {
+          exprs.push({
+            id:'odds',
+            label:'{o_l}:{o_r} odds '+(p >= 0.5 ? 'in favor' : 'against')
+          });
+        }
+
+        o.desmos.setExpressions(exprs);
        };
       /* ←— A0633981 7-7-7 Ex.3 ——————————————————————————————————————————→ *\
        | description
@@ -1620,6 +2247,171 @@ PearsonGL.External.rootJS = (function() {
           id:'B_'+which,
           latex:'B_{'+which+'}=['+collection+']'
         });
+       };
+      /* ←— A0633992 7-8-5 KC ————————————————————————————————————————————→ *\
+       | Shows how to calculate circumference given diameter, and vice-versa
+       |  as well as the calculation of pi given both.
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633992 = {};
+      fs.A0633992.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+      
+        hlps.r = hlps.maker('r_0');
+        hlps.d = hlps.maker('d');
+        hlps.C = hlps.maker('C');
+
+        o.desmos.observe('graphpaperBounds.updateFrame',function() {
+          window.setTimeout(function(){
+            fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+          },100);
+        });
+       };
+      fs.A0633992.swapSlider = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        if(o.value === 0) {
+          o.desmos.setExpressions([
+            {
+              id:'slider',
+              latex:'s='+Math.min(Math.max(1,Math.round(hlps.d.numericValue)),50)
+            },
+            {
+              id:'radius',
+              latex:'r_0=\\frac{\\operatorname{round}\\left(50\\cdot\\frac{d}{2}\\right)}{50}'
+            },
+            {
+              id:'circumference',
+              latex:'C=\\frac{\\operatorname{round}\\left(50\\cdot2\\pi r_0\\right)}{50}'
+            },
+            {
+              id:'diameter',
+              latex:'d=s'
+            },
+            {
+              id:'label_r',
+              latex:'\\left(\\frac{R}{2}\\cos\\theta_0+t_{ick}\\cos\\theta_1+2.5t_{ick},\\frac{R}{2}\\sin\\theta_0+t_{ick}\\sin\\theta_1\\right)',
+              label:'r = {d} ÷ 2 = {r0}'
+            },
+            {
+              id:'label_d',
+              label:'Diameter = {d}'
+            },
+            {
+              id:'label_C(r)',
+              latex:'\\left(0,R+t_{ick}\\right)',
+              showLabel: true,
+              label:'C = 2π({r0}) ≈ {C}'
+            },
+            {
+              id:'label_C(d)',
+              latex:'\\left(0,R+2.5t_{ick}\\right)',
+              showLabel: true,
+              label:'C = π({d}) ≈ {C}'
+            },
+            {
+              id:'label_pi',
+              latex:'\\left(0,-\\sqrt{R^2-\\left(5t_{ick}\\right)^2}\\right)',
+              label:'π ≈ {C} ÷ {d} ≈ 3.14'
+            }
+          ]);
+        } else if (o.value === 1) {
+          o.desmos.setExpressions([
+            {
+              id:'slider',
+              latex:'s='+Math.min(Math.max(1,Math.round(hlps.C.numericValue)),50)
+            },
+            {
+              id:'radius',
+              latex:'r_0=\\frac{\\operatorname{round}\\left(50\\cdot\\frac{d}{2}\\right)}{50}'
+            },
+            {
+              id:'circumference',
+              latex:'C=s'
+            },
+            {
+              id:'diameter',
+              latex:'d=\\frac{\\operatorname{round}\\left(50\\cdot\\frac{C}{\\pi}\\right)}{50}'
+            },
+            {
+              id:'label_r',
+              latex:'\\left(\\frac{R}{2}\\cos\\theta_0+t_{ick}\\cos\\theta_1+3.5t_{ick},\\frac{R}{2}\\sin\\theta_0+t_{ick}\\sin\\theta_1\\right)',
+              label:'r = {C} ÷ (2π) ≈ {r0}'
+            },
+            {
+              id:'label_d',
+              label:'d = {C} ÷ π ≈ {d}'
+            },
+            {
+              id:'label_C(r)',
+              latex:'\\left(0,R+t_{ick}\\right)',
+              showLabel: false,
+              label:'Circumference = {C}'
+            },
+            {
+              id:'label_C(d)',
+              latex:'\\left(0,R+t_{ick}\\right)',
+              showLabel: true,
+              label:'Circumference = {C}'
+            },
+            {
+              id:'label_pi',
+              latex:'\\left(0,-\\sqrt{R^2-\\left(5t_{ick}\\right)^2}\\right)',
+              label:'π ≈ {C} ÷ {d} ≈ 3.14'
+            }
+          ]);
+        }
+       };
+      fs.A0633992.updateFrame = function() {
+        var o = hs.parseArgs(arguments);
+
+        // var math = o.desmos.graphpaperBounds.mathCoordinates;
+        var pixels = o.desmos.graphpaperBounds.pixelCoordinates;
+
+        var newBounds = {};
+
+        newBounds.top = Math.min(o.value+70*2*o.value/(pixels.height-200),2*o.value);
+        newBounds.bottom = -Math.min(o.value+130*2*o.value/(pixels.height-200),4*o.value);
+        newBounds.right = Math.min(o.value+10*2*o.value/(pixels.width-20),3*o.value);
+        newBounds.left = -newBounds.right;
+
+        if(newBounds.top < o.value) {
+          newBounds.top = 2*o.value;
+          newBounds.bottom = -4*o.value;
+        }
+
+        if(newBounds.right < o.value) {
+          newBounds.right = 3*o.value;
+          newBounds.left = -3*o.value;
+        }
+
+        var newHeight = newBounds.top - newBounds.bottom;
+        var newWidth = newBounds.right - newBounds.left;
+
+        var newAspect = +((newWidth / newHeight).toPrecision(3));
+        var aspect = +((pixels.width / pixels.height).toPrecision(3));
+
+        o.log("Changing aspect "+newAspect+" to "+aspect);
+
+        // Pixel frame is narrower than required → buffer the height to keep
+        //  the aspect ratio matching the pixel dimensions
+        if(newAspect > aspect) {
+          newBounds.top = +((newBounds.top*newAspect/aspect).toPrecision(4));
+          newBounds.bottom = +((newBounds.bottom*newAspect/aspect).toPrecision(4));
+          newBounds.left = +(newBounds.left.toPrecision(4));
+          newBounds.right = +(newBounds.right.toPrecision(4));
+        } else if (newAspect < aspect) {
+          newBounds.left = +((newBounds.left*aspect/newAspect).toPrecision(4));
+          newBounds.right = +((newBounds.right*aspect/newAspect).toPrecision(4));
+          newBounds.top = +(newBounds.top.toPrecision(4));
+          newBounds.bottom = +(newBounds.bottom.toPrecision(4));
+        }
+
+        // o.log("Now "+(newBounds.right-newBounds.left)+":"+(newBounds.top-newBounds.bottom));
+        // o.log(" or "+((newBounds.right-newBounds.left)/(newBounds.top-newBounds.bottom)));
+
+        o.desmos.setMathBounds(newBounds);
        };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
