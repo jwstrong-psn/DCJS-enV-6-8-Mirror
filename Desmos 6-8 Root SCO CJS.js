@@ -1242,7 +1242,7 @@ PearsonGL.External.rootJS = (function() {
         o.desmos.setExpressions([
         {
           id:'slope',
-          label:'m='+m
+          latex:'m='+m
         },
         {
           id:'rise',
