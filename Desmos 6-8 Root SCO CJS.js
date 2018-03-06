@@ -1828,17 +1828,17 @@ PearsonGL.External.rootJS = (function() {
 
           var percents = Array.from(h[t]);
 
-          // Round everything
-          var rounded = hs.distributeByProportion(100,percents);
+          // First distribute the population according to the proportional estimates
+          vars.population = hs.distributeByProportion(hlps.N.numericValue,percents);
 
-          // Save the rounded percents so the dot plot can grab 'em.
-          vars.percents = rounded;
+          // Then estimate the percentage of the population represented in each bar
+          vars.percents = hs.distributeByProportion(100,vars.population);
 
           fs.A0633977.validate();
 
           o.desmos.setExpression({
             id:'percents',
-            latex:'P=\\left['+rounded+'\\right]'
+            latex:'P=\\left['+vars.percents+'\\right]'
           });
         });
 
@@ -1896,7 +1896,7 @@ PearsonGL.External.rootJS = (function() {
         vars.invalidated = false;
 
         if (hlps.left === undefined || hlps.N.numericValue === undefined) {
-          fs.A0633977.invalidate;
+          fs.A0633977.invalidate();
           return;
         }
 
@@ -1915,14 +1915,14 @@ PearsonGL.External.rootJS = (function() {
         ];
 
         // Generate the population based on the percent distribution and population size
-        var population = hs.distributeByProportion(N,percents);
+        var population = Array.from(vars.population);
         exprs.push({
           id:'population',
           latex:'P=\\left['+population+'\\right]'
         });
 
         var k = hlps.k.numericValue;
-        var sample = population.map(function(){return 0;});
+        var sample = (new Array(population.length)).fill(0);
         var order = [];
 
         var n = N;
