@@ -517,6 +517,48 @@ var ease2 = function ease(x,y,t,dt) {
   if(t < 1) setTimeout(function(){ease2(x,y,t+dt,dt);},200);
 };
 
+
+      /* ←— A0633977 generate —————————————————————————————————————————————————→ *\
+       | For generating points iteratively, so it looks more like a progressive
+       |  sampling process, than just everything showing up at once
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs = fs || {};
+       fs.A0633977 = fs.A0633977 || {};
+      fs.A0633977.generate = fs.A0633977.generate || function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+      
+        // Adds an element to a random bucket
+        function anotherHeight(n,y) {
+          var sum = 0;
+          y.forEach(function(e){
+            sum+=e;
+          });
+
+          var i;
+          for(i = sum; i <= Math.min(n-1,Math.ceil(1.2*sum)); i++) {
+            y[Math.floor(Math.random()*12)] += 1;
+          }
+          o.desmos.setExpressions([{id:'y_1',latex:'y_1=['+y+']'}]);
+          if(i < n) setTimeout(function(){
+            anotherHeight(n,y);
+          },500);
+        }
+        
+        // Places a dot in a random place in [0,1]×[0,1]
+        function anotherElement(k,n,x,y) {
+          while(x.length < Math.min(n,1.2*k)) {
+            x.push(Math.random());
+            y.push(Math.random());
+          }
+          o.desmos.setExpressions([{id:'x_1',latex:'x_1=['+x+']'},{id:'y_1',latex:'y_1=['+y+']'}]);
+          if(k < n) setTimeout(function(){
+            anotherElement(x.length,n,x,y);
+          },500);
+        }
+       };
+
 var stats2D = function(x,y){
   var total = function(x) {
     return x.reduce(function(acc,val) {
