@@ -1968,6 +1968,453 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.setExpressions(exprs);
        };
+      /* ←— A0633978 7-6-1 KC ————————————————————————————————————————————→ *\
+       | Approximates a given percent distribution with a random sample
+       | Distribution is defined in a histogram on the left
+       | Sample is generated in a dot plot on the right
+       |  TODO: Animate the picking of the sample
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633978 = {};
+       cs.A0633978 = {
+        NORMAL: Desmos.Styles.POINT,
+        SAMPLE: Desmos.Styles.OPEN,
+        DASHED: Desmos.Styles.DASHED,
+        SOLID: Desmos.Styles.SOLID
+       };
+      fs.A0633978.invalidate = function(sampleOnly) {
+        
+        var vars = vs.A0633978;
+        var hlps = hxs.A0633978;
+
+        if(vars.invalidated === true ||  (sampleOnly === true && vars.sampleInvalid === true) ||
+           hlps.left === undefined || hlps.right === undefined) {
+          return;
+        } else {
+          vars.invalidated = !sampleOnly;
+          vars.sampleInvalid = true;
+        }
+
+        var cons = cs.A0633978;
+
+        var exprsLeft = [];
+        var exprsRight = [];
+
+        if(sampleOnly) {
+          // un-highlight sample points
+          exprsLeft.push({
+            id:'samplePoints',
+            pointStyle:cons.NORMAL
+          });
+        } else {
+          // hide all points & statistics, and shdow the box plot
+          exprsLeft.push(
+            {
+              id:'points',
+              hidden:true
+            },
+            {
+              id:'samplePoints',
+              hidden:true
+            },
+            {
+              id:'statistics',
+              hidden:true
+            },
+            {
+              id:'mean',
+              label:'Estimated Mean'
+            },
+            {
+              id:'boxPlotTails',
+              hidden:true
+            },
+            {
+              id:'boxPlotLeft',
+              lineStyle:cons.DASHED
+            },
+            {
+              id:'boxPlotRight',
+              lineStyle:cons.DASHED
+            },
+            {
+              id:'boxPlotVerts',
+              lineStyle:cons.DASHED
+            },
+            {
+              id:'boxPlotArea',
+              latex:'\\left\\{Q_1\\le x\\le Q_3\\right\\}\\left|y-h_{box}\\right|=2t_{icky}',
+              lineStyle:cons.DASHED
+            },
+            {
+              id:'quartiles',
+              latex:'Q=\\sum_{z=\\left[0...4\\right]}^{\\left[0...4\\right]}\\operatorname{total}\\left(\\left\{C<\\frac{z}{4}:10,C_2<\\frac{z}{4}:\\frac{10\\left(\\frac{z}{4}-C_2\\right)}{H},0\\right\\}\\right)'
+              // else '\\operatorname{quartile}\\left(A,\\left[0...4\\right]\\right)'
+            }
+          );
+        }
+        hlps.left.push(exprsLeft);
+
+        if(vars.sampleInvalid === true) {
+          return;
+        } else {
+          vars.sampleInvalid = true;
+        }
+
+        // clear sample
+        exprsRight.push(
+          {
+            id:'points',
+            hidden:true
+          },
+          {
+            id:'boxPlot',
+            hidden:true
+          },
+          {
+            id:'statistics',
+            hidden:true
+          }
+        );
+        hlps.right.push(exprsRight);
+
+       };
+      fs.A0633978.validate = function() {
+        var vars = vs.A0633978;
+        var hlps = hxs.A0633978;
+        if(vars.invalidated === true ||
+           // Only invalidate if both widgets & their helpers have fully loaded
+           hlps.left === undefined || hlps.right === undefined) {
+          return;
+        }
+
+        var N = hlps.N.numericValue;
+        var n = hlps.n.numericValue;
+        var k = hlps.k.numericValue;
+        
+        // Skip validation if any of the variables have not initialized
+        if(N === undefined || n === undefined || k === undefined ||
+           hlps.S.numericValue === undefined || hlps.s.numericValue === undefined) {
+          return;
+        }
+
+        var S = hlps.S.listValue;
+        var s = hlps.s.listValue;
+
+        // S may be an empty list if no sample has been taken yet, or if sample
+        // size is 0; if so, its numericValue will have initialized to NaN.
+        // Since our next check calls .reduce(), we should catch this case before
+        // attempting to call that on undefined.
+        if(!Array.isArray(S) || !Array.isArray(s)) {
+          fs.A0633978.invalidate(true);
+          return;
+        }
+
+        // If the left has a different number of elements than the right thinks it does
+        if ((N !== n) || (k !== s.length) || (k !== S.length) ||
+            (N !== S.length + (Array.isArray(hlps.R.listValue) ? hlps.R.listValue.length : 0)) ||
+          // If the sample on the left doesn't match the sample on the right
+          !(S.reduce(function(T,e,i){
+              return (T && (e === s[i]));
+            },true))) {
+          fs.A0633978.invalidate(true);
+          return;
+        }
+
+        // Otherwise, we've passed the test
+        vars.sampleInvalid = false;
+       };
+      fs.A0633978.initialCheck = function(t,h) {
+        h.unobserve(t+'.initialize');
+        fs.A0633978.validate();
+       };
+      fs.A0633978.alwaysInvalidate = function(sampleOnly) {
+        return function(t,h) {
+          h.unobserve(t+'.initialize');
+          // Make a sanity check on first load, but…
+          fs.A0633978.validate();
+          // …then invalidate any time it changes (no check required).
+          h.observe(t+'.invalidate',fs.A0633978.invalidate(sampleOnly));
+        }
+       };
+      fs.A0633978.initLeft = function() {
+        var o = hs.parseArgs(arguments);
+
+        // Until proper o.uniqueId happens, we have to use our own
+        vs.A0633978 = vs.A0633978 || {};
+        hxs.A0633978 = hxs.A0633978 || {};
+
+        var hlps = hxs.A0633978;
+        var maker = hxs[o.uniqueId].maker;
+        var validate = fs.A0633978.validate;
+        var initialCheck = fs.A0633978.initialCheck;
+        var alwaysInvalidate = fs.A0633978.alwaysInvalidate(false);
+
+        hlps.left = o.desmos;
+
+        // Invalidate sample & population whenever the population size or percent distribution changes
+        hlps.N = maker('n');
+        hlps.N.observe('numericValue.initialize',alwaysInvalidate);
+        hlps.h = maker('h');
+        hlps.h.observe('listValue.initialize',alwaysInvalidate);
+
+        // Validate once, when the Sample & Remainder have loaded
+        hlps.S = maker('S');
+        hlps.S.observe('listValue.initialize',initialCheck);
+        hlps.R = maker('R');
+        hlps.R.observe('listValue.initialize',initialCheck);
+
+        // Don't worry about the heights, but keep track of them
+        hlps.H_S = maker('H_S');
+        hlps.H_R = maker('H_R');
+
+        // Validate once before just to be safe
+        validate();
+        o.log('Initial population validation complete.');
+       };
+      fs.A0633978.initRight = function() {
+        var o = hs.parseArgs(arguments);
+
+        // Until proper o.uniqueId happens, we have to use our own
+        vs.A0633978 = vs.A0633978 || {};
+        hxs.A0633978 = hxs.A0633978 || {};
+
+        var hlps = hxs.A0633978;
+        var maker = hxs[o.uniqueId].maker;
+        var validate = fs.A0633978.validate;
+        var initialCheck = fs.A0633978.initialCheck;
+        var alwaysInvalidate = fs.A0633978.alwaysInvalidate(true);
+
+        hlps.right = o.desmos;
+
+        // Always invalidate only the sample when the sample size changes
+        hlps.k = maker('k');
+        hlps.k.observe('numericValue.initialize',alwaysInvalidate);
+
+        // Check that sample size and values match the left
+        hlps.n = maker('n');
+        hlps.n.observe('numericValue.validate',initialCheck);
+        hlps.s = maker('s');
+        hlps.s.observe('listValue.validate',initialCheck);
+
+        // Validate once before just to be safe
+        validate();
+        o.log('Initial sample validation complete.');
+       };
+      fs.A0633978.setPopulation = function() {
+        // A0633978_setPopulation
+        // var o = hs.parseArgs(arguments);
+
+        var vars = vs.A0633978;
+        var hlps = hxs.A0633978;
+        var cons = cs.A0633978;
+
+        var N = hlps.N.numericValue;
+        var h = hlps.h.listValue;
+
+        if(N === undefined || hlps.h.numericValue === undefined) {
+          return;
+        }
+
+        // First, invalidate the sample
+        fs.A0633978.invalidate(true);
+
+        vars.invalidated = false;
+
+        var exprs = [
+          {
+            id:'sample',
+            latex:'S=\\left[\\right]'
+          },
+          {
+            id:'sampleHeights',
+            latex:'H_S=\\left[\\right]'
+          },
+          {
+            id:'points',
+            hidden:false
+          },
+          {
+            id:'samplePoints',
+            hidden:false
+          },
+          {
+            id:'statistics',
+            hidden:false
+          },
+          {
+            id:'mean',
+            label:'Mean: {m_{ean}}'
+          },
+          {
+            id:'boxPlotTails',
+            hidden:false
+          },
+          {
+            id:'boxPlotLeft',
+            lineStyle:cons.SOLID
+          },
+          {
+            id:'boxPlotRight',
+            lineStyle:cons.SOLID
+          },
+          {
+            id:'boxPlotVerts',
+            lineStyle:cons.SOLID
+          },
+          {
+            id:'boxPlotArea',
+            latex:'\\left\\{Q_1\\le x\\le Q_3\\right\\}\\left|y-h_{box}\\right|\\le 2t_{icky}'
+          },
+          {
+            id:'quartiles',
+            latex:'Q=\\operatorname{quartile}\\left(A,\\left[0...4\\right]\\right)'
+          }
+        ];
+
+        var R = [];
+        var H_R = [];
+        var buckets = hs.distributeByProportion(N,h);
+
+        var i;
+        var j;
+        for(i = 0; i < length(buckets); i += 1) {
+          for(j = 0; j < buckets[i]; j += 1) {
+            R.push(10*i+10*Math.random());
+            H_R.push(h[i]*(j+0.5)/buckets[i]);
+          }
+        }
+
+        exprs.push(
+          {
+            id:'population',
+            latex:'A=\\left['+R+'\\right]'
+          },
+          {
+            id:'remainder',
+            latex:'R=\\left['+R+'\\right]'
+          },
+          {
+            id:'remainderHeights',
+            latex:'H_R=\\left['+H_R+'\\right]'
+          },
+          {
+            id:'percents',
+            latex:'P=\\left['+hs.distributeByProportion(100,buckets)+'\\right]'
+          }
+        );
+       };
+      fs.A0633978.sample = function() {
+        // A0633978_sample
+        // var o = hs.parseArgs(arguments);
+
+        var vars = vs.A0633978;
+        var hlps = hxs.A0633978;
+        var cons = cs.A0633978;
+
+        // Cannot sample without a population
+        if (hlps.left === undefined || hlps.N.numericValue === undefined ||
+            // numericValue becomes NaN when a HelperExpression is initialized.
+            hlps.S.numericValue === undefined || hlps.R.numericValue === undefined) {
+          fs.A0633977.invalidate(true);
+          return;
+        }
+
+        if(vars.invalidated) {
+          fs.A0633978.setPopulation();
+        }
+
+        vars.sampleInvalid = false;
+
+        var N = hlps.N.numericValue;
+
+        var exprsLeft = [
+          {
+            id:'points',
+            hidden:false,
+            pointStyle:cons.NORMAL
+          },
+          {
+            id:'samplePoints',
+            hidden:false,
+            pointStyle:cons.SAMPLE
+          }
+        ];
+
+        var exprsRight = [
+          {
+            id:'points',
+            hidden:false
+          },
+          {
+            id:'boxPlot',
+            hidden:false
+          },
+          {
+            id:'statistics',
+            hidden:false
+          },
+          {
+            id:'n',
+            latex:'n='+N
+          }
+        ];
+
+        // Build the population
+        var S = hlps.S.listValue;
+        var R = hlps.R.listValue;
+
+        var H_S = hlps.H_S.listValue;
+        var H_R = hlps.H_R.listValue;
+
+        if(!Array.isArray(R)) {
+          R = Array.from(S);
+          H_R = Array.from(H_S);
+        } else if (Array.isArray(S)) {
+          R = R.concat(S);
+          H_R = H_R.concat(H_S);
+        }
+
+        S = [];
+        H_S = [];
+
+        var k = hlps.k.numericValue;
+        var random;
+        while(S.length < k && S.length < N) {
+          // Pick a random member of the population and add it to the sample
+          random = Math.min(Math.floor(R.length*Math.random()),R.length-1);
+          S.push(R.splice(random,1)[0]);
+          H_S.push(H_R.splice(random,1)[0]);
+        }
+
+        exprsLeft.push(
+          {
+            id:'sample',
+            latex:'S=\\left['+S+'\\right]'
+          },
+          {
+            id:'sampleHeights',
+            latex:'H_S=\\left['+H_S+'\\right]'
+          },
+          {
+            id:'remainder',
+            latex:'R=\\left['+R+'\\right]'
+          },
+          {
+            id:'remainderHeights',
+            latex:'R_S=\\left['+H_R+'\\right]'
+          }
+        );
+
+        exprsRight.push(
+          {
+            id:'sample',
+            latex:'s=\\left['+S+'\\right]'
+          }
+        );
+
+        hlps.left.setExpressions(exprsLeft);
+        hlps.right.setExpressions(exprsRight);
+       };
       /* ←— A0633979 7-6-3 Ex.1 ——————————————————————————————————————————→ *\
        | generates a new set of data between 0 and 50
        * ←————————————————————————————————————————————————————————————————→ */
@@ -2028,6 +2475,16 @@ PearsonGL.External.rootJS = (function() {
         var p = o.value;
 
         var ratio = hs.optimalRatio(p, undefined, undefined, true);
+        if (p === 0) {
+          ratio.numerator = 0;
+          ratio.denominator = 1;
+        } else if (p < 0.001) {
+          ratio.numerator = 1;
+          ratio.denominator = 1000000;
+        } else if (p < 0.005) {
+          ratio.numerator = 1;
+          ratio.denominator = 1000;
+        }
         var odds = hs.optimalOdds(p);
 
         var temp;
@@ -2526,6 +2983,9 @@ PearsonGL.External.rootJS = (function() {
         var o = hs.parseArgs(arguments);
         var vars = vs[o.uniqueId];
         var hlps = hxs[o.uniqueId];
+
+        // Workaround while button value is passed as a string
+        o.value = +o.value;
 
         o.log(arguments);
         clearTimeout(vars.timeoutID);
