@@ -44,12 +44,12 @@ PearsonGL.External.rootJS = (function() {
     var cs = {
       color:{
         mgmColors:{ // Colors for MGM
-          blue: '#0092C8',
-          red: '#F15A22',
-          green: '#0DB14B',
-          purple: '#812990',
-          black: '#000000',
-          grey: '#58595B'
+          BLUE: '#0092C8',
+          RED: '#F15A22',
+          GREEN: '#0DB14B',
+          PURPLE: '#812990',
+          BLACK: '#000000',
+          GREY: '#58595B'
         }
        },
       precision:{
@@ -1558,11 +1558,11 @@ PearsonGL.External.rootJS = (function() {
         o.desmos.setExpressions([
         {
           id:'6',
-          color:(o.value >= 0 ? cs.color.mgmColors.blue : cs.color.mgmColors.red)
+          color:(o.value >= 0 ? cs.color.mgmColors.BLUE : cs.color.mgmColors.RED)
         },
         {
           id:'7',
-          color:(o.value > 0 ? cs.color.mgmColors.red : cs.color.mgmColors.blue)
+          color:(o.value > 0 ? cs.color.mgmColors.RED : cs.color.mgmColors.BLUE)
         }]);
        };
       /* ←— A0633935 6-4-10 Ex.2 —————————————————————————————————————————————————→ *\
@@ -1597,7 +1597,7 @@ PearsonGL.External.rootJS = (function() {
           o.desmos.setExpression({
             id:'equation',
             latex:'('+x2+'-'+x1+')('+y2+'-y)=('+y2+'-'+y1+')('+x2+'-x)',
-            color:cs.color.mgmColors.blue,
+            color:cs.color.mgmColors.BLUE,
             hidden:false
           });
 
@@ -1605,13 +1605,13 @@ PearsonGL.External.rootJS = (function() {
             {
               id:'p1',
               latex:'('+x1+','+y1+')',
-              color:cs.color.mgmColors.blue,
+              color:cs.color.mgmColors.BLUE,
               hidden:true
             },
             {
               id:'p2',
               latex:'('+x2+','+y2+')',
-              color:cs.color.mgmColors.blue,
+              color:cs.color.mgmColors.BLUE,
               hidden:true
             }
             ]);
@@ -1706,7 +1706,7 @@ PearsonGL.External.rootJS = (function() {
         o.desmos.setExpression(
         {
           id:(o.name === 'x_1' ? '6' : '7'),
-          color:((o.name === 'x_1' ? (o.value >= 0) : (o.value < 0)) ? cs.color.mgmColors.blue : cs.color.mgmColors.red)
+          color:((o.name === 'x_1' ? (o.value >= 0) : (o.value < 0)) ? cs.color.mgmColors.BLUE : cs.color.mgmColors.RED)
         });
        };
       /* ←— A0633965 7-3-2 Ex.1 ——————————————————————————————————————————→ *\
@@ -1978,92 +1978,124 @@ PearsonGL.External.rootJS = (function() {
        cs.A0633978 = {
         NORMAL: Desmos.Styles.POINT,
         SAMPLE: Desmos.Styles.OPEN,
-        DASHED: Desmos.Styles.DASHED,
-        SOLID: Desmos.Styles.SOLID
+        COLOR_NORMAL: cs.color.mgmColors.BLUE,
+        COLOR_SAMPLE: cs.color.mgmColors.RED,
+        INVALID: cs.lineType.DASHED,
+        VALID: cs.lineType.SOLID
        };
       fs.A0633978.invalidate = function(sampleOnly) {
         
         var vars = vs.A0633978;
         var hlps = hxs.A0633978;
 
-        if(vars.invalidated === true ||  (sampleOnly === true && vars.sampleInvalid === true) ||
-           hlps.left === undefined || hlps.right === undefined) {
+        if(vars.invalidated === true ||  (sampleOnly === true && vars.sampleInvalid === true)) {
+          // debugLog('Not invalidating '+(sampleOnly ? '' : 'population and ')+'sample');
           return;
-        } else {
-          vars.invalidated = !sampleOnly;
-          vars.sampleInvalid = true;
         }
+
+        debugLog('Invalidating '+(sampleOnly ? '' : 'population and ')+'sample');
 
         var cons = cs.A0633978;
 
         var exprsLeft = [];
         var exprsRight = [];
 
-        if(sampleOnly) {
-          // un-highlight sample points
-          exprsLeft.push({
-            id:'samplePoints',
-            pointStyle:cons.NORMAL
-          });
-        } else {
-          // hide all points & statistics, and shdow the box plot
-          exprsLeft.push(
-            {
-              id:'points',
-              hidden:true
-            },
-            {
+        if(hlps.left !== undefined) {
+          if(sampleOnly) {
+            // un-highlight sample points
+            exprsLeft.push({
               id:'samplePoints',
-              hidden:true
-            },
-            {
-              id:'statistics',
-              hidden:true
-            },
-            {
-              id:'mean',
-              label:'Estimated Mean'
-            },
-            {
-              id:'boxPlotTails',
-              hidden:true
-            },
-            {
-              id:'boxPlotLeft',
-              lineStyle:cons.DASHED
-            },
-            {
-              id:'boxPlotRight',
-              lineStyle:cons.DASHED
-            },
-            {
-              id:'boxPlotVerts',
-              lineStyle:cons.DASHED
-            },
-            {
-              id:'boxPlotArea',
-              latex:'\\left\\{Q_1\\le x\\le Q_3\\right\\}\\left|y-h_{box}\\right|=2t_{icky}',
-              lineStyle:cons.DASHED
-            },
-            {
-              id:'quartiles',
-              latex:'Q=\\sum_{z=\\left[0...4\\right]}^{\\left[0...4\\right]}\\operatorname{total}\\left(\\left\{C<\\frac{z}{4}:10,C_2<\\frac{z}{4}:\\frac{10\\left(\\frac{z}{4}-C_2\\right)}{H},0\\right\\}\\right)'
-              // else '\\operatorname{quartile}\\left(A,\\left[0...4\\right]\\right)'
-            }
-          );
+              pointStyle:cons.NORMAL
+            });
+          } else {
+            vars.invalidated = true;
+            // hide all points & statistics, and shdow the box plot
+            exprsLeft.push(
+              {
+                id:'points',
+                hidden:true
+              },
+              {
+                id:'samplePoints',
+                hidden:true
+              },
+              {
+                id:'statistics',
+                hidden:true
+              },
+              {
+                id:'proportions',
+                hidden:true
+              },
+              {
+                id:'mean',
+                hidden:true,
+                showLabel:false
+              },
+              {
+                id:'boxPlotTails',
+                hidden:true
+              },
+              {
+                id:'boxPlotLeft',
+                style:cons.INVALID // DEPRECATED - change to lineStyle with v1.1
+              },
+              {
+                id:'boxPlotRight',
+                style:cons.INVALID // DEPRECATED - change to lineStyle with v1.1
+              },
+              {
+                id:'boxPlotVerts',
+                style:cons.INVALID // DEPRECATED - change to lineStyle with v1.1
+              },
+              {
+                id:'boxPlotArea',
+                latex:'\\left\\{Q_1\\le x\\le Q_3\\right\\}\\left|y-h_{box}\\right|<2t_{icky}',
+                style:cons.INVALID // DEPRECATED - change to lineStyle with v1.1
+              },
+              {
+                id:'quartiles',
+                latex:'Q=Q_L' // '\\sum_{z=\\left[0...4\\right]}^{\\left[0...4\\right]}\\operatorname{total}\\left(\\left\\{C<\\frac{z}{4}:10,C_2<\\frac{z}{4}:\\frac{10\\left(\\frac{z}{4}-C_2\\right)}{H},0\\right\\}\\right)'
+                // else '\\operatorname{quartile}\\left(A,\\left[0...4\\right]\\right)'
+              },
+              {
+                id:'sample',
+                latex:'S='
+              },
+              {
+                id:'remainder',
+                latex:'R='
+              },
+              {
+                id:'sampleHeights',
+                latex:'S='
+              },
+              {
+                id:'remainderHeights',
+                latex:'R='
+              },
+              {
+                id:'population',
+                latex:'A=\\left[\\operatorname{total}\\left(mp\\right)\\right]'
+              }
+            );
+          }
+          hlps.left.setExpressions(exprsLeft);
         }
-        hlps.left.push(exprsLeft);
 
-        if(vars.sampleInvalid === true) {
+        if(vars.sampleInvalid === true || hlps.right === undefined) {
           return;
-        } else {
-          vars.sampleInvalid = true;
         }
 
+        vars.sampleInvalid = true;
         // clear sample
         exprsRight.push(
           {
-            id:'points',
+            id:'samplePoints',
+            hidden:true
+          },
+          {
+            id:'histogram',
             hidden:true
           },
           {
@@ -2071,16 +2103,21 @@ PearsonGL.External.rootJS = (function() {
             hidden:true
           },
           {
+            id:'proportions',
+            hidden:true
+          },
+          {
             id:'statistics',
             hidden:true
           }
         );
-        hlps.right.push(exprsRight);
+        hlps.right.setExpressions(exprsRight);
 
        };
       fs.A0633978.validate = function() {
         var vars = vs.A0633978;
         var hlps = hxs.A0633978;
+
         if(vars.invalidated === true ||
            // Only invalidate if both widgets & their helpers have fully loaded
            hlps.left === undefined || hlps.right === undefined) {
@@ -2099,23 +2136,38 @@ PearsonGL.External.rootJS = (function() {
 
         var S = hlps.S.listValue;
         var s = hlps.s.listValue;
+        var R = hlps.R.listValue;
+
+        // If the believed population of the left doesn't match the actual population, invalidate both
+        if(N !== (Array.isArray(S) ? S.length : 0) + (Array.isArray(R) ? R.length : 0)) {
+          debugLog('Count of N='+N+' does not match actual population size '+((Array.isArray(S) ? S.length : 0) + (Array.isArray(R) ? R.length : 0)));
+          fs.A0633978.invalidate(false);
+          return;
+        }
 
         // S may be an empty list if no sample has been taken yet, or if sample
         // size is 0; if so, its numericValue will have initialized to NaN.
         // Since our next check calls .reduce(), we should catch this case before
         // attempting to call that on undefined.
-        if(!Array.isArray(S) || !Array.isArray(s)) {
+        if(!Array.isArray(S)) {
+          debugLog('Current sample size is 0');
           fs.A0633978.invalidate(true);
           return;
         }
 
         // If the left has a different number of elements than the right thinks it does
-        if ((N !== n) || (k !== s.length) || (k !== S.length) ||
-            (N !== S.length + (Array.isArray(hlps.R.listValue) ? hlps.R.listValue.length : 0)) ||
-          // If the sample on the left doesn't match the sample on the right
+        if (!Array.isArray(s) || (N !== n) || (k !== s.length) || (k !== S.length)) {
+          debugLog('N='+N+', n='+n+', k='+k+', s.length='+(Array.isArray(s) ? s.length : 0)+' S.length='+S.length);
+          fs.A0633978.invalidate(true);
+          return;
+        }
+
+        // If the sample on the left doesn't match the sample on the right
+        if (
           !(S.reduce(function(T,e,i){
               return (T && (e === s[i]));
             },true))) {
+          debugLog('Samples don\'t match:',S,s);
           fs.A0633978.invalidate(true);
           return;
         }
@@ -2128,13 +2180,44 @@ PearsonGL.External.rootJS = (function() {
         fs.A0633978.validate();
        };
       fs.A0633978.alwaysInvalidate = function(sampleOnly) {
+        var invalidate = function() {
+          fs.A0633978.invalidate(sampleOnly);
+        }
         return function(t,h) {
           h.unobserve(t+'.initialize');
           // Make a sanity check on first load, but…
           fs.A0633978.validate();
           // …then invalidate any time it changes (no check required).
-          h.observe(t+'.invalidate',fs.A0633978.invalidate(sampleOnly));
+          h.observe(t+'.invalidate',invalidate);
         }
+       };
+      fs.A0633978.sampleAfterRebuild = function(o) {
+        var hlps = hxs.A0633978;
+
+        var rebuilt = {
+          R: false,
+          H_R: false
+        }
+
+        var checkForResample = function(t,h) {
+          h.unobserve(t+'.resample');
+          rebuilt[h.latex] = true;
+          if(rebuilt.R && rebuilt.H_R &&
+             hlps.S.listValue === undefined && hlps.H_S.listValue === undefined) {
+            fs.A0633978.sample(o);
+          }
+        }
+
+        hlps.R.observe('listValue.resample',checkForResample);
+        hlps.S.observe('listValue.resample',checkForResample);
+        hlps.H_R.observe('listValue.resample',checkForResample);
+        hlps.H_S.observe('listValue.resample',checkForResample);
+
+        fs.A0633978.setPopulation({
+          name:'n',
+          value:hlps.N.numericValue,
+          desmos:hlps.left
+        });
        };
       fs.A0633978.initLeft = function() {
         var o = hs.parseArgs(arguments);
@@ -2143,6 +2226,7 @@ PearsonGL.External.rootJS = (function() {
         vs.A0633978 = vs.A0633978 || {};
         hxs.A0633978 = hxs.A0633978 || {};
 
+        var vars = vs.A0633978;
         var hlps = hxs.A0633978;
         var maker = hxs[o.uniqueId].maker;
         var validate = fs.A0633978.validate;
@@ -2159,9 +2243,23 @@ PearsonGL.External.rootJS = (function() {
 
         // Validate once, when the Sample & Remainder have loaded
         hlps.S = maker('S');
-        hlps.S.observe('listValue.initialize',initialCheck);
+        hlps.S.observe('numericValue.initialize',initialCheck);
         hlps.R = maker('R');
-        hlps.R.observe('listValue.initialize',initialCheck);
+        hlps.R.observe('numericValue.initialize',initialCheck);
+
+        vars.buckets = (new Array(10)).fill(0);
+
+        var fillBuckets = function(t,h) {
+          h.unobserve(t+'.fillBuckets');
+          if(Array.isArray(h[t])) {
+            h[t].forEach(function(e){
+              vars.buckets[Math.floor(e/10)] += 1;
+            });
+          }
+        };
+
+        hlps.S.observe('listValue.fillBuckets',fillBuckets);
+        hlps.R.observe('listValue.fillBuckets',fillBuckets);
 
         // Don't worry about the heights, but keep track of them
         hlps.H_S = maker('H_S');
@@ -2178,6 +2276,11 @@ PearsonGL.External.rootJS = (function() {
         vs.A0633978 = vs.A0633978 || {};
         hxs.A0633978 = hxs.A0633978 || {};
 
+        if(o.log === console.log) {
+          window.vars = vs;
+          window.hlps = hxs;
+        }
+
         var hlps = hxs.A0633978;
         var maker = hxs[o.uniqueId].maker;
         var validate = fs.A0633978.validate;
@@ -2190,19 +2293,21 @@ PearsonGL.External.rootJS = (function() {
         hlps.k = maker('k');
         hlps.k.observe('numericValue.initialize',alwaysInvalidate);
 
-        // Check that sample size and values match the left
+        // Check that population size and sample values match the left
         hlps.n = maker('n');
-        hlps.n.observe('numericValue.validate',initialCheck);
+        hlps.n.observe('numericValue.initialize',initialCheck);
         hlps.s = maker('s');
-        hlps.s.observe('listValue.validate',initialCheck);
+        hlps.s.observe('numericValue.initialize',initialCheck);
 
         // Validate once before just to be safe
         validate();
         o.log('Initial sample validation complete.');
        };
       fs.A0633978.setPopulation = function() {
+
+        var time = Date.now();
         // A0633978_setPopulation
-        // var o = hs.parseArgs(arguments);
+        var o = hs.parseArgs(arguments);
 
         var vars = vs.A0633978;
         var hlps = hxs.A0633978;
@@ -2212,8 +2317,11 @@ PearsonGL.External.rootJS = (function() {
         var h = hlps.h.listValue;
 
         if(N === undefined || hlps.h.numericValue === undefined) {
+          o.log('N and/or h is undefined');
           return;
         }
+
+        o.log('setting population');
 
         // First, invalidate the sample
         fs.A0633978.invalidate(true);
@@ -2242,7 +2350,12 @@ PearsonGL.External.rootJS = (function() {
             hidden:false
           },
           {
+            id:'proportions',
+            hidden:false
+          },
+          {
             id:'mean',
+            showLabel:true,
             label:'Mean: {m_{ean}}'
           },
           {
@@ -2251,25 +2364,74 @@ PearsonGL.External.rootJS = (function() {
           },
           {
             id:'boxPlotLeft',
-            lineStyle:cons.SOLID
+            style:cons.VALID // DEPRECATED - change to lineStyle with v1.1
           },
           {
             id:'boxPlotRight',
-            lineStyle:cons.SOLID
+            style:cons.VALID // DEPRECATED - change to lineStyle with v1.1
           },
           {
             id:'boxPlotVerts',
-            lineStyle:cons.SOLID
+            style:cons.VALID // DEPRECATED - change to lineStyle with v1.1
           },
           {
             id:'boxPlotArea',
-            latex:'\\left\\{Q_1\\le x\\le Q_3\\right\\}\\left|y-h_{box}\\right|\\le 2t_{icky}'
+            latex:'\\left\\{Q_1\\le x\\le Q_3\\right\\}\\left|y-h_{box}\\right|\\le 2t_{icky}',
+            style:cons.VALID // DEPRECATED - change to lineStyle with v1.1
           },
           {
             id:'quartiles',
-            latex:'Q=\\operatorname{quartile}\\left(A,\\left[0...4\\right]\\right)'
+            latex:'Q=\\operatorname{quantile}\\left(A,\\frac{\\left[0...4\\right]}{4}\\right)'
+            // 'Q=\\operatorname{quartile}\\left(A,\\left[0...4\\right]\\right)'
           }
         ];
+
+        // // Optimistically I forgot that there's an observer on `h` that invlidates everything
+        // var maxHeight = Math.max.apply(null,h);
+        // h = h.map(function(e){return e/maxHeight});
+        // 
+        // exprs.push(
+        //   {
+        //     id:'h_5',
+        //     latex:'h_5='+h[0]
+        //   },
+        //   {
+        //     id:'h_15',
+        //     latex:'h_15='+h[1]
+        //   },
+        //   {
+        //     id:'h_25',
+        //     latex:'h_25='+h[2]
+        //   },
+        //   {
+        //     id:'h_35',
+        //     latex:'h_35='+h[3]
+        //   },
+        //   {
+        //     id:'h_45',
+        //     latex:'h_45='+h[4]
+        //   },
+        //   {
+        //     id:'h_55',
+        //     latex:'h_55='+h[5]
+        //   },
+        //   {
+        //     id:'h_65',
+        //     latex:'h_65='+h[6]
+        //   },
+        //   {
+        //     id:'h_75',
+        //     latex:'h_75='+h[7]
+        //   },
+        //   {
+        //     id:'h_85',
+        //     latex:'h_85='+h[8]
+        //   },
+        //   {
+        //     id:'h_95',
+        //     latex:'h_95='+h[9]
+        //   }
+        // );
 
         var R = [];
         var H_R = [];
@@ -2277,12 +2439,14 @@ PearsonGL.External.rootJS = (function() {
 
         var i;
         var j;
-        for(i = 0; i < length(buckets); i += 1) {
+        for(i = 0; i < buckets.length; i += 1) {
           for(j = 0; j < buckets[i]; j += 1) {
             R.push(10*i+10*Math.random());
             H_R.push(h[i]*(j+0.5)/buckets[i]);
           }
         }
+
+        vars.buckets = buckets;
 
         exprs.push(
           {
@@ -2302,10 +2466,14 @@ PearsonGL.External.rootJS = (function() {
             latex:'P=\\left['+hs.distributeByProportion(100,buckets)+'\\right]'
           }
         );
+
+        o.log('Generated population in '+(Date.now()-time)+'ms');
+        hlps.left.setExpressions(exprs);
+        o.log('Expressions set after '+(Date.now()-time)+'ms');
        };
       fs.A0633978.sample = function() {
         // A0633978_sample
-        // var o = hs.parseArgs(arguments);
+        var o = hs.parseArgs(arguments);
 
         var vars = vs.A0633978;
         var hlps = hxs.A0633978;
@@ -2320,7 +2488,10 @@ PearsonGL.External.rootJS = (function() {
         }
 
         if(vars.invalidated) {
-          fs.A0633978.setPopulation();
+          o.name = 'n';
+          o.value = hlps.N.numericValue;
+          fs.A0633978.sampleAfterRebuild(o);
+          return;
         }
 
         vars.sampleInvalid = false;
@@ -2331,22 +2502,32 @@ PearsonGL.External.rootJS = (function() {
           {
             id:'points',
             hidden:false,
-            pointStyle:cons.NORMAL
+            style:cons.NORMAL, // DEPRECATED - change to pointStyle for 1.1
+            color:cons.COLOR_NORMAL
           },
           {
             id:'samplePoints',
             hidden:false,
-            pointStyle:cons.SAMPLE
+            style:cons.SAMPLE, // DEPRECATED - change to pointStyle for 1.1
+            color:cons.COLOR_SAMPLE
           }
         ];
 
         var exprsRight = [
           {
-            id:'points',
+            id:'samplePoints',
             hidden:false
           },
           {
             id:'boxPlot',
+            hidden:false
+          },
+          {
+            id:'histogram',
+            hidden:false
+          },
+          {
+            id:'proportions',
             hidden:false
           },
           {
@@ -2377,14 +2558,35 @@ PearsonGL.External.rootJS = (function() {
         S = [];
         H_S = [];
 
+        // Layer the points in the sample graph
+        var buckets = (new Array(10)).fill(0);
+
         var k = hlps.k.numericValue;
-        var random;
+        var i; // random number
+        var j; // bucket id
         while(S.length < k && S.length < N) {
           // Pick a random member of the population and add it to the sample
-          random = Math.min(Math.floor(R.length*Math.random()),R.length-1);
-          S.push(R.splice(random,1)[0]);
-          H_S.push(H_R.splice(random,1)[0]);
+          i = Math.min(Math.floor(R.length*Math.random()),R.length-1);
+          j = Math.floor(R[i]/10);
+          buckets[j] += 1;
+          S.push(R.splice(i,1)[0]);
+          H_S.push(H_R.splice(i,1)[0]);
         }
+
+        // sort the sample points based on their original order
+        var order = [];
+        while(order.length < S.length) {
+          order.push(order.length);
+        }
+        order.sort(function(a,b){
+          if(Math.floor(S[a]/10) === Math.floor(S[b]/10)) {
+            return (H_S[a] - H_S[b]);
+          } else {
+            return (S[a] - S[b]);
+          }
+        });
+        S = S.map(function(e,i){return S[order[i]]});
+        H_S = H_S.map(function(e,i){return H_S[order[i]]});
 
         exprsLeft.push(
           {
@@ -2401,14 +2603,50 @@ PearsonGL.External.rootJS = (function() {
           },
           {
             id:'remainderHeights',
-            latex:'R_S=\\left['+H_R+'\\right]'
+            latex:'H_R=\\left['+H_R+'\\right]'
           }
         );
+        
+        var percents = hs.distributeByProportion(100,buckets);
+
+        // Layer height
+        var h = Math.max.apply(null,hlps.h.listValue)/Math.max.apply(null,buckets);
+        // var h = 1/hlps.h.listValue.reduce(function(acc,e,i){
+        //   if(buckets[i]/e > acc) {
+        //     return buckets[i]/e;
+        //   } else {
+        //     return acc;
+        //   }
+        // },0);
+
+        var H_s = []; // new heights in the sample graph
+        for(i = 0; i < buckets.length; i += 1) {
+          for(j = 0; j < buckets[i]; j += 1) {
+            H_s.push(h*(j+0.5));
+          }
+          buckets[i] *= h;
+        }
 
         exprsRight.push(
           {
             id:'sample',
             latex:'s=\\left['+S+'\\right]'
+          },
+          {
+            id:'originalHeights',
+            latex:'H_S=\\left['+H_S+'\\right]'
+          },
+          {
+            id:'newHeights',
+            latex:'H_s=\\left['+H_s+'\\right]'
+          },
+          {
+            id:'barHeights',
+            latex:'h=\\left['+buckets+'\\right]'
+          },
+          {
+            id:'percents',
+            latex:'P=\\left['+percents+'\\right]'
           }
         );
 
@@ -2678,7 +2916,7 @@ PearsonGL.External.rootJS = (function() {
             showLabel:(id <= vars.maxTrial),
             hidden:true,
             secret:true,
-            color:cs.color.mgmColors.black
+            color:cs.color.mgmColors.BLACK
           });
 
           o.log('Setting expressions:',exprs);
@@ -3541,7 +3779,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.mgmColors.black
+                    color:cs.color.mgmColors.BLACK
                   },
                   {
                     id:'labelP_'+i,
@@ -3550,7 +3788,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.mgmColors.black
+                    color:cs.color.mgmColors.BLACK
                   },
                   {
                     id:'labelFrac_'+i,
@@ -3559,7 +3797,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.mgmColors.black
+                    color:cs.color.mgmColors.BLACK
                   },
                   {
                     id:'labelW_'+i,
@@ -3568,7 +3806,7 @@ PearsonGL.External.rootJS = (function() {
                     showLabel:false,
                     hidden:true,
                     secret:true,
-                    color:cs.color.mgmColors.black
+                    color:cs.color.mgmColors.BLACK
                   }
                 );
               }
