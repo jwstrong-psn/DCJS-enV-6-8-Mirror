@@ -2130,7 +2130,7 @@ PearsonGL.External.rootJS = (function() {
         
         // Skip validation if any of the variables have not initialized
         if(N === undefined || n === undefined || k === undefined ||
-           hlps.S.numericValue === undefined || hlps.s.numericValue === undefined) {
+           hlps.S.numericValue === undefined || hlps.s.numericValue === undefined || hlps.R.numericValue === undefined) {
           return;
         }
 
