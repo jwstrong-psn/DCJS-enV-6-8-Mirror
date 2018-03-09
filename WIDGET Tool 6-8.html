@@ -559,7 +559,6 @@
       });
 
       function clickSlider(event){
-        console.log('hello');
         // return; // TODO STUB WHATEVER
         // <button> → <td> → <tr id="sliderId">
         var sliderId = event.target.parentNode.parentNode.id;
@@ -567,7 +566,8 @@
         var id;
         var name;
         var func;
-        var value = +sliderRow.find('.sliderVal')[0].value;
+        var value = sliderRow.find('.sliderVal')[0].value;
+        var helper;
         var success = false;
         var slider = null;
 
@@ -580,9 +580,22 @@
           if(id !== '') sliderRow.find('.sliderId')[0].innerHTML = (id);
           if(name !== '') sliderRow.find('.sliderVar')[0].innerHTML = (name);
           if(func !== '') sliderRow.find('.sliderFunc')[0].innerHTML = (func);
-          if(value !== '') sliderRow.find('.sliderVal')[0].value = value;
+          if(value !== '') sliderRow.find('.sliderVal')[0].value = +value;
+          else if(value === '') {
+            sliderRow.find('.sliderVal')[0].value = '';
+            if (name !== '') {
+              helper = calculator.HelperExpression({latex:name});
+              helper.observe('numericValue.slider',(function(sliderRow){
+                return function(t,h){
+                  if(sliderRow) sliderRow.find('.sliderVal')[0].value = h[t];
+                  else h.unobserveAll();
+                };
+              })(sliderRow));
+            }
+          }
           sliderRow.find('.addSlider').click(clickSlider);
           sliderRow.find('.deleteSlider').click(deleteSlider);
+          console.log('Slider created:');
 
           // Only need to create the slider once. No replacing w/o deleting.
           // try {
@@ -595,21 +608,28 @@
           // } catch (e) {
           //   alert(e.message);
           // }
-          if (slider === null) return;
+          // if (slider === null) return;
           // currentSliders[slider.id] = slider;
-
         } // else currentSliders[sliderId].enforce(value);
         else {
           id = sliderRow.find('.sliderId')[0].innerText;
           name = sliderRow.find('.sliderVar')[0].innerText;
           func = sliderRow.find('.sliderFunc')[0].innerText;
-          console.log('id: '+id+'; name: '+name+'; func: '+func+'; value: '+value);
+          console.log('Slider activated:');
           if(func !== 'N/A') {
-            PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:value});
-          } else if(id !== '' && name !== '' && value !== '') {
+            if(PearsonGL.External.rootJS[func] !== undefined) {
+              PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:value});
+            }
+          } else if(id !== 'N/A' && name !== 'N/A' && value !== '') {
             calculator.setExpression({id:id,latex:name+'='+value});
           }
         }
+        console.log(
+          'id: '+(id === '' ? 'N/A' : id)+
+          '; name: '+(name === '' ? 'N/A' : name)+
+          '; func: '+(func === '' ? 'N/A' : func)+
+          '; value: '+(value === '' ? 'N/A' : value)
+        );
       }
       // TODO STUB WHATEVER //
       $(".addSlider").click(clickSlider);
