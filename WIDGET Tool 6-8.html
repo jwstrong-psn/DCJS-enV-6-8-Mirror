@@ -619,6 +619,8 @@
           if(func !== 'N/A') {
             if(PearsonGL.External.rootJS[func] !== undefined) {
               PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:value});
+            } else {
+              console.log('No such function: '+func);
             }
           } else if(id !== 'N/A' && name !== 'N/A' && value !== '') {
             calculator.setExpression({id:id,latex:name+'='+value});
