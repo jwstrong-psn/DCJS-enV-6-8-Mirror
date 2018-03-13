@@ -282,6 +282,13 @@ PearsonGL.External.rootJS = (function() {
           replace(/\-/g,'−');
         return expr;
        },
+      /* ←— subscript ———————————————————————————————————————————————————————→ *\
+       ↑ Add a subscript, using {} if the subscript is more than 2 chars
+       ↓
+       * ←—————————————————————————————————————————————————————————————————————→ */
+      sub: function(sub){
+        return ('_'+((''+sub).length > 1 ? '{'+sub+'}' : sub));
+       },
       /* ←— number to letter (lowercase) —————————————————————————————————→ *\
        | Convert a number to its lowercase letter with cs.alpha[n]`
        * ←————————————————————————————————————————————————————————————————→ */
@@ -1518,6 +1525,60 @@ PearsonGL.External.rootJS = (function() {
        };
 
     // SCO-SPECIFIC FUNCTIONS
+      /* ←— A0633923_addPoint ————————————————————————————————————————————→ *\
+       | Adds a point at [0,0]
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633923 = {};
+      fs.A0633923.addPoint = function() {
+        console.log(arguments);
+        var o = hs.parseArgs(arguments);
+        console.log(o);
+
+        var l = o.value+1;
+        var sub = hs.sub(l);
+
+        var arr = (new Array(l)).fill(undefined).map(function(e,i){
+          return hs.sub(i+1);
+        });
+
+        o.desmos.setExpressions([
+        {
+          id:'x_'+l,
+          latex:'x'+sub+'=0',
+          sliderBounds: {
+            min:'-10',
+            max:'10',
+            step:'1'
+          }
+        },
+        {
+          id:'y_'+l,
+          latex:'y'+sub+'=0',
+          sliderBounds: {
+            min:'-10',
+            max:'10',
+            step:'1'
+          }
+        },
+        {
+          id:'P_'+l,
+          latex:'P'+sub+'=\\left(x'+sub+',y'+sub+'\\right)',
+          color:cs.color.mgmColors.BLUE
+        },
+        {
+          id:'x_0',
+          latex:'x_0=\\left['+arr.map(function(e){
+            return 'x'+e;
+          })+'\\right]'
+        },
+        {
+          id:'y_0',
+          latex:'y_0=\\left['+arr.map(function(e){
+            return 'y'+e;
+          })+'\\right]'
+        }
+        ]);
+       };
       /* ←— A0633963 7-2-5 KC ————————————————————————————————————————————→ *\
        | Change the graph based on the ticket cost.
        * ←————————————————————————————————————————————————————————————————→ */
