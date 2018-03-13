@@ -531,7 +531,7 @@
             currState = window.calculator.getState();
             currState.expressions.list.forEach(function(expr){
               if(expr.type === "image") {
-                expr.image_url = images[expr.id].url.replace(/(?<=upload\/)(v[^\/]*\/|(?=[^\/]*\.(?:png|jpg)))/,"t_FPO/");
+                expr.image_url = images[expr.id].url.replace(/(?<=upload\/)(.*\/)*(?=[^\/]*\.[a-zA-Z]+$)/,"t_FPO/");
               }
             });
           }

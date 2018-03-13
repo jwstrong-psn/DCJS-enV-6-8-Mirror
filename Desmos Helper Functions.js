@@ -522,7 +522,7 @@ var ease2 = function ease(x,y,t,dt) {
        | For generating points iteratively, so it looks more like a progressive
        |  sampling process, than just everything showing up at once
        * ←————————————————————————————————————————————————————————————————→ */
-       fs = fs || {};
+       var fs = fs || {};
        fs.A0633977 = fs.A0633977 || {};
       fs.A0633977.generate = fs.A0633977.generate || function() {
         var o = hs.parseArgs(arguments);

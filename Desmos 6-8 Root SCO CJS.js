@@ -3132,6 +3132,30 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.setMathBounds(newBounds);
        };
+      /* ←— A0633995 8-1-3 KC ————————————————————————————————————————————→ *\
+       | Labels points adjacent to 
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633995 = {};
+      fs.A0633995.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+      
+        hlps.x_1 = hlps.maker('x_1');
+       };
+      fs.A0633995.focusPoint = function() {
+        // A0633995_focusPoint
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+      
+        var bounds = o.desmos.graphpaperBounds.mathCoordinates;
+
+        o.desmos.setMathBounds({
+          left: (hlps.x_1.numericValue - bounds.width/2),
+          right: (hlps.x_1.numericValue + bounds.width/2),
+          bottom: -bounds.height/2,
+          top: bounds.height/2
+        });
+       };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
        * ←————————————————————————————————————————————————————————————————→ */
