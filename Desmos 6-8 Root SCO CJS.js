@@ -18,7 +18,11 @@ window.PearsonGL.External = window.PearsonGL.External || {};
 ******************************************************************************/
 PearsonGL.External.rootJS = (function() {
   "use strict";
-  var debugLog = console.log; // change to function(){return false;}
+
+  var debugLog = function(){};
+  if(window.debugLog) {
+    debugLog = window.debugLog;
+  }
 
  /***********************************************************************************
    * PRIVATE VARIABLES / FUNCTIONS
@@ -1530,9 +1534,9 @@ PearsonGL.External.rootJS = (function() {
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633923 = {};
       fs.A0633923.addPoint = function() {
-        console.log(arguments);
+        debugLog(arguments);
         var o = hs.parseArgs(arguments);
-        console.log(o);
+        o.log(o);
 
         var l = o.value+1;
         var sub = hs.sub(l);
@@ -3399,7 +3403,7 @@ PearsonGL.External.rootJS = (function() {
        * ←—————————————————————————————————————————————————————————————————→ */
        fs.usabilityTestNumberLine.init = (function(){
         // Helper Functions
-          var o = {log:console.log}; //function(){}}; // change log to console.log to debug
+          var o = {log:debugLog}; //function(){}}; // change log to console.log to debug
 
           var intervalPreferences = (function(){
             var catalog = {};
@@ -3831,7 +3835,7 @@ PearsonGL.External.rootJS = (function() {
               id:'pSlider',
               sliderBounds:{min:0,max:W}//,step:1} // apparently the step breaks everything
             };
-            console.log('pSlider:',pSlider);
+            obj.log('pSlider:',pSlider);
             obj.desmos.setExpressions([
               {
                 id:'majorIntervalsW',
