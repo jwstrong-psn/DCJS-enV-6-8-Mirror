@@ -3209,10 +3209,13 @@ PearsonGL.External.rootJS = (function() {
         var hlps = hxs[o.uniqueId];
       
         var bounds = o.desmos.graphpaperBounds.mathCoordinates;
+        var tick = 8 * bounds.width/o.desmos.graphpaperBounds.pixelCoordinates.width;
+
+        var left = Math.max(hlps.x_1.numericValue - bounds.width/2,-2*tick);
 
         o.desmos.setMathBounds({
-          left: (hlps.x_1.numericValue - bounds.width/2),
-          right: (hlps.x_1.numericValue + bounds.width/2),
+          left: left,
+          right: left + bounds.width,
           bottom: -bounds.height/2,
           top: bounds.height/2
         });
