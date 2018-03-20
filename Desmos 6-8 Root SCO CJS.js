@@ -123,7 +123,7 @@ PearsonGL.External.rootJS = (function() {
         });
         return functions;
        },
-      /* ←— reportDCJSError —————————————————————————————————————————————————→ *\
+      /* ←— reportDCJSerror —————————————————————————————————————————————————→ *\
        ↑ Downloads an error report file including the current state and some     ↑
        |  other useful stuff.                                                    |
        | Additionally sets the Desmos calculator instance to a global variable   |
@@ -133,30 +133,45 @@ PearsonGL.External.rootJS = (function() {
        | @Arg2: (Optional) additional info to be recorded in the error report    |
        ↓                                                                         ↓
        * ←—————————————————————————————————————————————————————————————————————→ */
-      reportDCJSError: function(options) {
+      reportDCJSerror: function(options) {
 
-        window['widget_' + options.uniqueId] = options.desmos;
+        window.widgetDebug = window.widgetDebug || {
+          vars:vs,
+          helpers:hxs,
+          constants:cs,
+          errors:[],
+          downloadError: function(i) {
+            if(i === undefined) {
+              i = window.widgetDebug.errors.length - 1;
+            }
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(window.widgetDebug.errors[i],null,"\t")));
+            element.setAttribute('download', window.widgetDebug.errors[i].filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+          }
+        };
 
-        var output = {
-            id: options.uniqueId,
-            state: options.desmos.getState(),
-            variables: vs[options.uniqueId],
-            helpers: hxs[options.uniqueId],
-            screenshot: options.desmos.screenshot()
-          };
+        window.widgetDebug['widget_' + options.uniqueId] = options.desmos;
 
-        var i;
-        for (i = 1; i < arguments.length; i += 1) {
-          output["arguments["+i+"]"] = arguments[i];
-         }
+        var err = {
+          lastCall:{},
+          id: options.uniqueId,
+          state: options.desmos.getState(),
+          variables: vs[options.uniqueId],
+          helpers: hxs[options.uniqueId],
+          screenshot: options.desmos.screenshot(),
+          filename: 'Widget Error Report '+((new Date()).toISOString())+'.json'
+        };
 
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(output,null,"\t")));
-        element.setAttribute('download', 'Widget Error Report '+((new Date()).toISOString())+'.json');
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
+        Object.assign(err.lastCall,options);
+        err.lastCall.desmos = err.lastCall.desmos.guid;
+
+        window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err)));
+
+        debugLog('Error report saved. Review debugging info in window.widgetDebug');
        },
       /* ←— parseArgs —————————————————————————————————————————————————————→ *\
        ↑ Returns a new struct merging given options with defaults for those   ↑
@@ -216,7 +231,7 @@ PearsonGL.External.rootJS = (function() {
 
         if (output.log === console.log) {
           window.widget = desmos;
-          window.reportDesmosError = window.reportDesmosError || function() {
+          window.reportDesmosError = function() {
             hs.reportDCJSerror(output);
           };
         }
