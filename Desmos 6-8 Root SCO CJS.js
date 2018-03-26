@@ -3217,6 +3217,9 @@ PearsonGL.External.rootJS = (function() {
        | Labels points adjacent to 
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633995 = {};
+       cs.A0633995 = {
+        MARGIN: 24 // pixels of margin
+       };
       fs.A0633995.init = function() {
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
@@ -3227,18 +3230,35 @@ PearsonGL.External.rootJS = (function() {
         // A0633995_focusPoint
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
+
+        var x = hlps.x_1.numericValue;
+        var px = cs.A0633995.MARGIN
       
-        var bounds = o.desmos.graphpaperBounds.mathCoordinates;
-        var tick = 8 * bounds.width/o.desmos.graphpaperBounds.pixelCoordinates.width;
+        var maths = o.desmos.graphpaperBounds.mathCoordinates;
+        var bounds = {
+          width:maths.width,
+          height:maths.height,
+          left:maths.left,
+          right:maths.right,
+          top:maths.top,
+          bottom:maths.bottom
+        };
+        var margin = bounds.width/o.desmos.graphpaperBounds.pixelCoordinates.width * px;
 
-        var left = Math.max(hlps.x_1.numericValue - bounds.width/2,-2*tick);
+        if(bounds.width > 2*x+2*margin) {
+          // stuff
+          margin = 2*x / (o.desmos.graphpaperBounds.pixelCoordinates.width - 2*px) * px;
+          bounds.left = -margin;
+          bounds.right = 2*x + margin;
+        } else {
+          bounds.left = hlps.x_1.numericValue - bounds.width/2;
+          bounds.right = bounds.left + bounds.width;
+        }
 
-        o.desmos.setMathBounds({
-          left: left,
-          right: left + bounds.width,
-          bottom: -bounds.height/2,
-          top: bounds.height/2
-        });
+        bounds.bottom = -bounds.height/2;
+        bounds.top = bounds.height/2;
+
+        o.desmos.setMathBounds(bounds);
        };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
