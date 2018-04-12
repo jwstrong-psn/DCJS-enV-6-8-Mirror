@@ -223,19 +223,31 @@ PearsonGL.External.rootJS = (function() {
 
         var desmos = output.desmos;
 
-        var uid = output.uniqueId;
+        // ENUM the widget
+        var uid = cs.ENUM.indexOf(desmos);
+        if(uid === -1) {
+          uid = cs.ENUM.length;
+          cs.ENUM.push(desmos);
+        }
 
-        if(uid === undefined) {
-          uid = cs.ENUM.indexOf(desmos);
-          if(uid === -1) {
-            uid = cs.ENUM.length;
-            cs.ENUM.push(desmos);
-          }
+        // Identify the widget by its ENUM uid if it has no other identifier
+        if(output.uniqueId === undefined) {
           output.uniqueId = uid;
         }
 
-        vs[uid] = vs[uid] || {};
-        hxs[uid] = hxs[uid] || {};
+        var ouid = output.uniqueId;
+
+        // Initialize the variable & helper cache if necessary
+        vs[ouid] = vs[ouid] || {};
+        hxs[ouid] = hxs[ouid] || {};
+
+        // Link the ENUM uid to the authored Id, so the ENUM uid can always be used,
+        //  even if only the authored Id is known, using the following shortcut:
+        // uid = cs.ENUM.indexOf(cs.ENUM[output.uniqueId])
+        cs.ENUM[ouid] = cs.ENUM[uid];
+        vs[uid] = vs[ouid];
+        hxs[uid] = hxs[ouid];
+
 
         if(hxs[uid].maker === undefined) {
           hxs[uid].maker = function(expr){
@@ -270,6 +282,8 @@ PearsonGL.External.rootJS = (function() {
             }
           };
           window.widgetDebug.widgets[uid] = desmos;
+
+          // Update the error reporting to remember this last call's arguments
           window.reportDesmosError = function() {
             hs.reportDCJSerror(output);
           };
