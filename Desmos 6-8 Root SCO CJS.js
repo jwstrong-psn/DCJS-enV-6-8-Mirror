@@ -148,7 +148,21 @@ PearsonGL.External.rootJS = (function() {
         mergeObjects(err.lastCall,options);
         err.lastCall.desmos = "Desmos #"+cs.ENUM.indexOf(err.lastCall.desmos);
 
-        window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err)));
+        window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err, function(key, val) {
+          if(val instanceof Desmos.GraphingCalculator) {
+            if(cs.ENUM.indexOf(val) === -1) {
+              cs.ENUM.push(val);
+            }
+            return "[GraphingCalculator #"+cs.ENUM.indexOf(val)+"]";
+          } else if (val instanceof Desmos.Geometry) {
+            if(cs.ENUM.indexOf(val) === -1) {
+              cs.ENUM.push(val);
+            }
+            return "[Geometry #"+cs.ENUM.indexOf(val)+"]";
+          } else {
+            return val;
+          }
+        })));
 
         debugLog('Error report saved. Review debugging info in window.widgetDebug');
        },
