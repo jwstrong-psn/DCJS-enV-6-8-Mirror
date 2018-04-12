@@ -3491,6 +3491,42 @@ PearsonGL.External.rootJS = (function() {
           o.desmos.setExpressions(exprs);
         }); //*/
        };
+      /* ←— A0669770 6-2-1 KC ————————————————————————————————————————————→ *\
+       | recolors the point based on the side of 0
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0669770 = {};
+      fs.A0669770.setupCopy = function() {
+        var o = hs.parseArgs(arguments);
+
+        cs.ENUM['A0669770_'+o.name] = o.desmos;
+        if(o.name === 'left') {
+          hxs.A0669770_left = hxs[o.uniqueId];
+        }
+
+        var left = cs.ENUM.A0669770_left;
+        var right = cs.ENUM.A0669770_right;
+
+        // Make sure both are initialized
+        if(!(left instanceof Desmos.GraphingCalculator && right instanceof Desmos.GraphingCalculator)) {
+          return;
+        }
+
+        var hlps = hxs.A0669770_left;
+
+        function copyValue(name) {
+          // In case one of them gets reset, we need to unlink the old instances.
+          if (hlps[name] !== undefined) {
+            hlps[name].unobserveAll();
+          }
+          hlps[name] = hlps.maker(name);
+          hlps[name].observe('numericValue.A0669770', function(t,h) {
+            right.setExpression({id:name,latex:name+'='+h[t]});
+          });
+        }
+
+        ['x_1','y_1','x_2','y_2'].forEach(copyValue);
+
+       };
 
     /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
      fs.usabilityTestNumberLine = {};
