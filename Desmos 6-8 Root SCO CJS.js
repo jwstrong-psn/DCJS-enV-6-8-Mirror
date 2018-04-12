@@ -146,7 +146,20 @@ PearsonGL.External.rootJS = (function() {
         };
 
         mergeObjects(err.lastCall,options);
-        err.lastCall.desmos = "Desmos #"+cs.ENUM.indexOf(err.lastCall.desmos);
+
+        var id = cs.ENUM.indexOf(err.lastCall.desmos);
+
+        if(id === -1) {
+          id = cs.ENUM.length;
+          cs.ENUM.push(err.lastCall.desmos);
+        }
+        if(err.lastCall.desmos instanceof Desmos.GraphingCalculator) {
+          err.lastCall.desmos = "[GraphingCalculator #"+id+"]";
+        } else if (err.lastCall.desmos instanceof Desmos.Geometry) {
+          err.lastCall.desmos = "[Geometry #"+id+"]";
+        } else {
+          err.lastCall.desmos = "[Unknown Type #"+id+"]";
+        }
 
         window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err, function(key, val) {
           if(val instanceof Desmos.GraphingCalculator) {
