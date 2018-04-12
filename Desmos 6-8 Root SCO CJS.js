@@ -145,7 +145,7 @@ PearsonGL.External.rootJS = (function() {
           filename: 'Widget Error Report '+((new Date()).toISOString())+'.json'
         };
 
-        Object.assign(err.lastCall,options);
+        mergeObjects(err.lastCall,options);
         err.lastCall.desmos = "Desmos #"+cs.ENUM.indexOf(err.lastCall.desmos);
 
         window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err)));
@@ -3082,7 +3082,7 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.observe('graphpaperBounds.updateFrame',function() {
           window.setTimeout(function(){
-            fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+            fs.A0633992.updateFrame(mergeObjects({},o,{value:hlps.r.numericValue}));
           },100);
         });
        };
@@ -3302,7 +3302,7 @@ PearsonGL.External.rootJS = (function() {
        | throws paint at the wall (generates random data approximating a line)
        * ←————————————————————————————————————————————————————————————————→ */
       fs.A0634006.splat = function(a,b,opts) {
-        opts = Object.assign({
+        opts = mergeObjects({
           n:10,
           xMin:0,
           xMax:10,
