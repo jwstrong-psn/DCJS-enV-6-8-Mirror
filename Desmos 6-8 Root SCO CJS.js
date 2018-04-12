@@ -69,7 +69,8 @@ PearsonGL.External.rootJS = (function() {
        },
       tolerance:{
         RESCALE:0.3 // Granularity of zoom levels, in powers of 2
-       }
+       },
+      ENUM:[]
      };
   /* ←—PRIVATE HELPER FUNCTIONS————————————————————————————————————————————→ *\
        | Subroutines; access with hs.functionName(args)
@@ -145,7 +146,7 @@ PearsonGL.External.rootJS = (function() {
         };
 
         Object.assign(err.lastCall,options);
-        err.lastCall.desmos = err.lastCall.desmos.guid;
+        err.lastCall.desmos = "Desmos #"+cs.ENUM.indexOf(err.lastCall.desmos);
 
         window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err)));
 
@@ -179,17 +180,16 @@ PearsonGL.External.rootJS = (function() {
         var arg = args[0];
 
         var output = {
-          log: debugLog // Kill this when not debugging
+          log: debugLog
         };
 
         if (typeof arg === 'object') {
-          mergeObjects(output,{uniqueId:arg.desmos.guid},arg);
+          mergeObjects(output,arg);
          } else if (typeof arg === 'number') {
           // Expect (value, name, desmos)
           output.value = arg;
           output.name = args[1];
           output.desmos = args[2] || window.calculator || window.Calc;
-          output.uniqueId = output.desmos.guid;
          } else {
           throw new Error('DCJS parseArgs received non-standard arguments.');
          }
@@ -197,6 +197,15 @@ PearsonGL.External.rootJS = (function() {
         var desmos = output.desmos;
 
         var uid = output.uniqueId;
+
+        if(uid === undefined) {
+          uid = cs.ENUM.indexOf(desmos);
+          if(uid === -1) {
+            uid = cs.ENUM.length;
+            cs.ENUM.push(desmos);
+          }
+          output.uniqueId = uid;
+        }
 
         vs[uid] = vs[uid] || {};
         hxs[uid] = hxs[uid] || {};
@@ -1908,7 +1917,9 @@ PearsonGL.External.rootJS = (function() {
         hlps.N.observe('numericValue.validate',fs.A0633977.validate);
 
         hlps.N.observe('numericValue.updatePopulation', function(t,h){
-          vars.population = hs.distributeByProportion(h[t],vars.percents);
+          if(Array.isArray(vars.percents)) {
+            vars.population = hs.distributeByProportion(h[t],vars.percents);
+          }
         });
 
         hlps.p = hxs[o.uniqueId].maker('p');
