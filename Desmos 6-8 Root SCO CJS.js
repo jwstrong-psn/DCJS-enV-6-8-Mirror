@@ -134,28 +134,6 @@ PearsonGL.External.rootJS = (function() {
        ↓                                                                         ↓
        * ←—————————————————————————————————————————————————————————————————————→ */
       reportDCJSerror: function(options) {
-
-        window.widgetDebug = window.widgetDebug || {
-          vars:vs,
-          helpers:hxs,
-          constants:cs,
-          errors:[],
-          downloadError: function(i) {
-            if(i === undefined) {
-              i = window.widgetDebug.errors.length - 1;
-            }
-            var element = document.createElement('a');
-            element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(window.widgetDebug.errors[i],null,"\t")));
-            element.setAttribute('download', window.widgetDebug.errors[i].filename);
-            element.style.display = 'none';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-          }
-        };
-
-        window.widgetDebug['widget_' + options.uniqueId] = options.desmos;
-
         var err = {
           lastCall:{},
           id: options.uniqueId,
@@ -229,8 +207,33 @@ PearsonGL.External.rootJS = (function() {
           };
         }
 
-        if (output.log === console.log) {
-          window.widget = desmos;
+        if (window.debugLog) {
+          window.widgetDebug = window.widgetDebug || {
+            vars:vs,
+            helpers:hxs,
+            constants:cs,
+            errors:[],
+            widgets:{},
+            downloadError: function(i) {
+              if(i === undefined) {
+                i = window.widgetDebug.errors.length - 1;
+              }
+              if(i < 0) {
+                throw new Error("No errors available to download.");
+              }
+              if(i >= window.widgetDebug.errors.length) {
+                throw new Error("Cannot download error with id: "+i+"; only "+window.widgetDebug.errors.length+" error(s) reported.");
+              }
+              var element = document.createElement('a');
+              element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(window.widgetDebug.errors[i],null,"\t")));
+              element.setAttribute('download', window.widgetDebug.errors[i].filename);
+              element.style.display = 'none';
+              document.body.appendChild(element);
+              element.click();
+              document.body.removeChild(element);
+            }
+          };
+          window.widgetDebug.widgets[uid] = desmos;
           window.reportDesmosError = function() {
             hs.reportDCJSerror(output);
           };
@@ -1888,6 +1891,7 @@ PearsonGL.External.rootJS = (function() {
         }
        };
       fs.A0633977.initLeft = function() {
+        
         var o = hs.parseArgs(arguments);
 
         // Until proper o.uniqueId happens, we have to use our own
@@ -1902,6 +1906,10 @@ PearsonGL.External.rootJS = (function() {
         hlps.N = hxs[o.uniqueId].maker('n');
 
         hlps.N.observe('numericValue.validate',fs.A0633977.validate);
+
+        hlps.N.observe('numericValue.updatePopulation', function(t,h){
+          vars.population = hs.distributeByProportion(h[t],vars.percents);
+        });
 
         hlps.p = hxs[o.uniqueId].maker('p');
 
