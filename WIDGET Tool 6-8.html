@@ -14,7 +14,7 @@
   <!--script src="https://www.desmos.com/api/v1.0/geometry.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script-->
   <script src="./desmos/geometry.2018-04-19.js"></script>
   <!--script src="https://www.desmos.com/api/v1.0/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script-->
-  <script src="./desmos/calculator.2018-04-19.js"></script>
+  <script src="./desmos/calculator.2018-04-20.js"></script>
   <script src="./Desmos 6-8 Root SCO CJS.js"></script>
   <script src="./Desmos 6-8 Test Master SCO CJS.js"></script>
   <script src="./Desmos Helper Functions.js"></script>
@@ -76,6 +76,8 @@
           <tr><td style="text-align:right">Sidebar: </td><td style="text-align:center"><button type="button" id="sidebar">?</button></td></tr>
           <tr><td style="text-align:right">Autosize: </td><td style="text-align:center"><button type="button" id="geoAutosize">?</button></td></tr>
           <tr><td style="text-align:right">Selection: </td><td style="text-align:center"><button type="button" id="selection">?</button></td></tr>
+          <tr><td style="text-align:right">Axes: </td><td style="text-align:center"><button type="button" id="axes">?</button></td></tr>
+          <!--tr><td style="text-align:right">Labels: </td><td style="text-align:center"><button type="button" id="labels">?</button></td></tr-->
           <tr><td style="text-align:right">Ruler: </td><td style="text-align:center"><button type="button" id="ruler">?</button></td></tr>
           <tr><td style="text-align:right">Protractor: </td><td style="text-align:center"><button type="button" id="protractor">?</button></td></tr>
           <tr><td colspan="2">EXPERIMENTAL:</td></tr>
@@ -489,6 +491,12 @@
         });
         $("#selection").click(function(){
           window.rebuild({'selection':!(window.currentGeoConstructors['selection'])});
+        });
+        $("#axes").click(function(){
+          window.rebuild({'axes':!(window.currentGeoConstructors['axes'])});
+        });
+        $("#labels").click(function(){
+          window.rebuild({'labels':!(window.currentGeoConstructors['labels'])});
         });
         $("#ruler").click(function(){
           window.currentGeoConstructors.ruler = !(window.currentGeoConstructors['ruler']);
@@ -979,6 +987,8 @@
         window.sidebar={'sidebar':true};
         window.autosize={'autosize':true};
         window.selection={'selection':true};
+        window.axes={'axes':true};
+        window.labels={'labels':true};
         window.ruler={'ruler':true};
         window.protractor={'protractor':true};
         window.customtools={'customtools':true};
@@ -1046,6 +1056,8 @@
             'sidebar':true,
             'autosize':true,
             'selection':true,
+            'axes':false,
+            'labels':true,
             'ruler':false,
             'protractor':false,
             'colorMap':geoColors,
@@ -1065,6 +1077,8 @@
             'sidebar':false,
             'autosize':false,
             'selection':false,
+            'axes':false,
+            'labels':false,
             'ruler':false,
             'protractor':false,
             'colorMap':geoColors,
@@ -1125,6 +1139,8 @@
           'sidebar':'sidebar',
           'autosize':'geoAutosize',
           'selection':'selection',
+          'axes':'axes',
+          'labels':'labels',
           'ruler':'ruler',
           'protractor':'protractor',
           'colorMap':geoColors,
