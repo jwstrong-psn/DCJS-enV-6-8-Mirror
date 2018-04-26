@@ -18,8 +18,12 @@ window.PearsonGL.External = window.PearsonGL.External || {};
 ******************************************************************************/
 PearsonGL.External.masterJS = (function() {
   "use strict";
-  /*** DEBUG: SET TO function(){return false;} TO DISABLE CONSOLE MESSAGES ***/
-  var debugLog = console.log;
+
+  var debugLog = function(){
+    if(window.debugLog) {
+      window.debugLog.apply(null,arguments);
+    }
+  }
   
   /***********************************************************************************
    * PRIVATE VARIABLES / FUNCTIONS

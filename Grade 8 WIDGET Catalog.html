@@ -103,7 +103,7 @@
       <td style="vertical-align:top">
         <button type="button" id="copyState">Copy Current State</button><br>
         <button type="button" id="download">Download Current State</button><br>
-        <button type="button" id="save">Save As New Widget</button><br>
+        <button type="button" disabled>Catalog Mode (Cannot Save New Graphs)</button><br>
         <input type="text" id="stateInput" placeholder="Paste state here…">
         <button type="button" id="load">Load State</button>
       </td>
@@ -632,7 +632,7 @@
           console.log('Slider activated:');
           if(func !== 'N/A') {
             if(PearsonGL.External.rootJS[func] !== undefined) {
-              PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:+value});
+              PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:value});
             } else {
               console.log('No such function: '+func);
             }
@@ -1319,22 +1319,22 @@
             '<img class="'+id+'_load" id="'+id+'_img" style="max-width:100%;max-height:100%;">'+
             '</div><div style="float:bottom;">'+
             '<button type="button" class="'+id+'_load">load</button><br>'+
-            '<button type="button" class="'+id+'_download">download</button><br>'+
+            '<button type="button" class="'+id+'_download">download</button><!--br>'+
             '<button type="button" class="'+id+'_save">overwrite</button><br>'+
-            '<button type="button" class="'+id+'_delete">delete</button></div>');
+            '<button type="button" class="'+id+'_delete">delete</button--></div>');
             if (name !== undefined) $('#'+id+'_name')[0].value=name;
             $('#'+id+'_name').change(function(){name=$('#'+id+'_name')[0].value;updateStorage()});
             $('.'+id+'_load').click(function(){check('load');});
-            $('.'+id+'_save').click(function(){check('save');});
-            $('.'+id+'_delete').click(function(){check('delete');});
+            // $('.'+id+'_save').click(function(){check('save');});
+            // $('.'+id+'_delete').click(function(){check('delete');});
           } else {
-            $gui.append('<div id="'+id+'_name" style="float:top;padding:2px">AutoSaved</div><div style="float:top;width:'+previewWidth+'px;height:'+previewHeight+'px;border-style:outset;border-width:2px;">'+
+            $gui.append('<div id="'+id+'_name" style="float:top;padding:2px">NO SAVE</div><div style="float:top;width:'+previewWidth+'px;height:'+previewHeight+'px;border-style:outset;border-width:2px;">'+
             '<img id="'+id+'_img" style="max-width:100%;max-height:100%;">'+
             '</div><br><div style="float:bottom;">'+
             '<button type="button" class="'+id+'_download">download</button><br>'+
-            '<button type="button" class="'+id+'_new">save as new</button><br>'+
+            '<!--button type="button" class="'+id+'_new">save as new</button><br-->'+
             '<button type="button" class="'+id+'_clear">clear all</button></div>')
-            $('.'+id+'_new').click(function(){check('new');});
+            // $('.'+id+'_new').click(function(){check('new');});
             $('.'+id+'_clear').click(function(){check('clear');});
           }
           $('.'+id+'_download').click(download);
@@ -1657,7 +1657,7 @@
         if (typeof(Storage) !== undefined) {
           var package = [];
           for (graph in savedGraphs) package.push(savedGraphs[graph].package());
-          localStorage.setItem("MGMsavedGraphs",JSON.stringify(package));
+          // localStorage.setItem("MGMCatSavedGraphs",JSON.stringify(package));
         } else {
           console.log('No local storage available.');
         }
@@ -1680,9 +1680,9 @@
         autoSaveQueued = false;
         if (typeof(Storage) === undefined) return;
         // console.log('Checking for new versions…')
-        // if (latestVersion < localStorage.MGMcurrentVersion); // STUB
-        localStorage.setItem("MGMautoSave",JSON.stringify(workingState.package()));
-        localStorage.setItem("MGMcurrentVersion",Date.now());
+        // if (latestVersion < localStorage.MGMCatCurrentVersion); // STUB
+        // localStorage.setItem("MGMCatAutoSave",JSON.stringify(workingState.package()));
+        // localStorage.setItem("MGMCatCurrentVersion",Date.now());
       }
 
       // Note: never set toolType before refreshing the calculator;
@@ -1949,23 +1949,34 @@
 
       var latestVersion = Date.now();
 
-      if (typeof(Storage) !== undefined) {
-        if (localStorage.getItem("MGMcurrentVersion")) latestVersion = localStorage.getItem("MGMcurrentVersion");
-        if (localStorage.getItem("MGMautoSave")) {
-          workingState = new savedGraph($.parseJSON(localStorage.getItem("MGMautoSave")),'workingState');
-        } else {
-          workingState = new savedGraph(null,'workingState');
-          refreshCalculator();
+      $.getJSON('./catalog/grade8.json',function(data,msg) {
+        console.log(msg);
+        console.log('Loading data:',data);
+        latestVersion = data.date;
+        workingState = new savedGraph(null,'workingState');
+        refreshCalculator();
+        while(data.graphs.length > 0) {
+          savedGraphs.push(new savedGraph(data.graphs.pop()));
         }
-        if (localStorage.getItem("MGMsavedGraphs")) {
-          var unpacked = $.parseJSON(localStorage.getItem("MGMsavedGraphs"));
-          for (graph in unpacked) savedGraphs.push(new savedGraph(unpacked[graph]));
-        }
-      } else {
-        console.log('Cannot load saved data. No storage available.');
-      // by default, administer secret folders
-      window.show();
-      }
+      });
+
+      // if (typeof(Storage) !== undefined) {
+      //   if (localStorage.getItem("MGMCatCurrentVersion")) latestVersion = localStorage.getItem("MGMCatCurrentVersion");
+      //   if (localStorage.getItem("MGMCatAutoSave")) {
+      //     workingState = new savedGraph($.parseJSON(localStorage.getItem("MGMCatAutoSave")),'workingState');
+      //   } else {
+      //     workingState = new savedGraph(null,'workingState');
+      //     refreshCalculator();
+      //   }
+      //   if (localStorage.getItem("MGMCatSavedGraphs")) {
+      //     var unpacked = $.parseJSON(localStorage.getItem("MGMCatSavedGraphs"));
+      //     for (graph in unpacked) savedGraphs.push(new savedGraph(unpacked[graph]));
+      //   }
+      // } else {
+      //   console.log('Cannot load saved data. No storage available.');
+      // // by default, administer secret folders
+      // window.show();
+      // }
     });
   </script>
 </body>

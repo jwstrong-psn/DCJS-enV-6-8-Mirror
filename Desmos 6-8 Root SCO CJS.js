@@ -18,7 +18,12 @@ window.PearsonGL.External = window.PearsonGL.External || {};
 ******************************************************************************/
 PearsonGL.External.rootJS = (function() {
   "use strict";
-  var debugLog = console.log; // change to function(){return false;}
+
+  var debugLog = function(){
+    if(window.debugLog) {
+      window.debugLog.apply(null,arguments);
+    }
+  }
 
  /***********************************************************************************
    * PRIVATE VARIABLES / FUNCTIONS
@@ -64,7 +69,8 @@ PearsonGL.External.rootJS = (function() {
        },
       tolerance:{
         RESCALE:0.3 // Granularity of zoom levels, in powers of 2
-       }
+       },
+      ENUM:[]
      };
   /* ←—PRIVATE HELPER FUNCTIONS————————————————————————————————————————————→ *\
        | Subroutines; access with hs.functionName(args)
@@ -118,7 +124,7 @@ PearsonGL.External.rootJS = (function() {
         });
         return functions;
        },
-      /* ←— reportDCJSError —————————————————————————————————————————————————→ *\
+      /* ←— reportDCJSerror —————————————————————————————————————————————————→ *\
        ↑ Downloads an error report file including the current state and some     ↑
        |  other useful stuff.                                                    |
        | Additionally sets the Desmos calculator instance to a global variable   |
@@ -128,30 +134,50 @@ PearsonGL.External.rootJS = (function() {
        | @Arg2: (Optional) additional info to be recorded in the error report    |
        ↓                                                                         ↓
        * ←—————————————————————————————————————————————————————————————————————→ */
-      reportDCJSError: function(options) {
+      reportDCJSerror: function(options) {
+        var err = {
+          lastCall:{},
+          id: options.uniqueId,
+          state: options.desmos.getState(),
+          variables: vs[options.uniqueId],
+          helpers: hxs[options.uniqueId],
+          screenshot: options.desmos.screenshot(),
+          filename: 'Widget Error Report '+((new Date()).toISOString())+'.json'
+        };
 
-        window['widget_' + options.uniqueId] = options.desmos;
+        mergeObjects(err.lastCall,options);
 
-        var output = {
-            id: options.uniqueId,
-            state: options.desmos.getState(),
-            variables: vs[options.uniqueId],
-            helpers: hxs[options.uniqueId],
-            screenshot: options.desmos.screenshot()
-          };
+        var id = cs.ENUM.indexOf(err.lastCall.desmos);
 
-        var i;
-        for (i = 1; i < arguments.length; i += 1) {
-          output["arguments["+i+"]"] = arguments[i];
-         }
+        if(id === -1) {
+          id = cs.ENUM.length;
+          cs.ENUM.push(err.lastCall.desmos);
+        }
+        if(err.lastCall.desmos instanceof Desmos.GraphingCalculator) {
+          err.lastCall.desmos = "[GraphingCalculator #"+id+"]";
+        } else if (err.lastCall.desmos instanceof Desmos.Geometry) {
+          err.lastCall.desmos = "[Geometry #"+id+"]";
+        } else {
+          err.lastCall.desmos = "[Unknown Type #"+id+"]";
+        }
 
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(output,null,"\t")));
-        element.setAttribute('download', 'Widget Error Report '+((new Date()).toISOString())+'.json');
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
+        window.widgetDebug.errors.push(JSON.parse(JSON.stringify(err, function(key, val) {
+          if(val instanceof Desmos.GraphingCalculator) {
+            if(cs.ENUM.indexOf(val) === -1) {
+              cs.ENUM.push(val);
+            }
+            return "[GraphingCalculator #"+cs.ENUM.indexOf(val)+"]";
+          } else if (val instanceof Desmos.Geometry) {
+            if(cs.ENUM.indexOf(val) === -1) {
+              cs.ENUM.push(val);
+            }
+            return "[Geometry #"+cs.ENUM.indexOf(val)+"]";
+          } else {
+            return val;
+          }
+        })));
+
+        debugLog('Error report saved. Review debugging info in window.widgetDebug');
        },
       /* ←— parseArgs —————————————————————————————————————————————————————→ *\
        ↑ Returns a new struct merging given options with defaults for those   ↑
@@ -181,27 +207,47 @@ PearsonGL.External.rootJS = (function() {
         var arg = args[0];
 
         var output = {
-          log: debugLog // Kill this when not debugging
+          log: debugLog
         };
 
         if (typeof arg === 'object') {
-          mergeObjects(output,{uniqueId:arg.desmos.guid},arg);
+          mergeObjects(output,arg);
          } else if (typeof arg === 'number') {
           // Expect (value, name, desmos)
           output.value = arg;
           output.name = args[1];
           output.desmos = args[2] || window.calculator || window.Calc;
-          output.uniqueId = output.desmos.guid;
          } else {
           throw new Error('DCJS parseArgs received non-standard arguments.');
          }
 
         var desmos = output.desmos;
 
-        var uid = output.uniqueId;
+        // ENUM the widget
+        var uid = cs.ENUM.indexOf(desmos);
+        if(uid === -1) {
+          uid = cs.ENUM.length;
+          cs.ENUM.push(desmos);
+        }
 
-        vs[uid] = vs[uid] || {};
-        hxs[uid] = hxs[uid] || {};
+        // Identify the widget by its ENUM uid if it has no other identifier
+        if(output.uniqueId === undefined) {
+          output.uniqueId = uid;
+        }
+
+        var ouid = output.uniqueId;
+
+        // Initialize the variable & helper cache if necessary
+        vs[ouid] = vs[ouid] || {};
+        hxs[ouid] = hxs[ouid] || {};
+
+        // Link the ENUM uid to the authored Id, so the ENUM uid can always be used,
+        //  even if only the authored Id is known, using the following shortcut:
+        // uid = cs.ENUM.indexOf(cs.ENUM[output.uniqueId])
+        cs.ENUM[ouid] = cs.ENUM[uid];
+        vs[uid] = vs[ouid];
+        hxs[uid] = hxs[ouid];
+
 
         if(hxs[uid].maker === undefined) {
           hxs[uid].maker = function(expr){
@@ -209,9 +255,36 @@ PearsonGL.External.rootJS = (function() {
           };
         }
 
-        if (output.log === console.log) {
-          window.widget = desmos;
-          window.reportDesmosError = window.reportDesmosError || function() {
+        if (window.debugLog) {
+          window.widgetDebug = window.widgetDebug || {
+            vars:vs,
+            helpers:hxs,
+            constants:cs,
+            errors:[],
+            widgets:{},
+            downloadError: function(i) {
+              if(i === undefined) {
+                i = window.widgetDebug.errors.length - 1;
+              }
+              if(i < 0) {
+                throw new Error("No errors available to download.");
+              }
+              if(i >= window.widgetDebug.errors.length) {
+                throw new Error("Cannot download error with id: "+i+"; only "+window.widgetDebug.errors.length+" error(s) reported.");
+              }
+              var element = document.createElement('a');
+              element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(window.widgetDebug.errors[i],null,"\t")));
+              element.setAttribute('download', window.widgetDebug.errors[i].filename);
+              element.style.display = 'none';
+              document.body.appendChild(element);
+              element.click();
+              document.body.removeChild(element);
+            }
+          };
+          window.widgetDebug.widgets[uid] = desmos;
+
+          // Update the error reporting to remember this last call's arguments
+          window.reportDesmosError = function() {
             hs.reportDCJSerror(output);
           };
         }
@@ -1530,9 +1603,9 @@ PearsonGL.External.rootJS = (function() {
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633923 = {};
       fs.A0633923.addPoint = function() {
-        console.log(arguments);
+        debugLog(arguments);
         var o = hs.parseArgs(arguments);
-        console.log(o);
+        o.log(o);
 
         var l = o.value+1;
         var sub = hs.sub(l);
@@ -1868,6 +1941,7 @@ PearsonGL.External.rootJS = (function() {
         }
        };
       fs.A0633977.initLeft = function() {
+        
         var o = hs.parseArgs(arguments);
 
         // Until proper o.uniqueId happens, we have to use our own
@@ -1882,6 +1956,12 @@ PearsonGL.External.rootJS = (function() {
         hlps.N = hxs[o.uniqueId].maker('n');
 
         hlps.N.observe('numericValue.validate',fs.A0633977.validate);
+
+        hlps.N.observe('numericValue.updatePopulation', function(t,h){
+          if(Array.isArray(vars.percents)) {
+            vars.population = hs.distributeByProportion(h[t],vars.percents);
+          }
+        });
 
         hlps.p = hxs[o.uniqueId].maker('p');
 
@@ -3043,7 +3123,7 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.observe('graphpaperBounds.updateFrame',function() {
           window.setTimeout(function(){
-            fs.A0633992.updateFrame(Object.assign({},o,{value:hlps.r.numericValue}));
+            fs.A0633992.updateFrame(mergeObjects({},o,{value:hlps.r.numericValue}));
           },100);
         });
        };
@@ -3193,6 +3273,53 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.setMathBounds(newBounds);
        };
+      /* ←— A0633995 8-1-3 KC ————————————————————————————————————————————→ *\
+       | Labels points adjacent to 
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0633995 = {};
+       cs.A0633995 = {
+        MARGIN: 24 // pixels of margin
+       };
+      fs.A0633995.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+      
+        hlps.x_1 = hlps.maker('x_1');
+       };
+      fs.A0633995.focusPoint = function() {
+        // A0633995_focusPoint
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        var x = hlps.x_1.numericValue;
+        var px = cs.A0633995.MARGIN
+      
+        var maths = o.desmos.graphpaperBounds.mathCoordinates;
+        var bounds = {
+          width:maths.width,
+          height:maths.height,
+          left:maths.left,
+          right:maths.right,
+          top:maths.top,
+          bottom:maths.bottom
+        };
+        var margin = bounds.width/o.desmos.graphpaperBounds.pixelCoordinates.width * px;
+
+        if(bounds.width > 2*x+2*margin) {
+          // stuff
+          margin = 2*x / (o.desmos.graphpaperBounds.pixelCoordinates.width - 2*px) * px;
+          bounds.left = -margin;
+          bounds.right = 2*x + margin;
+        } else {
+          bounds.left = hlps.x_1.numericValue - bounds.width/2;
+          bounds.right = bounds.left + bounds.width;
+        }
+
+        bounds.bottom = -bounds.height/2;
+        bounds.top = bounds.height/2;
+
+        o.desmos.setMathBounds(bounds);
+       };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
        * ←————————————————————————————————————————————————————————————————→ */
@@ -3216,7 +3343,7 @@ PearsonGL.External.rootJS = (function() {
        | throws paint at the wall (generates random data approximating a line)
        * ←————————————————————————————————————————————————————————————————→ */
       fs.A0634006.splat = function(a,b,opts) {
-        opts = Object.assign({
+        opts = mergeObjects({
           n:10,
           xMin:0,
           xMax:10,
@@ -3372,7 +3499,7 @@ PearsonGL.External.rootJS = (function() {
        * ←—————————————————————————————————————————————————————————————————→ */
        fs.usabilityTestNumberLine.init = (function(){
         // Helper Functions
-          var o = {log:console.log}; //function(){}}; // change log to console.log to debug
+          var o = {log:debugLog}; //function(){}}; // change log to console.log to debug
 
           var intervalPreferences = (function(){
             var catalog = {};
@@ -3804,7 +3931,7 @@ PearsonGL.External.rootJS = (function() {
               id:'pSlider',
               sliderBounds:{min:0,max:W}//,step:1} // apparently the step breaks everything
             };
-            console.log('pSlider:',pSlider);
+            obj.log('pSlider:',pSlider);
             obj.desmos.setExpressions([
               {
                 id:'majorIntervalsW',

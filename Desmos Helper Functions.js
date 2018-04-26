@@ -523,6 +523,7 @@ var ease2 = function ease(x,y,t,dt) {
        |  sampling process, than just everything showing up at once
        * ←————————————————————————————————————————————————————————————————→ */
        window.fs = window.fs || {};
+       var fs = fs || {};
        fs.A0633977 = fs.A0633977 || {};
       fs.A0633977.generate = fs.A0633977.generate || function() {
         var o = hs.parseArgs(arguments);

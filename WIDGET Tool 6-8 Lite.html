@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>6–8 WIDGET Lite</title>
+  <title>6–8 Lite WIDGET</title>
   <link href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
   <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <!--script src="https://www.desmos.com/api/v1.0/geometry.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script-->
-  <script src="desmos/geometry.2017-12-18.js"></script>
+  <script src="desmos/geometry.2018-04-19.js"></script>
   <!--script src="https://www.desmos.com/api/v1.0/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script-->
-  <script src="desmos/calculator.2017-12-18.js"></script>
+  <script src="desmos/calculator.2018-04-20.js"></script>
   <style>
     html,
     body {
@@ -226,11 +226,11 @@
 
         window.calculator = null;
         if(window.Geo) {
-          geoPrevState = window.Geo.getState({stripDefaults:false});
+          geoPrevState = window.Geo.getState({stripDefaults:true});
           delete window.Geo;
         }
         if(window.Calc) {
-          calcPrevState = window.Calc.getState({stripDefaults:false});
+          calcPrevState = window.Calc.getState({stripDefaults:true});
           delete window.Calc;
         }
         if($elt) $elt.remove();
@@ -244,7 +244,7 @@
           window.calculator = window.Calc = Desmos.GraphingCalculator($elt[0],{administerSecretFolders:true,colors:window.colors});
           if (calcPrevState) window.calculator.setState(calcPrevState);
           if (calcDefaultState) window.calculator.setDefaultState(calcDefaultState);
-          else window.calculator.setDefaultState(window.calculator.getState({stripDefaults:false}));
+          else window.calculator.setDefaultState(window.calculator.getState({stripDefaults:true}));
         } else if (type == 'geometry') {
           window.calculator = window.Geo = Desmos.Geometry($elt[0],{colorMap:window.geoColors});
           if (geoPrevState) window.calculator.setState(geoPrevState);
@@ -330,7 +330,7 @@
         window.calculator.setState(state, options);
       };
       window.copyState = function() {
-        var currState = window.calculator.getState({stripDefaults:false});
+        var currState = window.calculator.getState({stripDefaults:true});
         try {copy(JSON.stringify(currState));} catch(e) {};
         return currState;
       };
