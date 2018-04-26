@@ -618,7 +618,7 @@
           console.log('Slider activated:');
           if(func !== 'N/A') {
             if(PearsonGL.External.rootJS[func] !== undefined) {
-              PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:value});
+              PearsonGL.External.rootJS[func]({desmos:calculator,id:id,name:name,value:+value});
             } else {
               console.log('No such function: '+func);
             }
