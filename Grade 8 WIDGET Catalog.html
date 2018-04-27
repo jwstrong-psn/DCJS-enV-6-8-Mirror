@@ -1323,7 +1323,7 @@
             '<button type="button" class="'+id+'_save">overwrite</button><br>'+
             '<button type="button" class="'+id+'_delete">delete</button--></div>');
             if (name !== undefined) {
-              var words = name.replace(/[()]/,'').split(' ');
+              var words = name.replace(/[()]/g,'').split(' ');
               SCO = words[0];
               var page = 1;
               if(words.indexOf('page') > -1 || words.indexOf('Page') > -1) {
