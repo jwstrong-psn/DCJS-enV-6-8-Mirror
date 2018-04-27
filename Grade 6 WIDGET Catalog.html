@@ -1323,11 +1323,15 @@
             '<button type="button" class="'+id+'_save">overwrite</button><br>'+
             '<button type="button" class="'+id+'_delete">delete</button--></div>');
             if (name !== undefined) {
-              var words = name.split(' ');
+              var words = name.replace(/[()]/,'').split(' ');
               SCO = words[0];
               var page = 1;
               if(words.indexOf('page') > -1 || words.indexOf('Page') > -1) {
                 page = +(words[Math.max(words.indexOf('page'),words.indexOf('Page'))+1]);
+              } else if (words.find(function(s){return /^[pP][0-9]$/.test(s);}) !== undefined) {
+                page = words.find(function(s){return /^[pP][0-9]$/.test(s);})[1];
+              } else if (words.indexOf('Try') > -1 || words.indexOf('try') > -1) {
+                page = 2;
               }
               $('#'+id+'_name').html('<a href="https://dcat.pearson.com/dcatweb/authored/digitalpath/envmath68_us_fl/env68rootsco/'+SCO+'/player.html?pageId='+page+'" target="previewSCO">'+name+'</a>');
             }
