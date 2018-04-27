@@ -138,7 +138,7 @@
       <td colspan="2">
         <div id="saveBrowserDiv" style="overflow-x:scroll;">
           <table>
-            <tr id="saveBrowserRow">
+            <tr id="saveBrowserRow" style="scroll-behavior:smooth;">
             </tr>
           </table>
         </div>
@@ -1314,7 +1314,7 @@
             $gui.html('');
           }
           if (id != DOM_ID_PREFIX+'workingState') {
-            $gui.append('<div id="'+id+'_name" placeholder="unnamed widget" style="text-align:center;width:'+previewWidth+'px;"></div>'+
+            $gui.append('<div id="'+id+'_name" placeholder="unnamed widget" style="text-align:center;width:'+previewWidth+'px;height:2em;"></div>'+
             '<div style="width:'+previewWidth+'px;height:'+previewHeight+'px;border-style:outset;border-width:2px;">'+
             '<img class="'+id+'_load" id="'+id+'_img" style="max-width:100%;max-height:100%;">'+
             '</div><div style="float:bottom;">'+

@@ -717,7 +717,7 @@
       "images": []
     },
     {
-      "name": "A0633996",
+      "name": "A0633996 Try It! b (p4)",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -1246,7 +1246,7 @@
       "images": []
     },
     {
-      "name": "A0633999",
+      "name": "A0633999 Try It! b (p3)",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -1909,7 +1909,7 @@
       "images": []
     },
     {
-      "name": "A0634001",
+      "name": "A0634001 Try It!",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -2047,7 +2047,7 @@
       "images": []
     },
     {
-      "name": "A0634002",
+      "name": "A0634002 (page 2)",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -2202,7 +2202,7 @@
       "images": []
     },
     {
-      "name": "A0634003",
+      "name": "A0634003 Try It!",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -3191,7 +3191,7 @@
       "images": []
     },
     {
-      "name": "A0634007 Example",
+      "name": "A0634007 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -3687,7 +3687,7 @@
       "images": []
     },
     {
-      "name": "A0634007 Try",
+      "name": "A0634007 Try It!",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -3881,7 +3881,7 @@
       "images": []
     },
     {
-      "name": "A0634008",
+      "name": "A0634008 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -4013,7 +4013,7 @@
       "images": []
     },
     {
-      "name": "A0634009",
+      "name": "A0634009 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5240,7 +5240,7 @@
       "images": []
     },
     {
-      "name": "A0634012 Example",
+      "name": "A0634012 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5316,7 +5316,7 @@
       "images": []
     },
     {
-      "name": "A0634012 Try",
+      "name": "A0634012 Try It!",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5528,7 +5528,7 @@
       "images": []
     },
     {
-      "name": "A0634013 Try a",
+      "name": "A0634013 Try It! a (p3)",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5740,7 +5740,7 @@
       "images": []
     },
     {
-      "name": "A0634013 Try b",
+      "name": "A0634013 Try It! b (p4)",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -6022,7 +6022,7 @@
       "images": []
     },
     {
-      "name": "A0634015",
+      "name": "A0634015 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -6426,7 +6426,7 @@
       "images": []
     },
     {
-      "name": "A0634016",
+      "name": "A0634016 Try It! (p3)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -6817,7 +6817,7 @@
       "images": []
     },
     {
-      "name": "A0634018",
+      "name": "A0634018 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -7213,7 +7213,7 @@
       "images": []
     },
     {
-      "name": "A0634019",
+      "name": "A0634019 Try It! (p3)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -8374,7 +8374,7 @@
       "images": []
     },
     {
-      "name": "A0634022",
+      "name": "A0634022 Try It! (p3)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -9382,7 +9382,7 @@
       "images": []
     },
     {
-      "name": "A0634024",
+      "name": "A0634024 VLA",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -9646,7 +9646,7 @@
       "images": []
     },
     {
-      "name": "A0634025 Try a",
+      "name": "A0634025 Try It! a (p3)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -9785,7 +9785,7 @@
       "images": []
     },
     {
-      "name": "A0634025 Try b",
+      "name": "A0634025 Try It! b (p4)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -10003,7 +10003,7 @@
       "images": []
     },
     {
-      "name": "A0634026",
+      "name": "A0634026 VLA",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -12053,7 +12053,7 @@
       "images": []
     },
     {
-      "name": "A0634030",
+      "name": "A0634030 VLA",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -12321,7 +12321,7 @@
       "images": []
     },
     {
-      "name": "A0634032 A",
+      "name": "A0634032 Part A (p1)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -12562,7 +12562,7 @@
       "images": []
     },
     {
-      "name": "A0634032 B",
+      "name": "A0634032 Part B (p2)",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -13647,7 +13647,7 @@
       "images": []
     },
     {
-      "name": "A0634037",
+      "name": "A0634038",
       "type": "graphing",
       "constructors": {
         "keypad": false,
