@@ -2,7 +2,7 @@
   "date": 1524260834440,
   "graphs": [
     {
-      "name": "A0633918",
+      "name": "A0633918 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -890,7 +890,7 @@
       "images": []
     },
     {
-      "name": "A0633919",
+      "name": "A0633919 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -1287,7 +1287,7 @@
         },
         {
           "latex": "x_1",
-          "funcName": "A0633919_color",
+          "funcName": "A0633919 page 1_color",
           "value": ""
         }
       ],
@@ -1297,7 +1297,7 @@
       "images": []
     },
     {
-      "name": "A0633920",
+      "name": "A0633920 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -1659,7 +1659,7 @@
         },
         {
           "latex": "x_1",
-          "funcName": "A0633919_color",
+          "funcName": "A0633919 page 1_color",
           "value": ""
         }
       ],
@@ -1669,7 +1669,7 @@
       "images": []
     },
     {
-      "name": "A0633921",
+      "name": "A0633921 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -2009,7 +2009,7 @@
         },
         {
           "latex": "x_1",
-          "funcName": "A0633919_color",
+          "funcName": "A0633919 page 1_color",
           "value": ""
         }
       ],
@@ -2019,7 +2019,7 @@
       "images": []
     },
     {
-      "name": "A0633922",
+      "name": "A0633922 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -2402,7 +2402,7 @@
         },
         {
           "latex": "x_1",
-          "funcName": "A0633919_color",
+          "funcName": "A0633919 page 1_color",
           "value": ""
         }
       ],
@@ -2412,7 +2412,7 @@
       "images": []
     },
     {
-      "name": "A0633923 Ex",
+      "name": "A0633923 page 1 Ex",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -2689,7 +2689,7 @@
       "images": []
     },
     {
-      "name": "A0633923 Try",
+      "name": "A0633923 page 2 Try",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -2748,7 +2748,7 @@
       "images": []
     },
     {
-      "name": "A0633924",
+      "name": "A0633924 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -3057,7 +3057,7 @@
       ]
     },
     {
-      "name": "A0633925",
+      "name": "A0633925 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -3116,7 +3116,7 @@
       "images": []
     },
     {
-      "name": "A0633926",
+      "name": "A0633926 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -3375,7 +3375,7 @@
       "images": []
     },
     {
-      "name": "A0633927",
+      "name": "A0633927 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -3447,7 +3447,7 @@
       "images": []
     },
     {
-      "name": "A0633928",
+      "name": "A0633928 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -3951,7 +3951,7 @@
       "images": []
     },
     {
-      "name": "A0633929",
+      "name": "A0633929 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -4518,7 +4518,7 @@
       "images": []
     },
     {
-      "name": "A0633930",
+      "name": "A0633930 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -4577,7 +4577,7 @@
       "images": []
     },
     {
-      "name": "A0633931",
+      "name": "A0633931 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -4889,7 +4889,7 @@
       "images": []
     },
     {
-      "name": "A0633932",
+      "name": "A0633932 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5424,7 +5424,7 @@
       "images": []
     },
     {
-      "name": "A0633933",
+      "name": "A0633933 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -5483,7 +5483,7 @@
       "images": []
     },
     {
-      "name": "A0633934 Ex",
+      "name": "A0633934 page 1 Ex",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5609,7 +5609,7 @@
       "images": []
     },
     {
-      "name": "A0633934 Try",
+      "name": "A0633934 page 2 Try",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5696,7 +5696,7 @@
       "images": []
     },
     {
-      "name": "A0633935 Ex",
+      "name": "A0633935 page 1 Ex",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5785,7 +5785,7 @@
       "helpers": [
         {
           "latex": "",
-          "funcName": "A0633935_init",
+          "funcName": "A0633935 page 1_init",
           "value": ""
         }
       ],
@@ -5795,7 +5795,7 @@
       "images": []
     },
     {
-      "name": "A0633935 Try",
+      "name": "A0633935 page 2 Try",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -5915,7 +5915,7 @@
       "images": []
     },
     {
-      "name": "A0633936",
+      "name": "A0633936 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -6007,7 +6007,7 @@
       "images": []
     },
     {
-      "name": "A0633937",
+      "name": "A0633937 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -6168,7 +6168,7 @@
       "images": []
     },
     {
-      "name": "A0633938",
+      "name": "A0633938 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -6270,7 +6270,7 @@
       "images": []
     },
     {
-      "name": "A0633942",
+      "name": "A0633942 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -6750,7 +6750,7 @@
       "images": []
     },
     {
-      "name": "A0633943",
+      "name": "A0633943 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -6858,7 +6858,7 @@
       "images": []
     },
     {
-      "name": "A0633944",
+      "name": "A0633944 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -6917,7 +6917,7 @@
       "images": []
     },
     {
-      "name": "A0633945",
+      "name": "A0633945 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -7391,7 +7391,7 @@
       "images": []
     },
     {
-      "name": "A0633946",
+      "name": "A0633946 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -7499,7 +7499,7 @@
       "images": []
     },
     {
-      "name": "A0633947",
+      "name": "A0633947 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -8468,7 +8468,7 @@
       "images": []
     },
     {
-      "name": "A0633948 a",
+      "name": "A0633948 page 1 a",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -8924,7 +8924,7 @@
       "images": []
     },
     {
-      "name": "A0633948 b",
+      "name": "A0633948 page 1 b",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -9323,7 +9323,7 @@
       "images": []
     },
     {
-      "name": "A0633949",
+      "name": "A0633949 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -9382,7 +9382,7 @@
       "images": []
     },
     {
-      "name": "A0633950",
+      "name": "A0633950 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -11569,7 +11569,7 @@
       "images": []
     },
     {
-      "name": "A0633951",
+      "name": "A0633951 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -12983,7 +12983,7 @@
       "images": []
     },
     {
-      "name": "A0633952",
+      "name": "A0633952 page 1",
       "type": "geometry",
       "constructors": {
         "construct.angle": true,
@@ -13961,7 +13961,7 @@
       "images": []
     },
     {
-      "name": "A0633953",
+      "name": "A0633953 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -14359,7 +14359,7 @@
       "images": []
     },
     {
-      "name": "A0633954",
+      "name": "A0633954 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -14584,7 +14584,7 @@
       "images": []
     },
     {
-      "name": "A0633955",
+      "name": "A0633955 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -15012,7 +15012,7 @@
       "images": []
     },
     {
-      "name": "A0633956",
+      "name": "A0633956 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
@@ -15327,7 +15327,7 @@
       "images": []
     },
     {
-      "name": "A0633957",
+      "name": "A0633957 page 1",
       "type": "graphing",
       "constructors": {
         "keypad": false,
