@@ -1673,9 +1673,11 @@ PearsonGL.External.rootJS = (function() {
         var l = o.value+1;
         var sub = hs.sub(l);
 
-        var arr = (new Array(l)).fill(undefined).map(function(e,i){
-          return hs.sub(i+1);
-        });
+        var arr = [];
+
+        while(arr.length < l) {
+          arr.push(hs.sub(arr.length+1));
+        }
 
         o.desmos.setExpressions([
         {
@@ -2126,7 +2128,12 @@ PearsonGL.External.rootJS = (function() {
         });
 
         var k = hlps.k.numericValue;
-        var sample = (new Array(population.length)).fill(0);
+        var sample = [];
+
+        while(sample.length < population.length) {
+          sample.push(0);
+        }
+
         var order = [];
 
         var n = N;
@@ -2451,7 +2458,7 @@ PearsonGL.External.rootJS = (function() {
         hlps.R = maker('R');
         hlps.R.observe('numericValue.initialize',initialCheck);
 
-        vars.buckets = (new Array(10)).fill(0);
+        vars.buckets = [0,0,0,0,0,0,0,0,0,0];
 
         var fillBuckets = function(t,h) {
           h.unobserve(t+'.fillBuckets');
@@ -2763,7 +2770,7 @@ PearsonGL.External.rootJS = (function() {
         H_S = [];
 
         // Layer the points in the sample graph
-        var buckets = (new Array(10)).fill(0);
+        var buckets = [0,0,0,0,0,0,0,0,0,0];
 
         var k = hlps.k.numericValue;
         var i; // random number
