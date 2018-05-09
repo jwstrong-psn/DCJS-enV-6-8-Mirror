@@ -19,17 +19,19 @@ window.PearsonGL.External = window.PearsonGL.External || {};
 PearsonGL.External.masterJS = (function() {
   "use strict";
 
-  var debugLog = function(){
+  var debugLog = (function(){
     if(window.debugLog) {
-      window.debugLog.apply(null,arguments);
+      return window.debugLog;
+    } else {
+      return function(){};
     }
-  }
-  
+  })();
+
   /***********************************************************************************
    * PRIVATE VARIABLES / FUNCTIONS
    **********************************************************************************/
   var exports = {};  // This object is used to export public functions/variables
-
+  
   /***********************************************************************************
    * EXPORTS / PUBLIC FUNCTIONS
    *

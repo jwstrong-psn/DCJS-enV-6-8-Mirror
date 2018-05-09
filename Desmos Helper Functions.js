@@ -1,3 +1,85 @@
+Math.log2 = Math.log2 || function(arg) {return Math.log(arg)*Math.LOG2E;};
+
+/* ←— objKeys —————————————————————————————————————————————————→ *\
+ | replaces Object.keys in case of *shudder* IE
+ * ←————————————————————————————————————————————————————————————————→ */
+ var objKeys = (function(){
+  if(typeof Object.keys === "function"){
+    return Object.keys;
+  } else {
+    // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+    return (function () {
+      var hasOwnProperty = Object.prototype.hasOwnProperty,
+      hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+      dontEnums = [
+        'toString',
+        'toLocaleString',
+        'valueOf',
+        'hasOwnProperty',
+        'isPrototypeOf',
+        'propertyIsEnumerable',
+        'constructor'
+      ],
+      dontEnumsLength = dontEnums.length;
+
+      return function (obj) {
+        if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+          throw new TypeError('Object.keys called on non-object');
+        }
+
+        var result = [], prop, i;
+
+        for (prop in obj) {
+          if (hasOwnProperty.call(obj, prop)) {
+            result.push(prop);
+          }
+        }
+
+        if (hasDontEnumBug) {
+          for (i = 0; i < dontEnumsLength; i++) {
+            if (hasOwnProperty.call(obj, dontEnums[i])) {
+              result.push(dontEnums[i]);
+            }
+          }
+        }
+        return result;
+      };
+    }());
+  }
+ })();
+
+/* ←— mergeObjects —————————————————————————————————————————————————→ *\
+ | replaces Object.assign in case of *shudder* IE
+ * ←————————————————————————————————————————————————————————————————→ */
+ var mergeObjects = (function() {
+  if (typeof Object.assign === "function") {
+    return Object.assign;
+  } else {
+    return function(){
+      var obj = arguments[0];
+
+      [].forEach.call(arguments, function(arg,i) {
+        var keys = [];
+        if(typeof arg === "string") {
+          while(keys.length < arg.length) {
+            keys.push(keys.length);
+          }
+        } else {
+          keys = objKeys(arg);
+        }
+
+        if(i > 0) {
+          keys.forEach(function(key) {
+            obj[key] = arg[key];
+          });
+        }
+      });
+
+      return obj;
+    };
+  }
+   })();
+
 window.xs = { // Commonly useful Desmos expressions (in LaTeX string form)
   /* — pointAlongArc ————————————————————————————————————————————————→ *\
    | pointAlongArc: For drawing points by polar reference from a point.
@@ -263,13 +345,15 @@ window.xs = { // Commonly useful Desmos expressions (in LaTeX string form)
    | #EXAMPLE: 
    * ←—————————————————————————————————————————————————————————————————→ */
    reflectPL:[{"id":"reflectPL","latex":"P_{reflPL}\\left(x,y\\right)=I_{ll}\\left(U_{perp}\\left(y,x\\right),y+\\left[0,0,D_{pl}\\left(x,y\\right)\\right]\\right)","hidden":"true"}]
- }
+ };
 
- window.addHelper = function(name,desmos=(window["calculator"] || window["Calc"])) {
+ window.addHelper = function(name,desmos) {
+   desmos = desmos || window["calculator"] || window["Calc"];
    desmos.setExpressions(window.xs[name]);
  }
 
- function drawTriangle(desmos=(window["calculator"] || window["Calc"])) {
+ function drawTriangle(desmos) {
+   desmos = (desmos || window["calculator"] || window["Calc"]);
    desmos.setExpressions([
     {id:"vertexA",latex:"\\left(x_1,y_1\\right)"},
     {id:"vertexB",latex:"\\left(x_2,y_2\\right)"},
@@ -590,7 +674,7 @@ var stats2D = function(x,y){
 };
 
 var splat = function(a,b,opts) {
-  opts = Object.assign({
+  opts = mergeObjects({
     n:10,
     xMin:0,
     xMax:10,

@@ -19,11 +19,94 @@ window.PearsonGL.External = window.PearsonGL.External || {};
 PearsonGL.External.rootJS = (function() {
   "use strict";
 
-  var debugLog = function(){
+  var debugLog = (function(){
     if(window.debugLog) {
-      window.debugLog.apply(null,arguments);
+      return window.debugLog;
+    } else {
+      return function(){};
     }
-  }
+  })();
+
+  /* ←— objKeys —————————————————————————————————————————————————→ *\
+   | replaces Object.keys in case of *shudder* IE
+   * ←————————————————————————————————————————————————————————————————→ */
+   var objKeys = (function(){
+    if(typeof Object.keys === "function"){
+      return Object.keys;
+    } else {
+      // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+      return (function () {
+        var hasOwnProperty = Object.prototype.hasOwnProperty,
+        hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+        dontEnums = [
+          'toString',
+          'toLocaleString',
+          'valueOf',
+          'hasOwnProperty',
+          'isPrototypeOf',
+          'propertyIsEnumerable',
+          'constructor'
+        ],
+        dontEnumsLength = dontEnums.length;
+
+        return function (obj) {
+          if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+            throw new TypeError('Object.keys called on non-object');
+          }
+
+          var result = [], prop, i;
+
+          for (prop in obj) {
+            if (hasOwnProperty.call(obj, prop)) {
+              result.push(prop);
+            }
+          }
+
+          if (hasDontEnumBug) {
+            for (i = 0; i < dontEnumsLength; i++) {
+              if (hasOwnProperty.call(obj, dontEnums[i])) {
+                result.push(dontEnums[i]);
+              }
+            }
+          }
+          return result;
+        };
+      }());
+    }
+   })();
+
+  /* ←— mergeObjects —————————————————————————————————————————————————→ *\
+   | replaces Object.assign in case of *shudder* IE
+   * ←————————————————————————————————————————————————————————————————→ */
+   var mergeObjects = (function() {
+    if (typeof Object.assign === "function") {
+      return Object.assign;
+    } else {
+      return function(){
+        var obj = arguments[0];
+
+        [].forEach.call(arguments, function(arg,i) {
+          var keys = [];
+          if(typeof arg === "string") {
+            while(keys.length < arg.length) {
+              keys.push(keys.length);
+            }
+          } else {
+            keys = objKeys(arg);
+          }
+
+          if(i > 0) {
+            keys.forEach(function(key) {
+              obj[key] = arg[key];
+            });
+          }
+        });
+
+        return obj;
+      };
+    }
+   })();
+
 
  /***********************************************************************************
    * PRIVATE VARIABLES / FUNCTIONS
@@ -75,26 +158,6 @@ PearsonGL.External.rootJS = (function() {
   /* ←—PRIVATE HELPER FUNCTIONS————————————————————————————————————————————→ *\
        | Subroutines; access with hs.functionName(args)
        * ←—————————————————————————————————————————————————————————————————→ */
-      /* ←— mergeObjects —————————————————————————————————————————————————→ *\
-       | replaces Object.assign in case of *shudder* IE
-       * ←————————————————————————————————————————————————————————————————→ */
-       function mergeObjects() {
-          if (typeof Object.assign === "function") {
-            return Object.assign.apply(Object,arguments);
-          }
-
-          var obj = arguments[0];
-
-          [].forEach.call(arguments, function(arg,i) {
-            if(i > 0) {
-              Object.keys(arg).forEach(function(key) {
-                obj[key] = arg[key];
-              });
-            }
-          });
-
-          return obj;
-       }
     var hs;
      hs = {
       /* ←— flattenFuncStruct —————————————————————————————————————————————→ *\
@@ -112,7 +175,7 @@ PearsonGL.External.rootJS = (function() {
           prefix = '';
         }
         var functions={};
-        Object.keys(funcStruct).forEach(function(key){
+        objKeys(funcStruct).forEach(function(key){
           var item = funcStruct[key];
           if (typeof item === 'object') {
             mergeObjects(functions,flattenFuncStruct(item,prefix+key+'_'));
@@ -400,7 +463,7 @@ PearsonGL.External.rootJS = (function() {
         var composites = {};
         mergeObjects(composites,{
           toArray: function() {
-            return Object.keys(composites).filter(function(key) {
+            return objKeys(composites).filter(function(key) {
               return composites[key] === true;
             });
           },
@@ -409,7 +472,7 @@ PearsonGL.External.rootJS = (function() {
           },
           length: function() {
             // Subtract 3 for these 3 functions
-            return Object.keys(composites).length-3;
+            return objKeys(composites).length-3;
           }
         });
         var primes = [2];
@@ -481,7 +544,7 @@ PearsonGL.External.rootJS = (function() {
        * ←—————————————————————————————————————————————————————————————————→ */
       powerSet: function powerSet(factorization) {
         factorization = mergeObjects({},factorization);
-        var factorList = Object.keys(factorization);
+        var factorList = objKeys(factorization);
 
         var factor;
         var mult; //-iplicity
@@ -790,7 +853,7 @@ PearsonGL.External.rootJS = (function() {
           "Infinity":[1]
         };
 
-        var keys = Object.keys(pairs).map(function(e){
+        var keys = objKeys(pairs).map(function(e){
           return +e;
         });
 
@@ -916,7 +979,7 @@ PearsonGL.External.rootJS = (function() {
 
         // List the distribution in descending (.pop() = lowest) order of relative error
         //  in switching roundings.
-        var order = Object.keys(distribution).sort(function(a,b){
+        var order = objKeys(distribution).sort(function(a,b){
           return hs.reroundError(distribution[b]) - hs.reroundError(distribution[a]);
         });
 
@@ -1473,7 +1536,7 @@ PearsonGL.External.rootJS = (function() {
         height[hlps.x2.numericValue] = hlps.y2.numericValue;
 
         // Do a little clean-up just in case
-        var xs = Object.keys(vars.height).filter(function(x){
+        var xs = objKeys(vars.height).filter(function(x){
           if(height[x] > 0) {
             return true;
           } else {
@@ -3034,7 +3097,7 @@ PearsonGL.External.rootJS = (function() {
             label = '… ' + label + '…';
             o.log('Not counting cards for undefined '+label);
             delete vars.B[id];
-            vars.maxTrial = Math.max.apply(this,Object.keys(vars.B));
+            vars.maxTrial = Math.max.apply(this,objKeys(vars.B));
             // If there are other undefined lists before this one, hide their labels
             for(i = vars.maxTrial + 1 ; i < id ; i += 1) {
               o.log('Hiding label for trial '+i);
@@ -3573,7 +3636,7 @@ PearsonGL.External.rootJS = (function() {
                 }
 
                 // 4. prime divisors of n
-                primes = Object.keys(hs.factorize(n));
+                primes = objKeys(hs.factorize(n));
                 primes.forEach(function(e) {
                   orderInclusive.push(e*n);
                   orderExclusive.push(e*n);
