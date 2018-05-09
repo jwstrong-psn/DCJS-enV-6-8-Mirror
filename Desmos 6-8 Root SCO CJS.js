@@ -399,23 +399,23 @@ PearsonGL.External.rootJS = (function() {
       latexToText: function(expr){
         expr = (''+expr);
         expr = expr.
-          replace(/\\cdot\s?/g,'\u22c5').
-          replace(/._\{([a-zA-Z])Var\}/g,'$1').
-          replace(/([+=÷×\u22c5])/g,' $1 ').
-          replace(/,/g,',\u202f').
-          replace(/\^2/g,'²').
-          replace(/\^3/g,'³').
-          replace(/\\sqrt\{([^{}]*?)\}/g,'√($1)').
-          replace(/\\theta\s?/g,'θ').
-          replace(/\\pi\s?/g,'π').
-          replace(/_0/g,'₀').
-          replace(/_1/g,'₁').
-          replace(/_2/g,'₂').
-          replace(/\\(?:right|left)\\*([()\[\]|{}])/g,'$1').
-          replace(/\\right/g,'').
-          replace(/\\left/g,'').
-          replace(/([^\s \u202f(\[{|])\-|(\|[^|]*\|)-(?=\|)/g,'$1$2 − ').
-          replace(/\-/g,'−');
+          replace(new RegExp('\\\\cdot\\s?','g'),'\u22c5').
+          replace(new RegExp('._\\{([a-zA-Z])Var\\}','g'),'$1').
+          replace(new RegExp('([+=÷×\\u22c5])','g'),' $1 ').
+          replace(new RegExp(',','g'),',\u202f').
+          replace(new RegExp('\\^2','g'),'²').
+          replace(new RegExp('\\^3','g'),'³').
+          replace(new RegExp('\\\\sqrt\\{([^{}]*?)\\}','g'),'√($1)').
+          replace(new RegExp('\\\\theta\\s?','g'),'θ').
+          replace(new RegExp('\\\\pi\\s?','g'),'π').
+          replace(new RegExp('_0','g'),'₀').
+          replace(new RegExp('_1','g'),'₁').
+          replace(new RegExp('_2','g'),'₂').
+          replace(new RegExp('\\\\(?:right|left)\\\\*([()\\[\\]|{}])','g'),'$1').
+          replace(new RegExp('\\\\right','g'),'').
+          replace(new RegExp('\\\\left','g'),'').
+          replace(new RegExp('([^\\s \\u202f(\\[{|])\\-|(\\|[^|]*\\|)-(?=\\|)','g'),'$1$2 − ').
+          replace(new RegExp('\\-','g'),'−');
         return expr;
        },
       /* ←— subscript ———————————————————————————————————————————————————————→ *\
@@ -3025,7 +3025,7 @@ PearsonGL.External.rootJS = (function() {
         var vars = vs[o.uniqueId];
         var hlps = hxs[o.uniqueId];
 
-        var regIndex = /^[Bb]_{?([0-9]+)}?$/;
+        var regIndex = new RegExp("^[Bb]_{?([0-9]+)}?$");
 
         vars.B = [undefined];
         vars.maxTrial = 0;
@@ -3072,7 +3072,7 @@ PearsonGL.External.rootJS = (function() {
           var i;
 
           if(Array.isArray(list)) {
-            label += list.toString().replace(/,/g,', ');
+            label += list.toString().replace(new RegExp(",","g"),', ');
             o.log('Counting cards for '+label);
             // Count'em
             list.forEach(function(e) {
@@ -4432,7 +4432,7 @@ PearsonGL.External.rootJS = (function() {
         function numberWithCommas(x) {
           x = x.toString();
           x= String(x);
-          var pattern = /(-?\d+)(\d{3})/;
+          var pattern = new RegExp("(-?\\d+)(\\d{3})");
           while (pattern.test(x)) {
             x = String(x).replace(pattern, "$1,$2");
           }
