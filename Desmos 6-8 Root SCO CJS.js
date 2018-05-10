@@ -27,6 +27,19 @@ PearsonGL.External.rootJS = (function() {
     }
   })();
 
+  /* ←— myIsNaN —————————————————————————————————————————————————→ *\
+   | replaces Number.isNaN in case of *shudder* IE
+   * ←————————————————————————————————————————————————————————————————→ */
+   var myIsNaN = (function(){
+    if(typeof Number.isNaN !== "function") {
+      return function(obj) {
+        return (typeof obj === "number" && obj !== obj);
+      };
+    } else {
+      return Number.isNaN;
+    }
+   })();
+
   /* ←— objKeys —————————————————————————————————————————————————→ *\
    | replaces Object.keys in case of *shudder* IE
    * ←————————————————————————————————————————————————————————————————→ */
@@ -372,14 +385,14 @@ PearsonGL.External.rootJS = (function() {
         var helpers = hxs[o.uniqueId];
         var helper = helpers[expression] || helpers.maker({latex:expression});
 
-        if (typeof helper.numericValue === 'number' && !(Number.isNaN(helper.numericValue))) {
+        if (typeof helper.numericValue === 'number' && !(myIsNaN(helper.numericValue))) {
           callback(helper.numericValue);
         } else if (Array.isArray(helper.listValue)) {
           callback(helper.listValue);
         } else {
           var thiscall = Date.now();
           var observeCallback = function(type,thishelper) {
-            if(Number.isNaN(thishelper[type]) || thishelper[type] === undefined) {
+            if(myIsNaN(thishelper[type]) || thishelper[type] === undefined) {
               return;
             }
 
@@ -1358,7 +1371,7 @@ PearsonGL.External.rootJS = (function() {
           // Expand the view if the bar is wider than 10/12ths the width of the view.
           var bounds = o.desmos.graphpaperBounds.mathCoordinates;
           var unit = Math.max(bounds.width/12, hlps.P.numericValue/10, hlps.W.numericValue/10);
-          if(typeof unit !== "number" || Number.isNaN(unit)) {
+          if(typeof unit !== "number" || myIsNaN(unit)) {
             unit = bounds.width/12;
           }
 
@@ -1402,7 +1415,7 @@ PearsonGL.External.rootJS = (function() {
 
         // 1: fix amount
         if(o.value === 1) {
-          if (typeof hlps.P.numericValue === "number" && !Number.isNaN(hlps.P.numericValue)) {
+          if (typeof hlps.P.numericValue === "number" && !myIsNaN(hlps.P.numericValue)) {
             o.desmos.setExpressions([
               {
                 id:'part',
@@ -1438,7 +1451,7 @@ PearsonGL.External.rootJS = (function() {
           }
         // 0: fix percent
         } else {
-          if (typeof hlps.p.numericValue === "number" && !Number.isNaN(hlps.p.numericValue)) {
+          if (typeof hlps.p.numericValue === "number" && !myIsNaN(hlps.p.numericValue)) {
             o.desmos.setExpressions([
               {
                 id:'part',
@@ -1598,7 +1611,7 @@ PearsonGL.External.rootJS = (function() {
           thisCall = 'numericValue.'+Date.now();
           cb = (function(theCall,args) {
             return function() {
-              if(Number.isNaN(x.numericValue) && Number.isNaN(y.numericValue)) {
+              if(myIsNaN(x.numericValue) && myIsNaN(y.numericValue)) {
                 x.unobserve(theCall);
                 y.unobserve(theCall);
                 addOriginPoint(args);
@@ -1626,7 +1639,7 @@ PearsonGL.External.rootJS = (function() {
         }
 
         function parseNaN(v,i,a){
-          if(Number.isNaN(v)) {
+          if(myIsNaN(v)) {
             a[i]='';
           }
         }
@@ -3748,8 +3761,8 @@ PearsonGL.External.rootJS = (function() {
                 p = list1[a[1]];
                 q = list1[b[1]];
 
-                if(typeof p === "number" && !(Number.isNaN(p)) &&
-                  typeof q === "number" && !(Number.isNaN(q))) {
+                if(typeof p === "number" && !(myIsNaN(p)) &&
+                  typeof q === "number" && !(myIsNaN(q))) {
                   return (p - q);
                 }
               }
