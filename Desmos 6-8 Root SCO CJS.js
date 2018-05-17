@@ -3368,6 +3368,80 @@ PearsonGL.External.rootJS = (function() {
         var hlps = hxs[o.uniqueId];
       
         hlps.x_1 = hlps.maker('x_1');
+        hlps.zoom = hlps.maker('z');
+
+        hlps.zoom.observe('numericValue',function(t,h) {
+          if(h[t] === 0) {
+            // zoomed out
+            o.desmos.setExpressions([
+              {
+                "id": "520",
+                "latex": "x_{root}=\\left[5,15...95\\right]"
+              },
+              {
+                "id": "513",
+                "latex": "x_{largeRoot}=\\left[0,10...100\\right]"
+              },
+              {
+                "id": "532",
+                "latex": "x_{rootLarge}=\\left[0...10\\right]"
+              },
+              {
+                "id": "570",
+                "latex": "U_{scale}=0.1"
+              },
+              {
+                "id": "537",
+                "latex": "r_{ootStep}=1"
+              },
+              {
+                "id": "zoom_level",
+                "latex": "z=0"
+              }
+            ]);
+            o.desmos.setMathBounds({
+              left:-5,
+              right:105,
+              top:1
+              bottom:1
+            });
+            o.desmos.setOptions({
+              zoomButtons:false
+            });
+          } else {
+            // zooming in
+            o.desmos.setExpressions([
+              {
+                "id": "520",
+                "latex": "x_{root}=t_{icks}\\left(\\frac{s_{tepAdj}\\left(m_{inStepWidthRoot}\\right)}{U_{scale}}\\right)"
+              },
+              {
+                "id": "513",
+                "latex": "x_{largeRoot}=t_{icks}\\left(\\frac{l_{argeStep}\\left(m_{inStepWidthRoot}\\right)}{U_{scale}}\\right)"
+              },
+              {
+                "id": "532",
+                "latex": "x_{rootLarge}=10^{b_{ase}\\left(m_{inStepWidthRoot}\\right)}\\operatorname{round}\\left(\\frac{x_{largeRoot}U_{scale}}{10^{b_{ase}\\left(m_{inStepWidthRoot}\\right)}}\\right)"
+              },
+              {
+                "id": "570",
+                "latex": "U_{scale}=\\frac{r_{oot}}{s_q}"
+              },
+              {
+                "id": "537",
+                "latex": "r_{ootStep}=s_{tepAdj}\\left(m_{inStepWidthRoot}\\right)"
+              },
+              {
+                "id": "zoom_level",
+                "latex": "z=1"
+              }
+            ]);
+            fs.A0633995_focusPoint(o);
+            o.desmos.setOptions({
+              zoomButtons:true
+            });
+          }
+        });
        };
       fs.A0633995.focusPoint = function() {
         // A0633995_focusPoint
