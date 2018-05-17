@@ -3366,14 +3366,37 @@ PearsonGL.External.rootJS = (function() {
       fs.A0633995.init = function() {
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
+        var vars = vs[o.uniqueId];
       
         hlps.x_1 = hlps.maker('x_1');
         hlps.zoom = hlps.maker('z');
 
         hlps.zoom.observe('numericValue',function(t,h) {
           if(h[t] === 0) {
-            // zoomed out
+            // non-focus mode
+            var bounds = o.desmos.graphpaperBounds.mathCoordinates;
+            if(bounds.left !== -5 ||
+               bounds.right !== 105 ||
+               bounds.top !== 1 ||
+               bounds.bottom !== -1) {
+              vars.resetting = true;
+              o.desmos.setExpressions([
+                { // hide #line while resetting
+                  id:'2',
+                  hidden:true
+                },
+                { // hide points while resetting
+                  id:'472',
+                  hidden:true
+                }
+              ]);
+            }
+
             o.desmos.setExpressions([
+              {
+                "id": "485",
+                "dragMode": Desmos.DragModes.X
+              },
               {
                 "id": "520",
                 "latex": "x_{root}=\\left[5,15...95\\right]"
@@ -3402,15 +3425,20 @@ PearsonGL.External.rootJS = (function() {
             o.desmos.setMathBounds({
               left:-5,
               right:105,
-              top:1
-              bottom:1
+              top:1,
+              bottom:-1
             });
             o.desmos.setOptions({
               zoomButtons:false
             });
           } else {
-            // zooming in
+            // Focus mode
+            vars.resetting = false;
             o.desmos.setExpressions([
+              { // No dragging in focus mode
+                "id": "485",
+                "dragMode": Desmos.DragModes.NONE
+              },
               {
                 "id": "520",
                 "latex": "x_{root}=t_{icks}\\left(\\frac{s_{tepAdj}\\left(m_{inStepWidthRoot}\\right)}{U_{scale}}\\right)"
@@ -3436,12 +3464,60 @@ PearsonGL.External.rootJS = (function() {
                 "latex": "z=1"
               }
             ]);
-            fs.A0633995_focusPoint(o);
+            fs.A0633995.focusPoint(o);
             o.desmos.setOptions({
               zoomButtons:true
             });
           }
         });
+
+        o.desmos.observe('graphpaperBounds',function(){
+          var bounds = o.desmos.graphpaperBounds.mathCoordinates;
+          // Reset to non-focus mode when home button resets
+          if(Math.abs(bounds.left + 10) < 0.1 &&
+             Math.abs(bounds.right - 10) < 0.1) {
+            o.log('Home button was pressed.');
+            vars.resetting = true;
+            o.desmos.setExpressions([
+              {
+                id:'zoom_level',
+                latex:'z=0'
+              }
+            ]);
+          // If we're at default zoom, set us to non-focus mode
+          } else if (bounds.left === -5 &&
+                     bounds.right === 105 &&
+                     bounds.top === 1 &&
+                     bounds.bottom === -1) {
+            o.log('Reset to non-focus mode.');
+            vars.resetting = false;
+            o.desmos.setExpressions([
+              { // show #line
+                id:'2',
+                hidden:false
+              },
+              { // show points
+                id:'472',
+                hidden:false
+              },
+              {
+                id:'zoom_level',
+                latex:'z=0'
+              }
+            ]);
+          // Set to focus mode if the zoom level isn't default and
+          //  isn't trying to get there.
+          } else if (vars.resetting === false && hlps.zoom.numericValue !== 1) {
+            o.log('Setting to focus mode');
+            o.desmos.setExpression({
+              id:'zoom_level',
+              latex:'z=1'
+            });
+          } else {
+            o.log('Bounds changed; no action taken: z=',hlps.zoom.numericValue,
+              '\nResetting:',vars.resetting,'\nBounds:',bounds);
+          }
+        })
        };
       fs.A0633995.focusPoint = function() {
         // A0633995_focusPoint
@@ -3472,8 +3548,8 @@ PearsonGL.External.rootJS = (function() {
           bounds.right = bounds.left + bounds.width;
         }
 
-        bounds.bottom = -bounds.height/2;
-        bounds.top = bounds.height/2;
+        bounds.bottom = -1;
+        bounds.top = 1;
 
         o.desmos.setMathBounds(bounds);
        };
