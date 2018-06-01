@@ -3366,158 +3366,8 @@ PearsonGL.External.rootJS = (function() {
       fs.A0633995.init = function() {
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
-        var vars = vs[o.uniqueId];
       
         hlps.x_1 = hlps.maker('x_1');
-        hlps.zoom = hlps.maker('z');
-
-        hlps.zoom.observe('numericValue',function(t,h) {
-          if(h[t] === 0) {
-            // non-focus mode
-            var bounds = o.desmos.graphpaperBounds.mathCoordinates;
-            if(bounds.left !== -5 ||
-               bounds.right !== 105 ||
-               bounds.top !== 1 ||
-               bounds.bottom !== -1) {
-              vars.resetting = true;
-              o.desmos.setExpressions([
-                { // hide #line while resetting
-                  id:'2',
-                  hidden:true
-                },
-                { // hide points while resetting
-                  id:'472',
-                  hidden:true
-                }
-              ]);
-            }
-
-            o.desmos.setExpressions([
-              {
-                "id": "485",
-                "dragMode": Desmos.DragModes.X
-              },
-              {
-                "id": "520",
-                "latex": "x_{root}=\\left[5,15...95\\right]"
-              },
-              {
-                "id": "513",
-                "latex": "x_{largeRoot}=\\left[0,10...100\\right]"
-              },
-              {
-                "id": "532",
-                "latex": "x_{rootLarge}=\\left[0...10\\right]"
-              },
-              {
-                "id": "570",
-                "latex": "U_{scale}=0.1"
-              },
-              {
-                "id": "537",
-                "latex": "r_{ootStep}=1"
-              },
-              {
-                "id": "zoom_level",
-                "latex": "z=0"
-              }
-            ]);
-            o.desmos.setMathBounds({
-              left:-5,
-              right:105,
-              top:1,
-              bottom:-1
-            });
-            o.desmos.setOptions({
-              zoomButtons:false
-            });
-          } else {
-            // Focus mode
-            vars.resetting = false;
-            o.desmos.setExpressions([
-              { // No dragging in focus mode
-                "id": "485",
-                "dragMode": Desmos.DragModes.NONE
-              },
-              {
-                "id": "520",
-                "latex": "x_{root}=t_{icks}\\left(\\frac{s_{tepAdj}\\left(m_{inStepWidthRoot}\\right)}{U_{scale}}\\right)"
-              },
-              {
-                "id": "513",
-                "latex": "x_{largeRoot}=t_{icks}\\left(\\frac{l_{argeStep}\\left(m_{inStepWidthRoot}\\right)}{U_{scale}}\\right)"
-              },
-              {
-                "id": "532",
-                "latex": "x_{rootLarge}=10^{b_{ase}\\left(m_{inStepWidthRoot}\\right)}\\operatorname{round}\\left(\\frac{x_{largeRoot}U_{scale}}{10^{b_{ase}\\left(m_{inStepWidthRoot}\\right)}}\\right)"
-              },
-              {
-                "id": "570",
-                "latex": "U_{scale}=\\frac{r_{oot}}{s_q}"
-              },
-              {
-                "id": "537",
-                "latex": "r_{ootStep}=s_{tepAdj}\\left(m_{inStepWidthRoot}\\right)"
-              },
-              {
-                "id": "zoom_level",
-                "latex": "z=1"
-              }
-            ]);
-            fs.A0633995.focusPoint(o);
-            o.desmos.setOptions({
-              zoomButtons:true
-            });
-          }
-        });
-
-        o.desmos.observe('graphpaperBounds',function(){
-          var bounds = o.desmos.graphpaperBounds.mathCoordinates;
-          // Reset to non-focus mode when home button resets
-          if(Math.abs(bounds.left + 10) < 0.1 &&
-             Math.abs(bounds.right - 10) < 0.1) {
-            o.log('Home button was pressed.');
-            vars.resetting = true;
-            o.desmos.setExpressions([
-              {
-                id:'zoom_level',
-                latex:'z=0'
-              }
-            ]);
-          // If we're at default zoom, set us to non-focus mode
-          } else if (bounds.left === -5 &&
-                     bounds.right === 105 &&
-                     bounds.top === 1 &&
-                     bounds.bottom === -1) {
-            o.log('Reset to non-focus mode.');
-            vars.resetting = false;
-            o.desmos.setExpressions([
-              { // show #line
-                id:'2',
-                hidden:false
-              },
-              { // show points
-                id:'472',
-                hidden:false
-              },
-              {
-                id:'zoom_level',
-                latex:'z=0'
-              }
-            ]);
-          // Set to focus mode if the zoom level isn't default and
-          //  isn't trying to get there.
-          } else if (vars.resetting === false && hlps.zoom.numericValue !== 1) {
-            o.log('Setting to focus mode');
-            o.desmos.setExpression({
-              id:'zoom_level',
-              latex:'z=1'
-            });
-          } else {
-            o.log('Bounds changed; no action taken: z=',hlps.zoom.numericValue,
-              '\nResetting:',vars.resetting,'\nBounds:',bounds);
-          }
-        })
        };
       fs.A0633995.focusPoint = function() {
         // A0633995_focusPoint
@@ -3548,8 +3398,8 @@ PearsonGL.External.rootJS = (function() {
           bounds.right = bounds.left + bounds.width;
         }
 
-        bounds.bottom = -1;
-        bounds.top = 1;
+        bounds.bottom = -bounds.height/2;
+        bounds.top = bounds.height/2;
 
         o.desmos.setMathBounds(bounds);
        };
@@ -3725,6 +3575,578 @@ PearsonGL.External.rootJS = (function() {
         }); //*/
        };
 
+    /* ←— usabilityTestNumberLine FUNCTIONS ————————————————————————————————→ */
+     fs.usabilityTestNumberLine = {};
+      /* ←— init —————————————————————————————————————————————————————————→ *\
+       | stuff
+       * ←—————————————————————————————————————————————————————————————————→ */
+       fs.usabilityTestNumberLine.init = (function(){
+        // Helper Functions
+          var o = {log:debugLog}; //function(){}}; // change log to console.log to debug
+
+          var intervalPreferences = (function(){
+            var catalog = {};
+
+            return function(n, min, max, excludeRelativePrimes) {
+              if (min === undefined) {
+                min = 1;
+              }
+              if (excludeRelativePrimes === undefined) {
+                excludeRelativePrimes = false;
+              }
+              //  returns array of integers from minIntervals to maxIntervals or n, whichever is lower
+              //  
+              //  sorted as, from lowest to highest at each level:
+              //    1. divisors of n
+              //    2. divisors of 2^k*n (unless excluded as a relative prime)
+              //    3. divisors of 10n (unless excluded as a relative prime)
+              //    4*. divisors of n*(each prime divisor of n, in order)
+              //    5*. divisors of n*(each prime divisor of n, in order, squared)
+              //    6*. divisors of n^2
+              //    7*. all other integers less than n (unless excludeRelativePrimes is set)
+              //
+              //  the array will have additional properties:
+              //    order: array of values of m = k*n considered above, in order they were considered
+
+              max = max || n;
+
+              var orderInclusive = [];
+              var orderExclusive = [];
+              var m;
+              var k;
+              var primes;
+              var listInclusive = [];
+              var coveredInclusive = [];
+              var listExclusive = [];
+              var coveredExclusive = [];
+              var answer;
+              var out;
+              var i;
+
+              if(!(catalog[n])) {
+
+                catalog[n] = {
+                  inclusive:{},
+                  exclusive:{}
+                };
+
+                // 1. divisors of n
+                orderInclusive.push(n);
+                orderExclusive.push(n);
+
+                // 2. divisors of 2^k*n
+                m = n;
+                k = 2;
+                while(m % 2 === 0) {
+                  m /= 2;
+                  k *= 2;
+                }
+                while(k < n) {
+                  orderInclusive.push(k*m);
+                  if(n % 2 === 0) {
+                    orderExclusive.push(k*m);
+                  }
+                  k *= 2;
+                }
+
+                // 3. divisors of 10n
+                orderInclusive.push(10*n);
+                if(n % 10 === 0) {
+                  orderExclusive.push(10*n);
+                }
+
+                // 4. prime divisors of n
+                primes = objKeys(hs.factorize(n));
+                primes.forEach(function(e) {
+                  orderInclusive.push(e*n);
+                  orderExclusive.push(e*n);
+                });
+
+                // 5. prime divisors of n, squared
+                primes.forEach(function(e) {
+                  orderInclusive.push(e*e*n);
+                  orderExclusive.push(e*e*n);
+                });
+
+                // 6. divisors n^2
+                orderInclusive.push(n*n);
+                orderExclusive.push(n*n);
+
+                catalog[n].inclusive.order = orderInclusive.filter(function(e,i,a) {
+                  return (a.indexOf(e) === i);
+                });
+
+                catalog[n].exclusive.order = orderExclusive.filter(function(e,i,a) {
+                  return (a.indexOf(e) === i);
+                });
+
+                orderInclusive.forEach(function(e) {
+                  var divs = hs.divisors(e);
+                  divs.forEach(function(e) {
+                    if(!(coveredInclusive[e])) {
+                      coveredInclusive[e] = true;
+                      listInclusive.push(e);
+                    }
+                  });
+                });
+                catalog[n].inclusive.list = listInclusive;
+
+                orderExclusive.forEach(function(e) {
+                  var divs = hs.divisors(e);
+                  divs.forEach(function(e) {
+                    if(!(coveredExclusive[e])) {
+                      coveredExclusive[e] = true;
+                      listExclusive.push(e);
+                    }
+                  });
+                });
+                catalog[n].exclusive.list = listExclusive;
+              }
+
+              if (excludeRelativePrimes) {
+                answer = catalog[n].exclusive;
+              } else {
+                answer = catalog[n].inclusive;
+              }
+
+              out = answer.list.filter(function(e){
+                return (min <= e && e <= max);
+              });
+              out.order = answer.order.slice();
+
+              if(!excludeRelativePrimes) {
+                for(i = min; i <= max; i += 1) {
+                  if(out.indexOf(i) === -1) {
+                    out.push(i);
+                  }
+                }
+              }
+
+              return out;
+            };
+          }());
+
+          function alignPreferences(list1,list2,distance) {
+            if(distance === undefined) {
+              distance = function(l1,l2,a,b){
+                l1 = l1;
+                l2 = l2;
+                return a+b;
+              };
+            }
+            var preferences = [];
+            var i;
+            var j;
+            var k;
+
+            // start with taxicab distance, preferring list2 ([1,0] comes before [0,1])
+            for(i = 0; i <= list1.length+list2.length; i += 1) {
+              j = Math.min(i,list1.length);
+              for(k = i - j; j >= 0 && k < list2.length; k += 1) {
+                if(list1[j] === list2[k]) {
+                  preferences.push({'1':j,'2':k});
+                }
+                j -= 1;
+              }
+            }
+
+            preferences.sort(function(a,b){
+              var d1 = distance(list1,list2,a[1],a[2]);
+              var d2 = distance(list1,list2,b[1],b[2]);
+              var p;
+              var q;
+
+              // slight preference for the smaller value, if two preferences are equal
+              if (d1 === d2) {
+                p = list1[a[1]];
+                q = list1[b[1]];
+
+                if(typeof p === "number" && !(myIsNaN(p)) &&
+                  typeof q === "number" && !(myIsNaN(q))) {
+                  return (p - q);
+                }
+              }
+
+              return (d1 - d2);
+            });
+
+            var coords;
+
+            for (i = 0; i < preferences.length; i += 1) {
+              coords = preferences[i];
+              if (list1[coords[1]] !== list2[coords[2]]) {
+                o.log("NOOOOOOO");
+              }
+              preferences[i] = list1[coords[1]];
+            }
+
+            return preferences;
+          }
+
+          // function divideWholeForPart(whole,part,wholePreferences) {
+
+            //   if(wholePreferences === undefined) wholePreferences = intervalPreferences(whole);
+
+            //   var preferences = Array.from(wholePreferences);
+
+            //   var evenDivisors = [];
+            //   var catalog = {};
+            //   var i;
+            //   var j;
+            //   var newPref;
+
+            //   for(i = 0; i < wholePreferences.length; i += 1) {
+            //     catalog[i] = true;
+            //     if(whole%wholePreferences[i] === 0) evenDivisors.push(wholePreferences[i]);
+            //   }
+            //   for(i = 0; i < evenDivisors.length; i += 1) {
+            //     for(j = i; j < evenDivisors.length; j += 1) {
+            //       newPref = evenDivisors[i]*evenDivisors[j];
+            //       if(!(catalog[newPref])) {
+            //         catalog[newPref] = true;
+            //         preferences.push(newPref);
+            //       }
+            //     }
+            //   }
+
+            //   var scaledParts = preferences.map(function(i){return part*i;});
+
+            //   var simpleErrors = scaledParts.map(function(p){return p%whole;}).map(function(E){return Math.min(E,whole-E);});
+
+            //   var intervalRelativeError = simpleErrors.map(function(r){return r/whole;});
+
+            //   var wholeRelativeError = [];
+            //   for(i = 0; i < intervalRelativeError.length; i += 1) {
+            //     wholeRelativeError[i] = intervalRelativeError[i]/preferences[i];
+            //   }
+
+            //   var indices = [];
+            //   for(i = 0; i < preferences.length; i += 1) {
+            //     indices.push(i);
+            //   }
+
+            //   indices.sort((a,b)=>{
+            //     var preferA;
+            //     if(simpleErrors[a]===0 && simpleErrors[b] === 0) {
+            //       o.log('both '+preferences[a]+' and '+preferences[b]+' divide');
+            //       return (a - b);
+            //     } else if (simpleErrors[a] === 0) {
+            //       o.log(preferences[a]+' divides');
+            //       return -1;
+            //     } else if (simpleErrors[b] === 0) {
+            //       o.log(preferences[b]+' divides');
+            //       return 1;
+            //     } else if (intervalRelativeError[a] <= 0.1 && intervalRelativeError[b] <= 0.1) {
+            //       o.log('close contenders '+preferences[a]+','+preferences[b]);
+            //       return (a - b);
+            //     } else if ((a < wholePreferences.length) == (b < wholePreferences.length)) {
+            //       preferA = (wholeRelativeError[a] - wholeRelativeError[b]);
+            //       if(preferA < 0) o.log(preferences[a]+' is better than '+preferences[b]);
+            //       else o.log(preferences[b]+' is better than '+preferences[a]);
+            //       return preferA;
+            //     } else if (a < wholePreferences.length) {
+            //       o.log(preferences[b]+' was fabricated; '+preferences[a]+' was not.')
+            //       return -1;
+            //     } else if (b < wholePreferences.length) {
+            //       o.log(preferences[a]+' was fabricated; '+preferences[b]+' was not.')
+            //       return 1;
+            //     }
+            //     o.log('something\'s wrong');
+            //     return 0;
+            //   });
+
+            //   preferences = indices.map(function(i){return preferences[i];});
+
+            //   return preferences;
+            // }
+
+          function chooseIntervals(W,p,min,maxMajor,maxMinor) {
+            p = p;
+            if(min === undefined) {
+              min = 1;
+            }
+            if(maxMajor === undefined) {
+              maxMajor = 20;
+            }
+            if(maxMinor === undefined) {
+              maxMinor = 100;
+            }
+
+            var majorIntervalsW = 1;
+            var minorIntervalsW;
+            var majorIntervals100 = 2;
+            var minorIntervals100;
+
+            // Prefer divisors of both.
+            var preferencesW = intervalPreferences(W,1,maxMinor,true);
+            var preferences100 = intervalPreferences(100,2,maxMinor,true);
+            var preferences = alignPreferences(preferencesW,preferences100,
+              function(w,c,iw,ic) {
+                w = w;
+                c = c;
+                return iw*10+ic*Math.sqrt(W);
+              }
+            );
+
+            o.log('W',preferencesW,'100',preferences100,'joint',preferences);
+
+            var i;
+            var interval;
+            if(preferences.length > 0) {
+              for(i = 0; i < preferences.length; i += 1) {
+                interval = preferences[i];
+                if((i === 0 ||
+                  interval > majorIntervalsW) &&
+                  interval <= maxMajor &&
+                  interval % 2 === 0 && // Always show 50%
+                  100 % interval === 0 &&
+                  W % interval === 0) {
+                  majorIntervalsW = interval;
+                  majorIntervals100 = interval;
+                }
+              }
+            }
+
+            // Subdivide based on chosen Major Interval (if any)
+            minorIntervalsW = 1;
+            for(i = 0; i < preferencesW.length; i += 1) {
+              interval = preferencesW[i];
+              if(interval > minorIntervalsW &&
+                interval % majorIntervalsW === 0 &&
+                W % interval === 0) {
+                minorIntervalsW = interval;
+              }
+            }
+
+            minorIntervals100 = 2;
+            for(i = 0; i < preferences100.length; i += 1) {
+              interval = preferences100[i];
+              if(interval > minorIntervals100 &&
+                interval % majorIntervals100 === 0 &&
+                100 % interval === 0) {
+                minorIntervals100 = interval;
+              }
+            }
+
+            // Increase Major Interval resolution, aligning with subdivisions
+            var betterMajor = majorIntervalsW;
+            for(i = 0; i < preferencesW.length; i += 1) {
+              interval = preferencesW[i];
+              if(interval > betterMajor &&
+                interval <= maxMajor &&
+                interval % majorIntervalsW === 0 &&
+                minorIntervalsW % interval === 0 &&
+                W % interval === 0) {
+                betterMajor = interval;
+              }
+            }
+            majorIntervalsW = betterMajor;
+
+            betterMajor = majorIntervals100;
+            for(i = 0; i < preferences100.length; i += 1) {
+              interval = preferences100[i];
+              if(interval > betterMajor &&
+                interval <= maxMajor &&
+                interval % majorIntervals100 === 0 &&
+                minorIntervals100 % interval === 0 &&
+                100 % interval === 0) {
+                betterMajor = interval;
+              }
+            }
+            majorIntervals100 = betterMajor;
+
+            o.log('W Major:',majorIntervalsW,'100 Major:',majorIntervals100);
+
+
+            var out = {
+              majorIntervalsW: majorIntervalsW,
+              minorIntervalsW: minorIntervalsW,
+              majorIntervals100: majorIntervals100,
+              minorIntervals100: minorIntervals100
+            };
+
+            return out;
+          }
+
+          var mostMajorIntervals = 29;
+
+        return function(){
+          var obj = hs.parseArgs(arguments);
+          var hlps = hxs[obj.uniqueId];
+          mergeObjects(hlps,{
+            W:hlps.maker('W'),
+            p:hlps.maker('p'),
+            scalex:hlps.maker('t_{ickx}')
+          });
+
+          function updateBar() {
+            var p = hlps.p.numericValue;
+            var W = hlps.W.numericValue;
+
+            obj.desmos.setExpressions([
+              {
+                id:'p_labelP',
+                label:''+(Math.round(100*p)/100)
+              },
+              {
+                id:'p_label100',
+                label:''+(Math.round(100*100*p/W)/100)+'%'
+              }
+            ]);
+          }
+
+          function updateIntervals() {
+            var W = hlps.W.numericValue;
+            if(W <= 0) {
+              return;
+            }
+            var p = hlps.p.numericValue;
+            var tick = hlps.scalex.numericValue;
+            var spacing = 2*tick/3;
+            var width = 100;
+            var maxMinorIntervals = Math.max(2,Math.floor(width/spacing));
+            var maxMajorIntervals = Math.max(2,Math.floor(width/(4*spacing)));
+            var minIntervals = Math.max(2,Math.floor(width/(7*spacing)));
+
+            var choices = chooseIntervals(W,p,minIntervals,maxMajorIntervals,maxMinorIntervals);
+            obj.log(choices);
+            var pSlider = {
+              id:'pSlider',
+              sliderBounds:{min:0,max:W}//,step:1} // apparently the step breaks everything
+            };
+            obj.log('pSlider:',pSlider);
+            obj.desmos.setExpressions([
+              {
+                id:'majorIntervalsW',
+                latex:'I_w='+choices.majorIntervalsW
+              },
+              {
+                id:'majorIntervals100',
+                latex:'I='+choices.majorIntervals100
+              },
+              {
+                id:'minorIntervalsW',
+                latex:'I_W='+choices.minorIntervalsW
+              },
+              {
+                id:'minorIntervals100',
+                latex:'I_{100}='+choices.minorIntervals100
+              },
+              {
+                id:'p_labelW',
+                label:''+(Math.round(100*W)/100)
+              }// ,pSlider // apparently this removes the snapping interval
+            ]);
+            var newMostMajors = Math.max(choices.majorIntervals100,choices.majorIntervalsW);
+            var exprs = [];
+            var i;
+            if(newMostMajors > mostMajorIntervals) {
+              for (i = mostMajorIntervals+1; i <= newMostMajors; i += 1) {
+                exprs.push(
+                  {
+                    id:'label100_'+i,
+                    latex:'\\left(\\frac{100\\cdot'+i+'}{I},h_{100}-t_{icky}\\right)',
+                    label:''+(Math.round(100*i*100/choices.majorIntervals100)/100)+'%',
+                    showLabel:false,
+                    hidden:true,
+                    secret:true,
+                    color:cs.color.mgmColors.BLACK
+                  },
+                  {
+                    id:'labelP_'+i,
+                    latex:'\\left(\\frac{100\\cdot'+i+'}{I_w},h_W-t_{icky}\\right)',
+                    label:''+(Math.round(100*i*W/choices.majorIntervalsW)/100),
+                    showLabel:false,
+                    hidden:true,
+                    secret:true,
+                    color:cs.color.mgmColors.BLACK
+                  },
+                  {
+                    id:'labelFrac_'+i,
+                    latex:'\\left(\\frac{100\\cdot'+i+'}{I_w},h_W-1.4\\cdot t_{icky}\\right)',
+                    label:''+(Math.round(100*W)/100),
+                    showLabel:false,
+                    hidden:true,
+                    secret:true,
+                    color:cs.color.mgmColors.BLACK
+                  },
+                  {
+                    id:'labelW_'+i,
+                    latex:'\\left(\\frac{100\\cdot'+i+'}{I_w},h_W-2\\cdot t_{icky}\\right)',
+                    label:''+(Math.round(100*W)/100),
+                    showLabel:false,
+                    hidden:true,
+                    secret:true,
+                    color:cs.color.mgmColors.BLACK
+                  }
+                );
+              }
+              obj.desmos.setExpressions(exprs);
+              mostMajorIntervals = newMostMajors;
+            }
+            exprs = [];
+            for (i = 0; i <= mostMajorIntervals; i += 1) {
+              if(i <= choices.majorIntervals100) {
+                exprs.push(
+                  {
+                    id:'label100_'+i,
+                    label:''+(Math.round(100*i*100/choices.majorIntervals100)/100),
+                    showLabel:true
+                  }
+                );
+              } else {
+                exprs.push(
+                  {
+                    id:'label100_'+i,
+                    showLabel:false
+                  }
+                );
+              }
+
+              if(i <= choices.majorIntervalsW) {
+                exprs.push(
+                  {
+                    id:'labelP_'+i,
+                    label:''+(Math.round(100*i*W/choices.majorIntervalsW)/100),
+                    showLabel:true
+                  // },
+                  // {
+                  //   id:'labelFrac_'+i,
+                  //   showLabel:false
+                  // },
+                  // {
+                  //   id:'labelW_'+i,
+                  //   label:''+(Math.round(100*W)/100),
+                  //   showLabel:false
+                  }
+                );
+              } else {
+                exprs.push(
+                  {
+                    id:'labelP_'+i,
+                    showLabel:false
+                  // },
+                  // {
+                  //   id:'labelFrac_'+i,
+                  //   showLabel:false
+                  // },
+                  // {
+                  //   id:'labelW_'+i,
+                  //   showLabel:false
+                  }
+                );
+              }
+            }
+            obj.desmos.setExpressions(exprs);
+            updateBar();
+          }
+
+          hlps.W.observe('numericValue',updateIntervals);
+          hlps.scalex.observe('numericValue',updateIntervals);
+          hlps.p.observe('numericValue',updateBar);
+        };
+       }());
+      
 // Pre-DCJS Stuff
    ;(function(){
       // Define functions
