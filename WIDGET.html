@@ -1531,6 +1531,7 @@
                 geoPrevState = null;
                 desWidth = 550;
                 desHeight = 475;
+                window.calculator.destroy();
                 $elt.remove();
                 delete window.Calc;
                 delete window.Geo;
@@ -1822,10 +1823,12 @@
         window.calculator = null;
         if(window.Geo) {
           geoPrevState = window.Geo.getState();//{stripDefaults: false});
+          window.Geo.destroy();
           delete window.Geo;
         }
         if(window.Calc) {
           calcPrevState = window.Calc.getState();//{stripDefaults: false});
+          window.Calc.destroy();
           delete window.Calc;
         }
         if($elt) $elt.remove();
