@@ -590,6 +590,54 @@ PearsonGL.External.rootJS = (function() {
         debugLog(products);
         return products;
        },
+      /* ←— currency ———————————————————————————————————————→ *\
+       ↑ Finds the nearest currency-scale value to a number                   |
+       |                                                                      |
+       | @arg0 {number}                                                       |
+       | @arg1 {boolean}                                                      |
+       |        TRUE: Returns the ceiling (least upper bound) value           |
+       |        FALSE: Returns the floor (greatest lower bound) value         |
+       |        UNDEFINED: Rounds to the nearest value on the log scale       |
+       |                                                                      |
+       | @Returns: catalog of the form {f1:m1,f2:m2,...}                      ↓
+       * ←—————————————————————————————————————————————————————————————————→ */
+      currency: function(x,roundUp){
+        var catalog = {};
+        var log = Math.log10(x);
+        var lb = Math.pow(10,Math.floor(log));
+        var ub;
+        if (x >= 5*lb) {
+          if (x === lb * 5) {
+            ub = lb * 5;
+          } else {
+            ub = lb * 10;
+          }
+          lb *= 5;
+        } else if (x >= 2 * lb) {
+          if (x === lb * 2) {
+            ub = lb * 2;
+          } else {
+            ub = lb * 5
+          }
+          lb *= 2;
+        } else if (x === lb) {
+          ub = lb;
+        } else {
+          ub = lb * 2;
+        }
+
+        if(roundUp === true) {
+          return ub;
+        } else if (roundUp === false) {
+          return lb;
+        } else {
+          if (Math.log10(ub) + Math.log10(lb) <= 2 * log) {
+            return ub;
+          } else {
+            return lb;
+          }
+        }
+       },
       /* ←— factorize(n) (memoized) ———————————————————————————————————————→ *\
        ↑ Converts a number into a catalog of prime factors and their          |
        |  multiplicities.                                                     |
@@ -1908,6 +1956,7 @@ PearsonGL.External.rootJS = (function() {
        };
       /* ←— A0633959 6-2-1 KC ————————————————————————————————————————————→ *\
        | recolors the point based on the side of 0
+       | NOTE: Also used in 7-1-4 Example 3 Try It!
        * ←————————————————————————————————————————————————————————————————→ */
        fs.A0633959 = {};
       fs.A0633959.color = function() {
