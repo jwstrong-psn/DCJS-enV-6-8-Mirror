@@ -590,9 +590,9 @@
         $("#axes").click(function(){
           window.rebuild({'axes':!(window.currentGeoConstructors['axes'])});
         });
-        $("#labels").click(function(){
-          window.rebuild({'labels':!(window.currentGeoConstructors['labels'])});
-        });
+        // $("#labels").click(function(){
+        //   window.rebuild({'labels':!(window.currentGeoConstructors['labels'])});
+        // });
         $("#ruler").click(function(){
           window.currentGeoConstructors.ruler = !(window.currentGeoConstructors['ruler']);
           if (!(toolType == 'geometry')) return;
@@ -1086,7 +1086,7 @@
         window.autosize={'autosize':true};
         window.selection={'selection':true};
         window.axes={'axes':true};
-        window.labels={'labels':true};
+        // window.labels={'labels':true};
         window.ruler={'ruler':true};
         window.protractor={'protractor':true};
         window.customtools={'customtools':true};
@@ -1155,7 +1155,7 @@
             'autosize':true,
             'selection':true,
             'axes':false,
-            'labels':true,
+            //'labels':true,
             'ruler':false,
             'protractor':false,
             'colorMap':geoColors,
@@ -1176,7 +1176,7 @@
             'autosize':false,
             'selection':false,
             'axes':false,
-            'labels':false,
+            //'labels':false,
             'ruler':false,
             'protractor':false,
             'colorMap':geoColors,
@@ -1238,7 +1238,7 @@
           'autosize':'geoAutosize',
           'selection':'selection',
           'axes':'axes',
-          'labels':'labels',
+          //'labels':'labels',
           'ruler':'ruler',
           'protractor':'protractor',
           'colorMap':geoColors,
