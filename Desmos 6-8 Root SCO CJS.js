@@ -1386,6 +1386,28 @@ PearsonGL.External.rootJS = (function() {
           ]
         });
        };
+      /* ←— Inequality Number Line ———————————————————————————————————————→ *\
+       | For the Inequality Number Line that allows free setting of bounds
+       * ←————————————————————————————————————————————————————————————————→ */
+        fs.tool.ineqNL = {};
+      fs.tool.ineqNL.updateBounds = function() {
+        var o = hs.parseArgs(arguments);
+
+        o.desmos.setExpressions([
+          {
+            id: 'x_{left}',
+            latex: 'x_{left}='+o.desmos.graphpaperBounds.mathCoordinates.left
+          },
+          {
+            id: 'x_{right}',
+            latex: 'x_{right}='+o.desmos.graphpaperBounds.mathCoordinates.right
+          },
+          {
+            id: 'endpoint_x',
+            latex: 'x_0=0.5'
+          }
+        ]);
+       };
       /* ←— Bar Diagram —————————————————————————————————————————————————→ *\
        | Resizes the number line
        * ←————————————————————————————————————————————————————————————————→ */
