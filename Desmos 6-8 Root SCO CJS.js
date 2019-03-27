@@ -2043,6 +2043,333 @@ PearsonGL.External.rootJS = (function() {
           latex:expr
         });
        };
+      /* ←— A??????? 7-6-1 Ex.1 ——————————————————————————————————————————→ *\
+       | Left generates a population with a given size and proportion (y/n)
+       | Right samples the population
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G7_6_1_Ex_1 = {};
+       cs.G7_6_1_Ex_1 = {
+        HIDE: [
+          {
+            id:'yes',
+            hidden:true
+          },
+          {
+            id:'no',
+            hidden:true
+          },
+          {
+            id:'sample_yes',
+            hidden:true
+          },
+          {
+            id:'sample_no',
+            hidden:true
+          }
+        ],
+        DEFAULT_POPULATION_SIZE: 2468,
+        DEFAULT_SAMPLE_SIZE: 20,
+        CONVENIENCE: 2,
+        SURVEYORS: 5
+       };
+      fs.G7_6_1_Ex_1.initLeft = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        hlps.left = o.uniqueId;
+        hlps.init = true;
+        
+        hlps.desmos = o.desmos;
+        hlps.S = hlps.maker('S');
+        hlps.V = hlps.maker('V');
+        hlps.r = hlps.maker('r');
+        hlps.c = hlps.maker('c');
+        hlps.n = hlps.maker('n');
+        hlps.k = hlps.maker('k');
+
+        if(window.widget_right !== undefined) {
+          hlps.right = window.widget_right;
+          hxs[hlps.right].left = o.uniqueId;
+          delete window.widget_right;
+          fs.G7_6_1_Ex_1.init(o.uniqueId, hlps.right);
+        } else {
+          window.widget_left = o.uniqueId;
+        }
+       };
+      fs.G7_6_1_Ex_1.initRight = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+
+        hlps.right = o.uniqueId;
+        hlps.init = true;
+        
+        hlps.desmos = o.desmos;
+        hlps.S = hlps.maker('S');
+        hlps.V = hlps.maker('V');
+        hlps.r = hlps.maker('r');
+        hlps.c = hlps.maker('c');
+        hlps.n = hlps.maker('n');
+        hlps.k = hlps.maker('k');
+
+        if(window.widget_left !== undefined) {
+          hlps.left = window.widget_left;
+          hxs[hlps.left].right = o.uniqueId;
+          delete window.widget_left;
+          fs.G7_6_1_Ex_1.init(hlps.left, o.uniqueId);
+        } else {
+          window.widget_right = o.uniqueId;
+        }
+       };
+      fs.G7_6_1_Ex_1.init = function(left, right) {
+        left = hxs[left];
+        right = hxs[right];
+        var cons = cs.G7_6_1_Ex_1;
+        
+        if(left.S.numericValue === undefined ||
+           right.S.numericValue === undefined ||
+           left.V.numericValue === undefined ||
+           right.V.numericValue === undefined ||
+           left.r.numericValue === undefined ||
+           right.r.numericValue === undefined ||
+           left.c.numericValue === undefined ||
+           right.c.numericValue === undefined ||
+           left.n.numericValue === undefined ||
+           right.n.numericValue === undefined) {
+          // hide everything, try again
+          left.desmos.setExpressions(cons.HIDE);
+          right.desmos.setExpressions(cons.HIDE);
+          left.init = window.setTimeout(function(){
+            fs.G7_6_1_Ex_1.init(left,right);
+          },50);
+          right.init = left.init;
+          return false;
+        } else {
+          delete left.init;
+          delete right.init;
+        }
+       };
+      fs.G7_6_1_Ex_1.sample = function() {
+        var o = hs.parseArgs(arguments);
+        var cons = cs.G7_6_1_Ex_1;
+        var left = hxs[hxs[o.uniqueId].left];
+        var right = hxs[left.right];
+
+        // ignore sample requests before initialization
+        if(left.init !== undefined || right.init !== undefined) {
+          return;
+        }
+
+        var population = left.V.listValue;
+        var k = right.k.numericValue || cons.DEFAULT_SAMPLE_SIZE;
+        var sample, r, c, crowd, i, j;
+
+        if(o.name === 'random') {
+          sample = fs.G7_6_1_Ex_1.random(population, k);
+        } else {
+          // Generate the crowd
+          crowd = [];
+          r = left.r.numericValue;
+          c = left.c.numericValue;
+          for(i = 0; i < r; i += 1) {
+            crowd[i] = [];
+            for(j = 0; j < c; j += 1) {
+              crowd[i][j] = population[i*c + j];
+            }
+          }
+
+          if(o.name === 'small') {
+            sample = fs.G7_6_1_Ex_1.convenience(crowd, cons.CONVENIENCE, cons.SURVEYORS);
+          }
+
+          if(o.name === 'convenient') {
+            sample = fs.G7_6_1_Ex_1.convenience(crowd, k, cons.SURVEYORS);
+          }
+        }
+
+        left.desmos.setExpression({
+          id:'sample',
+          latex:'\\left\\['+sample.join(',')+'\\right\\]'
+        });
+
+        right.desmos.setExpression({
+          id:'sample',
+          latex:'\\left\\['+sample.join(',')+'\\right\\]'
+        });
+       };
+      fs.G7_6_1_Ex_1.convenience = function(rows, columns, size, surveyors) {
+        // Give each surveyor a starting location
+        if(!Array.isArray(surveyors)) {
+          surveyors = (new Array(surveyors)).fill(true).map(function(){
+            return [
+              Math.floor(rows*Math.random()),
+              Math.floor(columns*Math.random())
+            ];
+          });
+        }
+
+        var sample = (new Array(rows*columns)).fill(0);
+
+        function walk(surveyor){
+          var direction;
+          size -= 1; // next house
+          if(size < 0) return;
+          if(Math.random() < 0.8) { // walk in a cardinal direction
+            direction = Math.floor(2*Math.random());
+            if(surveyor[direction] === 0) {
+              surveyor[direction] += 1;
+            } else if (surveyor[direction] === [rows, columns][direction]) {
+              surveyor[direction] -= 1;
+            } else {
+              surveyor[direction] += (2*Math.round(Math.random()) - 1);
+            }
+          } else { // walk diagonally
+            if(surveyor[0] === 0) {
+              surveyor[0] += 1;
+            } else if (surveyor[0] === rows-1) {
+              surveyor[0] -= 1;
+            } else {
+              surveyor[0] += (2*Math.round(Math.random()) - 1);
+            }
+            if(surveyor[1] === 0) {
+              surveyor[1] += 1;
+            } else if (surveyor[1] === columns-1) {
+              surveyor[1] -= 1;
+            } else {
+              surveyor[1] += (2*Math.round(Math.random()) - 1);
+            }
+          }
+          if(sample[columns*surveyor[0]+surveyor[1]] === 0 && size >= 0) {
+            sample[columns*surveyor[0]+surveyor[1]] = 1;
+          } else {
+            size += 1; // house already visited; try again
+          }
+        }
+
+        while(size > 0) {
+          surveyors.forEach(walk);
+        }
+
+        return sample;
+       };
+      fs.G7_6_1_Ex_1.random = function(population, size) {
+        population = Object.keys(population);
+
+        var sample = (new Array(population.length)).fill(0);
+
+        while(size > 0) {
+          sample[population.splice(population.length*Math.random(),1)[0]] = 1;
+          size -= 1;
+        }
+
+        return sample;
+       };
+      fs.G7_6_1_Ex_1.census = function(rows, columns, proportion, neighborhoods) {
+
+        neighbors = (new Array(neighborhoods)).fill(true).map(incorporate);
+        // Add some randomness to the mix
+        population = (new Array(rows*columns)).fill(proportion).map(Math.random).map(person);
+
+        var target = Math.round(proportion*rows*columns);
+        var border = proportion;
+        var upper = 1;
+        var lower = 0;
+        var votes, result;
+
+        do {
+          votes = vote(population,border);
+          result = votes.reduce(function(acc,e){return acc+e;});
+          if(result > target) {
+            lower = border; // raise the threshold for a yes vote
+          } else if(result < target) {
+            upper = border;
+          }
+          border = (lower + upper)/2;
+
+          debugLog(result + ' vs. ' + target);
+        }
+        while(result !== target && upper > lower);
+        // Note: The first condition may not terminate if there are two people
+        // with identical political views who happen to be right on the border,
+        // but that has probability ~0 of occurring (3 mostly-random floating-
+        // point numbers must be equal); just in case, the second condition
+        // will eventually terminate when JS runs out of bits to split
+
+        return votes;
+
+        function incorporate(e,i){
+          // Give each neighborhood a center, appeal, and voting preference
+          var vote;
+          if(i === 0) {
+            return {
+              i:0,
+              j:0,
+              appeal:1,
+              vote:1
+            };
+          } else if (i === neighborhoods - 1) {
+            return {
+              i:rows-1,
+              j:columns-1,
+              appeal:1,
+              vote:0
+            };
+          } else if (i < neighborhoods*proportion) {
+            vote = 1;
+          } else {
+            vote = 0;
+          }
+          return {
+            i: Math.floor(rows*Math.random()),
+            j: Math.floor(columns*Math.random()),
+            appeal: 0.5+0.5*Math.random(),
+            vote: vote
+          };
+         }
+
+        function person(e,k){
+          return influence(e,Math.floor(k/columns),k % columns);
+         }
+
+        function influence(preference,i,j){
+          var pull0 = neighbors.reduce(function(acc,e){
+            var distance_sq;
+            if(e.vote === 0) {
+              distance_sq = (e.i-i)*(e.i-i)+(e.j-j)*(e.j-j);
+              return (acc + e.appeal / Math.max(distance_sq,1));
+            } else {
+              return acc;
+            }
+          },0);
+
+          var pull1 = neighbors.reduce(function(acc,e){
+            var distance_sq;
+            if(e.vote === 1) {
+              distance_sq = (e.i-i)*(e.i-i)+(e.j-j)*(e.j-j);
+              return (acc + e.appeal / Math.max(distance_sq,1));
+            } else {
+              return acc;
+            }
+          },0);
+
+          if(pull1 > pull0) {
+            return (1 - (pull0/pull1)*(1 - preference));
+          } else if (pull0 > pull1) {
+            return ((pull1/pull0)*preference);
+          } else {
+            return preference;
+          }
+         }
+
+        function vote(population,division) {
+          return population.map(function(e) {
+            if(e > division) {
+              return 1;
+            } else {
+              return 0;
+            }
+          });
+         }
+       };
       /* ←— A0633977 7-6-1 KC ————————————————————————————————————————————→ *\
        | Approximates a given percent distribution with a random sample
        | Distribution is defined in a histogram on the left
