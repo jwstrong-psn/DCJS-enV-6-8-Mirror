@@ -599,10 +599,9 @@ PearsonGL.External.rootJS = (function() {
        |        FALSE: Returns the floor (greatest lower bound) value         |
        |        UNDEFINED: Rounds to the nearest value on the log scale       |
        |                                                                      |
-       | @Returns: catalog of the form {f1:m1,f2:m2,...}                      ↓
+       | @Returns: currency value (1, 2, 5, 10, etc.) matching the number     ↓
        * ←—————————————————————————————————————————————————————————————————→ */
       currency: function(x,roundUp){
-        var catalog = {};
         var log = Math.log10(x);
         var lb = Math.pow(10,Math.floor(log));
         var ub;
@@ -617,7 +616,7 @@ PearsonGL.External.rootJS = (function() {
           if (x === lb * 2) {
             ub = lb * 2;
           } else {
-            ub = lb * 5
+            ub = lb * 5;
           }
           lb *= 2;
         } else if (x === lb) {
@@ -1029,7 +1028,7 @@ PearsonGL.External.rootJS = (function() {
        * ←————————————————————————————————————————————————————————————————→ */
       distributeByProportion: function(n,proportions) {
         var total = proportions.reduce(function(s,t){return s + t;});
-        var distribution = proportions.map(function(p){return n * p/total});
+        var distribution = proportions.map(function(p){return n * p/total;});
 
         // Round everything
         var rounded = distribution.map(function(x) {return Math.round(x);});
@@ -2477,14 +2476,14 @@ PearsonGL.External.rootJS = (function() {
       fs.A0633978.alwaysInvalidate = function(sampleOnly) {
         var invalidate = function() {
           fs.A0633978.invalidate(sampleOnly);
-        }
+        };
         return function(t,h) {
           h.unobserve(t+'.initialize');
           // Make a sanity check on first load, but…
           fs.A0633978.validate();
           // …then invalidate any time it changes (no check required).
           h.observe(t+'.invalidate',invalidate);
-        }
+        };
        };
       fs.A0633978.sampleAfterRebuild = function(o) {
         var hlps = hxs.A0633978;
@@ -2492,7 +2491,7 @@ PearsonGL.External.rootJS = (function() {
         var rebuilt = {
           R: false,
           H_R: false
-        }
+        };
 
         var checkForResample = function(t,h) {
           h.unobserve(t+'.resample');
@@ -2501,7 +2500,7 @@ PearsonGL.External.rootJS = (function() {
              hlps.S.listValue === undefined && hlps.H_S.listValue === undefined) {
             fs.A0633978.sample(o);
           }
-        }
+        };
 
         hlps.R.observe('listValue.resample',checkForResample);
         hlps.S.observe('listValue.resample',checkForResample);
@@ -2571,7 +2570,7 @@ PearsonGL.External.rootJS = (function() {
         vs.A0633978 = vs.A0633978 || {};
         hxs.A0633978 = hxs.A0633978 || {};
 
-        if(o.log === console.log) {
+        if(o.log === window.console.log) {
           window.vars = vs;
           window.hlps = hxs;
         }
@@ -2880,8 +2879,8 @@ PearsonGL.External.rootJS = (function() {
             return (S[a] - S[b]);
           }
         });
-        S = S.map(function(e,i){return S[order[i]]});
-        H_S = H_S.map(function(e,i){return H_S[order[i]]});
+        S = S.map(function(e,i){return S[order[i]];});
+        H_S = H_S.map(function(e,i){return H_S[order[i]];});
 
         exprsLeft.push(
           {
@@ -2969,7 +2968,7 @@ PearsonGL.External.rootJS = (function() {
         }
 
         if(typeof o.name !== "string" || o.name === '') {
-          o.name = "S"
+          o.name = "S";
         }
 
         var expr = o.name + "=\\left[";
@@ -3588,7 +3587,7 @@ PearsonGL.External.rootJS = (function() {
             o.log('Bounds changed; no action taken: z=',hlps.zoom.numericValue,
               '\nResetting:',vars.resetting,'\nBounds:',bounds);
           }
-        })
+        });
        };
       fs.A0633995.focusPoint = function() {
         // A0633995_focusPoint
@@ -3596,7 +3595,7 @@ PearsonGL.External.rootJS = (function() {
         var hlps = hxs[o.uniqueId];
 
         var x = hlps.x_1.numericValue;
-        var px = cs.A0633995.MARGIN
+        var px = cs.A0633995.MARGIN;
       
         var maths = o.desmos.graphpaperBounds.mathCoordinates;
         var bounds = {
