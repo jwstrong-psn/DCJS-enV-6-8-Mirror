@@ -3317,6 +3317,140 @@ PearsonGL.External.rootJS = (function() {
           latex:expr
         });
        };
+      /* ←— A??????? 7-7-1 Ex.1 ——————————————————————————————————————————→ *\
+       | Spins a spinner! WHEEEEEE
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G7_7_1_Ex_1 = {};
+       cs.G7_7_1_Ex_1 = {
+        MAX_FREQUENCY: 20
+       };
+      fs.G7_7_1_Ex_1.init = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+        var cons = cs.G7_7_1_Ex_1;
+
+        // Stop the spinner
+        o.desmos.setExpression({
+          id:'play',
+          latex:'p=0'
+        });
+
+        hlps.alpha = hlps.maker('\\alpha');
+        hlps.beta = hlps.maker('\\beta');
+        hlps.a = hlps.maker('a');
+        hlps.c = hlps.maker('c');
+        hlps.frequency = hlps.maker('f');
+        hlps.results = hlps.maker('S');
+
+        hlps.setNext = function(t,h) {
+          var alpha = hlps.alpha.numericValue;
+
+          o.desmos.setExpressions([
+            {
+              id:'beta',
+              latex:'\\beta='+alpha
+            }
+          ]);
+        };
+
+        hlps.spinOnce = function(t,h) {
+          var a = hlps.a.numericValue;
+          var frequency = vars.f;
+          var n = vars.n;
+          var k = vars.spins;
+
+          // If there's a lot of spins to go, get faster, otherwise slow down
+          if(k < n/2) {
+            frequency = Math.min(k + 1, cons.MAX_FREQUENCY);
+          } else if (k >= 3*n/4) {
+            frequency = Math.max(1,Math.min(frequency, 2*(n-k)-1));
+          }
+
+          vars.spins += 1;
+
+          // set a new target, and start the animation over
+          o.desmos.setExpressions([
+            {
+              id:'alpha',
+              latex:'\\alpha='+2*Math.random()*Math.PI
+            },
+            {
+              id:'b',
+              latex:'b='+a
+            },
+            {
+              id:'frequency',
+              latex:'f='+frequency
+            },
+            {
+              id:'play',
+              latex:'p=1'
+            }
+          ]);
+        };
+
+        hlps.record = function(t,h) {
+          var alpha = hlps.alpha.numericValue;
+          var results = hlps.results.listValue || [];
+
+          if(results.length > vars.data) {
+            return;
+          }
+
+          vars.data += 1;
+
+          results.push(alpha);
+
+          o.desmos.setExpressions([
+            {
+              id:'results',
+              latex:'S=\\left['+results.join(',')+'\\right]'
+            }
+          ]);
+        };
+
+        hlps.spin = function(t,h) {
+          if(h[t] > 0) {
+            hlps.setNext();
+            if (vars.data < vars.spins) {
+              hlps.record();
+            } else if (vars.spins >= vars.n) {
+              o.desmos.setExpression({
+                id:'play',
+                latex:'p=0'
+              });
+              h.unobserve(t);
+            }
+            if(h[t] > 0.5) {
+              if (vars.spins < vars.n) {
+                hlps.spinOnce();
+              }
+            }
+          }
+        };
+       };
+      fs.G7_7_1_Ex_1.spin = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        var hlps = hxs[o.uniqueId];
+
+        vars.spins = 0;
+        vars.data = 0;
+
+        o.desmos.setExpressions([
+          {
+            id:'results',
+            latex:'S=\\left[\\right]'
+          }
+        ]);
+
+        hlps.c.observe('numericValue',hlps.spin);
+
+        console.log('hi',hs,vs,hxs);
+
+        hlps.spinOnce();
+       };
       /* ←— A0633980 7-7-1 KC ————————————————————————————————————————————→ *\
        | description
        * ←————————————————————————————————————————————————————————————————→ */
