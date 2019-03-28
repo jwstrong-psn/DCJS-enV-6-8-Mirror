@@ -2087,16 +2087,55 @@ PearsonGL.External.rootJS = (function() {
           {
             id:'sample_no',
             hidden:true
+          },
+          {
+            id:'undecided',
+            hidden:true
+          },
+          {
+            id:'unknown',
+            hidden:false
           }
-        ],
+         ],
+        SHOW: [
+          {
+            id:'yes',
+            hidden:false
+          },
+          {
+            id:'no',
+            hidden:false
+          },
+          {
+            id:'sample_yes',
+            hidden:false
+          },
+          {
+            id:'sample_no',
+            hidden:false
+          },
+          {
+            id:'undecided',
+            hidden:false
+          },
+          {
+            id:'unknown',
+            hidden:true
+          }
+         ],
         DEFAULT_POPULATION_SIZE: 2468,
+        DEFAULT_NEIGHBORHOODS: 10,
+        DEFAULT_PROPORTION: 0.58,
         DEFAULT_SAMPLE_SIZE: 20,
-        CONVENIENCE: 2,
-        SURVEYORS: 5
+        DEFAULT_SMALL_SAMPLE: 2,
+        DEFAULT_SURVEYORS: 5
        };
       fs.G7_6_1_Ex_1.initLeft = function() {
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
+        var cons = cs.G7_6_1_Ex_1;
+
+        o.desmos.setExpressions(cons.HIDE);
 
         hlps.left = o.uniqueId;
         hlps.init = true;
@@ -2121,6 +2160,9 @@ PearsonGL.External.rootJS = (function() {
       fs.G7_6_1_Ex_1.initRight = function() {
         var o = hs.parseArgs(arguments);
         var hlps = hxs[o.uniqueId];
+        var cons = cs.G7_6_1_Ex_1;
+
+        o.desmos.setExpressions(cons.HIDE);
 
         hlps.right = o.uniqueId;
         hlps.init = true;
@@ -2143,82 +2185,161 @@ PearsonGL.External.rootJS = (function() {
         }
        };
       fs.G7_6_1_Ex_1.init = function(left, right) {
-        left = hxs[left];
-        right = hxs[right];
+        var hlps_l = hxs[left];
+        var hlps_r = hxs[right];
         var cons = cs.G7_6_1_Ex_1;
-        
-        if(left.S.numericValue === undefined ||
-           right.S.numericValue === undefined ||
-           left.V.numericValue === undefined ||
-           right.V.numericValue === undefined ||
-           left.r.numericValue === undefined ||
-           right.r.numericValue === undefined ||
-           left.c.numericValue === undefined ||
-           right.c.numericValue === undefined ||
-           left.n.numericValue === undefined ||
-           right.n.numericValue === undefined) {
+        var vars = vs[left];
+
+        if(hlps_l.S.numericValue === undefined ||
+           hlps_r.S.numericValue === undefined ||
+           hlps_l.V.numericValue === undefined ||
+           hlps_r.V.numericValue === undefined ||
+           hlps_l.r.numericValue === undefined ||
+           hlps_r.r.numericValue === undefined ||
+           hlps_l.c.numericValue === undefined ||
+           hlps_r.c.numericValue === undefined ||
+           hlps_l.n.numericValue === undefined ||
+           hlps_r.n.numericValue === undefined) {
           // hide everything, try again
-          left.desmos.setExpressions(cons.HIDE);
-          right.desmos.setExpressions(cons.HIDE);
-          left.init = window.setTimeout(function(){
+          hlps_l.desmos.setExpressions(cons.HIDE);
+          hlps_r.desmos.setExpressions(cons.HIDE);
+          hlps_l.init = window.setTimeout(function(){
             fs.G7_6_1_Ex_1.init(left,right);
           },50);
-          right.init = left.init;
-          return false;
+          hlps_r.init = hlps_l.init;
+          return;
         } else {
-          delete left.init;
-          delete right.init;
+          delete hlps_l.init;
+          delete hlps_r.init;
+
+          vars.P = vars.P || cons.DEFAULT_PROPORTION;
+          vars.n = vars.n || cons.DEFAULT_POPULATION_SIZE;
+          vars.k = vars.k || cons.DEFAULT_SAMPLE_SIZE;
+          vars.F = vars.F || cons.DEFAULT_SURVEYORS;
+
+          fs.G7_6_1_Ex_1.match(left,right);
+          hlps_l.desmos.setExpressions(cons.SHOW);
+          hlps_r.desmos.setExpressions(cons.SHOW);
         }
        };
-      fs.G7_6_1_Ex_1.sample = function() {
+      fs.G7_6_1_Ex_1.match = function(left, right) {
+        var hlps_l = hxs[left];
+        var hlps_r = hxs[right];
+
+        var set_r = [];
+
+        if(hlps_l.r.numericValue !== hlps_r.r.numericValue) {
+          set_r.push({
+            id:'rows',
+            latex:'r='+hlps_l.r.numericValue
+          });
+        }
+
+        if(hlps_l.c.numericValue !== hlps_r.c.numericValue) {
+          set_r.push({
+            id:'columns',
+            latex:'c='+hlps_l.c.numericValue
+          });
+        }
+
+        if(hlps_l.n.numericValue !== hlps_r.n.numericValue) {
+          set_r.push({
+            id:'population',
+            latex:'n='+hlps_l.n.numericValue
+          });
+        }
+
+        if(!hs.arrayEquals(hlps_l.S.listValue,hlps_r.S.listValue)) {
+          set_r.push({
+            id:'sample',
+            latex:'S=\\left['+(hlps_l.S.listValue || []).join(',')+'\\right]'
+          });
+        }
+
+        if(!hs.arrayEquals(hlps_l.V.listValue,hlps_r.V.listValue)) {
+          set_r.push({
+            id:'votes',
+            latex:'V=\\left['+(hlps_l.V.listValue || []).join(',')+'\\right]'
+          });
+        }
+
+        if(set_r.length !== 0) {
+          hlps_r.desmos.setExpressions(set_r);
+        }
+       };
+      fs.G7_6_1_Ex_1.genPop = function() {
         var o = hs.parseArgs(arguments);
         var cons = cs.G7_6_1_Ex_1;
         var left = hxs[hxs[o.uniqueId].left];
         var right = hxs[left.right];
+        var vars = vs[left];
+
+        var r = left.r.numericValue;
+        var c = left.c.numericValue;
+
+        var population = fs.G7_6_1_Ex_1.census(r, c, vars.P, cons.DEFAULT_NEIGHBORHOODS);
+
+        left.desmos.setExpressions([
+          {
+            id:'votes',
+            latex:'V=\\left['+population.join(',')+'\\right]'
+          }
+        ].concat(cons.SHOW));
+
+        right.desmos.setExpressions([
+          {
+            id:'votes',
+            latex:'V=\\left['+population.join(',')+'\\right]'
+          }
+        ].concat(cons.HIDE));
+       };
+      fs.G7_6_1_Ex_1.survey = function() {
+        var o = hs.parseArgs(arguments);
+        var cons = cs.G7_6_1_Ex_1;
+        var left = hxs[hxs[o.uniqueId].left];
+        var right = hxs[left.right];
+        var vars = vs[left];
 
         // ignore sample requests before initialization
         if(left.init !== undefined || right.init !== undefined) {
           return;
         }
 
-        var population = left.V.listValue;
-        var k = right.k.numericValue || cons.DEFAULT_SAMPLE_SIZE;
-        var sample, r, c, crowd, i, j;
+        var k = vars.k;
+        var r = left.r.numericValue;
+        var c = left.c.numericValue;
+        var sample;
 
         if(o.name === 'random') {
-          sample = fs.G7_6_1_Ex_1.random(population, k);
+          sample = fs.G7_6_1_Ex_1.random(r * c, k);
         } else {
-          // Generate the crowd
-          crowd = [];
-          r = left.r.numericValue;
-          c = left.c.numericValue;
-          for(i = 0; i < r; i += 1) {
-            crowd[i] = [];
-            for(j = 0; j < c; j += 1) {
-              crowd[i][j] = population[i*c + j];
-            }
-          }
-
           if(o.name === 'small') {
-            sample = fs.G7_6_1_Ex_1.convenience(crowd, cons.CONVENIENCE, cons.SURVEYORS);
+            k = cons.DEFAULT_SMALL_SAMPLE;
           }
-
-          if(o.name === 'convenient') {
-            sample = fs.G7_6_1_Ex_1.convenience(crowd, k, cons.SURVEYORS);
-          }
+          sample = fs.G7_6_1_Ex_1.convenience(r, c, k, vars.F);
         }
 
-        left.desmos.setExpression({
-          id:'sample',
-          latex:'\\left\\['+sample.join(',')+'\\right\\]'
-        });
+        left.desmos.setExpressions([
+          {
+            id:'sample',
+            latex:'S=\\left['+sample.join(',')+'\\right]'
+          }
+        ].concat(cons.SHOW));
 
-        right.desmos.setExpression({
-          id:'sample',
-          latex:'\\left\\['+sample.join(',')+'\\right\\]'
-        });
+        right.desmos.setExpressions([
+          {
+            id:'sample',
+            latex:'S=\\left['+sample.join(',')+'\\right]'
+          }
+        ].concat(cons.SHOW));
        };
       fs.G7_6_1_Ex_1.convenience = function(rows, columns, size, surveyors) {
+        if(rows * columns <= size) {
+          return ((new Array(rows*columns)).fill(1));
+        } else if (size === 0) {
+          return ((new Array(rows*columns)).fill(0));
+        }
+
         // Give each surveyor a starting location
         if(!Array.isArray(surveyors)) {
           surveyors = (new Array(surveyors)).fill(true).map(function(){
@@ -2234,9 +2355,11 @@ PearsonGL.External.rootJS = (function() {
         function walk(surveyor){
           var direction;
           size -= 1; // next house
-          if(size < 0) return;
+          if(size < 0) {
+            return;
+          }
           if(Math.random() < 0.8) { // walk in a cardinal direction
-            direction = Math.floor(2*Math.random());
+            direction = Math.round(Math.random()); // 0 = NS, 1 = EW
             if(surveyor[direction] === 0) {
               surveyor[direction] += 1;
             } else if (surveyor[direction] === [rows, columns][direction]) {
@@ -2273,21 +2396,23 @@ PearsonGL.External.rootJS = (function() {
 
         return sample;
        };
-      fs.G7_6_1_Ex_1.random = function(population, size) {
-        population = Object.keys(population);
+      fs.G7_6_1_Ex_1.random = function(pop_size, sample_size) {
+        if(sample_size >= pop_size) {
+          return ((new Array(pop_size)).fill(1));
+        }
 
-        var sample = (new Array(population.length)).fill(0);
+        var sample = (new Array(pop_size)).fill(0);
+        var population = Object.keys(sample);
 
-        while(size > 0) {
+        while(sample_size > 0) {
           sample[population.splice(population.length*Math.random(),1)[0]] = 1;
-          size -= 1;
+          sample_size -= 1;
         }
 
         return sample;
        };
       fs.G7_6_1_Ex_1.census = function(rows, columns, proportion, neighborhoods) {
-
-        var neighbors = (new Array(neighborhoods)).fill(true).map(incorporate);
+        var neighbors = (new Array(neighborhoods)).fill().map(incorporate);
         // Add some randomness to the mix
         var population = (new Array(rows*columns)).fill(proportion).map(Math.random).map(person);
 
