@@ -2265,9 +2265,9 @@ PearsonGL.External.rootJS = (function() {
        };
       fs.G7_6_1_Ex_1.census = function(rows, columns, proportion, neighborhoods) {
 
-        neighbors = (new Array(neighborhoods)).fill(true).map(incorporate);
+        var neighbors = (new Array(neighborhoods)).fill(true).map(incorporate);
         // Add some randomness to the mix
-        population = (new Array(rows*columns)).fill(proportion).map(Math.random).map(person);
+        var population = (new Array(rows*columns)).fill(proportion).map(Math.random).map(person);
 
         var target = Math.round(proportion*rows*columns);
         var border = proportion;
@@ -3343,7 +3343,7 @@ PearsonGL.External.rootJS = (function() {
         hlps.frequency = hlps.maker('f');
         hlps.results = hlps.maker('S');
 
-        hlps.setNext = function(t,h) {
+        hlps.setNext = function() {
           var alpha = hlps.alpha.numericValue;
 
           o.desmos.setExpressions([
@@ -3354,7 +3354,7 @@ PearsonGL.External.rootJS = (function() {
           ]);
         };
 
-        hlps.spinOnce = function(t,h) {
+        hlps.spinOnce = function() {
           var a = hlps.a.numericValue;
           var frequency = vars.f;
           var n = vars.n;
@@ -3390,7 +3390,7 @@ PearsonGL.External.rootJS = (function() {
           ]);
         };
 
-        hlps.record = function(t,h) {
+        hlps.record = function() {
           var alpha = hlps.alpha.numericValue;
           var results = hlps.results.listValue || [];
 
@@ -3446,8 +3446,6 @@ PearsonGL.External.rootJS = (function() {
         ]);
 
         hlps.c.observe('numericValue',hlps.spin);
-
-        console.log('hi',hs,vs,hxs);
 
         hlps.spinOnce();
        };
@@ -3766,7 +3764,7 @@ PearsonGL.External.rootJS = (function() {
             {
               id:'label_r',
               latex:'\\left(\\frac{R}{2}\\cos\\theta_0+t_{ick}\\cos\\theta_1+2.5t_{ick},\\frac{R}{2}\\sin\\theta_0+t_{ick}\\sin\\theta_1\\right)',
-              label:'r = {d} ÷ 2 = {r0}'
+              label:'r = {d} ÷ 2 = {r0}'
             },
             {
               id:'label_d',
@@ -3776,18 +3774,18 @@ PearsonGL.External.rootJS = (function() {
               id:'label_C(r)',
               latex:'\\left(0,R+t_{ick}\\right)',
               showLabel: true,
-              label:'C = 2π({r0}) ≈ {C}'
+              label:'C = 2π({r0}) ≈ {C}'
             },
             {
               id:'label_C(d)',
               latex:'\\left(0,R+2.5t_{ick}\\right)',
               showLabel: true,
-              label:'C = π({d}) ≈ {C}'
+              label:'C = π({d}) ≈ {C}'
             },
             {
               id:'label_pi',
               latex:'\\left(0,-\\sqrt{R^2-\\left(5t_{ick}\\right)^2}\\right)',
-              label:'π ≈ {C} ÷ {d} ≈ 3.14'
+              label:'π ≈ {C} ÷ {d} ≈ 3.14'
             }
           ]);
         } else if (o.value === 1) {
@@ -3811,11 +3809,11 @@ PearsonGL.External.rootJS = (function() {
             {
               id:'label_r',
               latex:'\\left(\\frac{R}{2}\\cos\\theta_0+t_{ick}\\cos\\theta_1+3.5t_{ick},\\frac{R}{2}\\sin\\theta_0+t_{ick}\\sin\\theta_1\\right)',
-              label:'r = {C} ÷ (2π) ≈ {r0}'
+              label:'r = {C} ÷ (2π) ≈ {r0}'
             },
             {
               id:'label_d',
-              label:'d = {C} ÷ π ≈ {d}'
+              label:'d = {C} ÷ π ≈ {d}'
             },
             {
               id:'label_C(r)',
@@ -3832,7 +3830,7 @@ PearsonGL.External.rootJS = (function() {
             {
               id:'label_pi',
               latex:'\\left(0,-\\sqrt{R^2-\\left(5t_{ick}\\right)^2}\\right)',
-              label:'π ≈ {C} ÷ {d} ≈ 3.14'
+              label:'π ≈ {C} ÷ {d} ≈ 3.14'
             }
           ]);
         }
