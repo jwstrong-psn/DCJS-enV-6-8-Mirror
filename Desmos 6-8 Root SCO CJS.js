@@ -637,6 +637,28 @@ PearsonGL.External.rootJS = (function() {
           }
         }
        },
+      /* ←— array equality ———————————————————————————————————————→ *\
+       ↑ Finds the nearest currency-scale value to a number                   |
+       |                                                                      |
+       | @arg0 {Array}                                                        |
+       | @arg1 {Array}                                                        |
+       |                                                                      |
+       | @Returns: true iff the arrays contain identical entries, else false  ↓
+       * ←—————————————————————————————————————————————————————————————————→ */
+      arrayEquals: function(arr1,arr2){
+        if(!Array.isArray(arr1) ||
+          !Array.isArray(arr2) ||
+          arr1.length !== arr2.length) {
+          return false;
+        }
+        return (arr1.reduce(function(acc,e,i){
+          if(arr2[i] !== e) {
+            return false;
+          } else {
+            return acc;
+          }
+        },true));
+       },
       /* ←— factorize(n) (memoized) ———————————————————————————————————————→ *\
        ↑ Converts a number into a catalog of prime factors and their          |
        |  multiplicities.                                                     |
