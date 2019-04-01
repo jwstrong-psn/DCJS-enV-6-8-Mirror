@@ -3490,6 +3490,42 @@ PearsonGL.External.rootJS = (function() {
         hlps.frequency = hlps.maker('f');
         hlps.results = hlps.maker('S');
 
+        hlps.results.observe('listValue',function(t,h){
+          vars.results = h[t];
+          h.unobserve(t);
+        });
+
+        hlps.clear = function() {
+          hlps.results.unobserve('listValue');
+          vars.spins = 0;
+          vars.data = 0;
+          vars.results = [];
+
+          o.desmos.setExpressions([
+            {
+              id:'results',
+              latex:'S=\\left[\\right]'
+            }
+          ]);
+        };
+
+        hlps.theta_0 = hlps.maker('\\theta_0');
+        hlps.theta_1 = hlps.maker('\\theta_1');
+        hlps.theta_2 = hlps.maker('\\theta_2');
+        hlps.theta_3 = hlps.maker('\\theta_3');
+
+        function initClear(t,h) {
+          h.unobserve(t);
+          h.observe(t,hlps.clear);
+        }
+
+        hlps.theta_0.observe('numericValue',initClear);
+        hlps.theta_1.observe('numericValue',initClear);
+        hlps.theta_2.observe('numericValue',initClear);
+        hlps.theta_3.observe('numericValue',initClear);
+
+
+
         hlps.setNext = function() {
           var alpha = hlps.alpha.numericValue;
 
@@ -3539,7 +3575,7 @@ PearsonGL.External.rootJS = (function() {
 
         hlps.record = function() {
           var alpha = hlps.alpha.numericValue;
-          var results = hlps.results.listValue || [];
+          var results = vars.results || [];
 
           if(results.length > vars.data) {
             return;
@@ -3579,18 +3615,11 @@ PearsonGL.External.rootJS = (function() {
        };
       fs.G7_7_1_Ex_1.spin = function() {
         var o = hs.parseArgs(arguments);
-        var vars = vs[o.uniqueId];
         var hlps = hxs[o.uniqueId];
 
-        vars.spins = 0;
-        vars.data = 0;
+        hlps.c.unobserve('numericValue');
 
-        o.desmos.setExpressions([
-          {
-            id:'results',
-            latex:'S=\\left[\\right]'
-          }
-        ]);
+        hlps.clear();
 
         hlps.c.observe('numericValue',hlps.spin);
 
