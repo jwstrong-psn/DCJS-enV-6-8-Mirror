@@ -3489,6 +3489,7 @@ PearsonGL.External.rootJS = (function() {
         hlps.beta = hlps.maker('\\beta');
         hlps.a = hlps.maker('a');
         hlps.c = hlps.maker('c');
+        hlps.n = hlps.maker('n');
         hlps.frequency = hlps.maker('f');
         hlps.results = hlps.maker('S');
 
@@ -3530,6 +3531,7 @@ PearsonGL.External.rootJS = (function() {
         hlps.theta_1.observe('numericValue',initClear);
         hlps.theta_2.observe('numericValue',initClear);
         hlps.theta_3.observe('numericValue',initClear);
+        hlps.n.observe('numericValue',initClear);
 
 
 
