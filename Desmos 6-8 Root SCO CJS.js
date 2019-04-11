@@ -716,7 +716,7 @@ PearsonGL.External.rootJS = (function() {
        return function(n) {
 
         if(!catalog[n]) {
-          catalog[n] = hs.powerSet(hs.factorize(n)).sort(function(a,b){return a>b;});
+          catalog[n] = hs.powerSet(hs.factorize(n)).sort(function(a,b){return (a-b);});
         }
 
         return catalog[n].slice();
