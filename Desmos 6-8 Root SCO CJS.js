@@ -2376,29 +2376,79 @@ PearsonGL.External.rootJS = (function() {
           if(size < 0) {
             return;
           }
-          if(Math.random() < 0.8) { // walk in a cardinal direction
-            direction = Math.round(Math.random()); // 0 = NS, 1 = EW
-            if(surveyor[direction] === 0) {
-              surveyor[direction] += 1;
-            } else if (surveyor[direction] === [rows, columns][direction]) {
-              surveyor[direction] -= 1;
-            } else {
-              surveyor[direction] += (2*Math.round(Math.random()) - 1);
-            }
-          } else { // walk diagonally
-            if(surveyor[0] === 0) {
-              surveyor[0] += 1;
-            } else if (surveyor[0] === rows-1) {
-              surveyor[0] -= 1;
-            } else {
-              surveyor[0] += (2*Math.round(Math.random()) - 1);
-            }
-            if(surveyor[1] === 0) {
-              surveyor[1] += 1;
-            } else if (surveyor[1] === columns-1) {
-              surveyor[1] -= 1;
-            } else {
-              surveyor[1] += (2*Math.round(Math.random()) - 1);
+          if(true) {
+            direction = Math.floor(6*Math.random());
+            if(direction === 0) {
+              // go E
+              if(surveyor[1] === columns-1) {
+                // hit the right wall
+              } else {
+                surveyor[1] += 1;
+              }
+            } else if(direction === 1) {
+              // go NE
+              if(surveyor[0] === rows-1) {
+                // hit the top wall
+              } else if (surveyor[0] % 2 === 1) {
+                // on an even row; NE is just up
+                surveyor[0] += 1;
+              } else {
+                // on an odd row; NE is up-right
+                if(surveyor[1] === columns-1) {
+                  // hit the right wall
+                } else {
+                  surveyor[0] += 1;
+                  surveyor[1] += 1;
+                }
+              }
+            } else if (direction === 2) {
+              // go NW
+              if(surveyor[0] === rows-1) {
+                // hit the top wall
+              } else if (surveyor[0] % 2 === 1) {
+                // on an even row, NW is up-left
+                if(surveyor[1] === 0) {
+                  // hit the left wall
+                } else {
+                  surveyor[0] += 1;
+                  surveyor[1] -= 1;
+                }
+              } 
+            } else if (direction === 3) {
+              // go W
+              if(surveyor[1] === 0) {
+                // hit the left wall
+              } else {
+                surveyor[1] -= 1;
+              }
+            } else if (direction === 4) {
+              // go SW
+              if(surveyor[0] === 0) {
+                // hit the bottom wall
+              } else if (surveyor[0] % 2 === 1) {
+                // on an even row; SW is down-left
+                if(surveyor[1] === 0) {
+                  // hit the left wall
+                } else {
+                  surveyor[0] -= 1;
+                  surveyor[1] -= 1;
+                }
+              }
+            } else if (direction === 5) {
+              // go SE
+              if(surveyor[0] === 0) {
+                // hit the bottom wall
+              } else if (surveyor[0] % 2 === 1) {
+                // on an even row; SE is just down
+                surveyor[0] -= 1;
+              } else {
+                if(surveyor[1] === columns-1) {
+                  // hit the right wall
+                } else {
+                  surveyor[0] -= 1;
+                  surveyor[1] += 1;
+                }
+              }
             }
           }
           if(sample[columns*surveyor[0]+surveyor[1]] === 0 && size >= 0) {
