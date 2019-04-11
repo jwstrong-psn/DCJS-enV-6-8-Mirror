@@ -1849,6 +1849,84 @@ PearsonGL.External.rootJS = (function() {
         }
         ]);
        };
+      /* ←— A0633919 6-1-4 Ex.1 ————————————————————————————————————————————→ *\
+       | Generates division problems (int)A/(frac)B and a corresponding number line
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G6_1_4_Ex_1 = {};
+       cs.G6_1_4_Ex_1 = {
+        MAX_DIVIDEND: 10, // A
+        MAX_DENOMINATOR: 12, // denominator of B
+        MAX_QUOTIENT: 20 // This must be >= 2*MAX_DIVIDEND so A/(1/2)<=MAX_QUOTIENT
+       };
+      fs.G6_1_4_Ex_1.newProblem = function() {
+        var o = hs.parseArgs(arguments);
+        var cons = cs.G6_1_4_Ex_1;
+
+        // Problem A/B, where A is an integer and B is a rational number that
+        // divides A
+        var denominator = 2 + Math.floor((cons.MAX_DENOMINATOR-2)*Math.random());
+        var numerator = Math.ceil((denominator-1)*Math.random());
+
+        var quotients;
+        var quotient;
+        var dividend;
+
+        while(dividend === undefined) {
+          quotients = [];
+          quotient = 0;
+          // List possible quotients that produce integers
+          while(quotient * numerator < denominator*cons.MAX_DIVIDEND &&
+                quotient < cons.MAX_QUOTIENT) {
+            quotient += 1;
+            if((quotient*numerator) % denominator === 0) {
+              quotients.push(quotient);
+            }
+          }
+
+          if(quotients.length > 0) {
+            dividend = (quotients[Math.floor(quotients.length*Math.random())]*numerator) / denominator;
+          } else {
+            // no quotients possible with the current numerator/denominator
+            // (it is possible for the first integer multiple to be > MAX_DIVIDEND)
+            if(numerator > 1) {
+              // worst-case scenario, we have to go with 1/denominator, which
+              // will pair with the multiple MAX_DIVIDEND*denominator
+              numerator -= 1;
+            } else {
+            // worst-case scenario there is MAX_DIVIDEND*denominator > MAX_QUOTIENT,
+            // which is resolved by reducing the denominator and trying again
+              denominator -= 1;
+              numerator = Math.ceil((denominator-1)*Math.random());
+              // this will always eventually produce an answer because eventually
+              // the denominator = 2, and 2*MAX_DIVIDEND <= MAX_QUOTIENT
+            }
+          }
+        }
+
+        o.desmos.setExpressions([
+          {
+            id:'A',
+            latex:'A='+dividend
+          },
+          {
+            id:'n',
+            latex:'n='+numerator
+          },
+          {
+            id:'d',
+            latex:'d='+denominator
+          }
+        ]);
+       };
+      fs.G6_1_4_Ex_1.setInterval = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+
+        o.desmos.setExpression({
+          id:'whole',
+          latex:'W='+(vars.ticks+1)
+        });
+       };
       /* ←— A0633919 6-2-1 KC ————————————————————————————————————————————→ *\
        | recolors the point based on the side of 0
        * ←————————————————————————————————————————————————————————————————→ */
