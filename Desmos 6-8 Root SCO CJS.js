@@ -4171,6 +4171,54 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.setMathBounds(newBounds);
        };
+      /* ←— A??????? 8-1-3 Ex.3 ——————————————————————————————————————————→ *\
+       | Snaps points to the line when the student starts to drag them
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G8_1_3_Ex_3 = {};
+       cs.G8_1_3_Ex_3 = {
+        DEFAULT_POSITIONS: [
+          -4,
+          -2,
+          0,
+          2,
+          4
+        ]
+       };
+      fs.G8_1_3_Ex_3.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+        var vars = vs[o.uniqueId];
+        var cons = cs.G8_1_3_Ex_3;
+
+        vars.inits = cons.DEFAULT_POSITIONS;
+
+        hlps.x0 = hlps.maker('x_0');
+        hlps.x1 = hlps.maker('x_1');
+        hlps.x2 = hlps.maker('x_2');
+        hlps.x3 = hlps.maker('x_3');
+        hlps.x4 = hlps.maker('x_4');
+
+        hlps.x0.observe('numericValue',initVal);
+        hlps.x1.observe('numericValue',initVal);
+        hlps.x2.observe('numericValue',initVal);
+        hlps.x3.observe('numericValue',initVal);
+        hlps.x4.observe('numericValue',initVal);
+
+        function initVal(t,h) {
+          h.unobserve(t);
+          vars.inits[Number(h.latex[2])] = h[t];
+          h.observe(t,stick);
+        }
+
+        function stick(t,h) {
+          if(h[t] !== vars.inits[Number(h.latex[2])]) {
+            o.desmos.setExpression({
+              id: h.latex.replace('x_','y'),
+              latex: h.latex.replace('x','y')+'=0'
+            });
+          }
+        }
+       };
       /* ←— A0633995 8-1-3 KC ————————————————————————————————————————————→ *\
        | Labels points adjacent to 
        * ←————————————————————————————————————————————————————————————————→ */
