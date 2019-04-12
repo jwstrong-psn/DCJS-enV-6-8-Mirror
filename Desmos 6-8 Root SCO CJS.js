@@ -722,6 +722,40 @@ PearsonGL.External.rootJS = (function() {
         return catalog[n].slice();
         };
        }()),
+      /* ←— gcf ———————————————————————————————————————————————————————————→ *\
+       ↑ Finds the greatest common factor of two numbers                      |
+       |                                                                      |
+       | @arg0 {number}                                                       |
+       | @arg1 {number}                                                       |
+       | @Returns: greatest common factor of the two inputs (1 if rel.prime)  ↓
+       * ←—————————————————————————————————————————————————————————————————→ */
+      gcf: function(a,b){
+        if(a === b || a === 1) {
+          return a;
+        } else if (b === 1) {
+          return b;
+        }
+        var divisors_a = hs.divisors(a);
+        var divisors_b = hs.divisors(b);
+        var gcf = 1;
+
+        var i = 0;
+        var j = 0;
+
+        while(i < divisors_a.length) {
+          while(j < divisors_b.length && divisors_b[j] < divisors_a[i]) {
+            j += 1;
+          }
+
+          if(j < divisors_b.length && divisors_b[j] === divisors_a[i]) {
+            gcf = divisors_b[j];
+          }
+
+          i += 1;
+        }
+
+        return gcf;
+       },
       /* ←— easeFunc —————————————————————————————————————————————————→ *\
        | Given a current value, current rate, destination, and target
        |  ease time, returns parameters for f(t) = A sin(b * t - h) + k
