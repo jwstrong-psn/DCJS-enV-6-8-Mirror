@@ -324,12 +324,10 @@ PearsonGL.External.rootJS = (function() {
         vs[uid] = vs[ouid];
         hxs[uid] = hxs[ouid];
 
-
-        if(hxs[uid].maker === undefined) {
-          hxs[uid].maker = function(expr){
-            return desmos.HelperExpression.call(desmos,{latex:expr});
-          };
-        }
+        // Refresh the maker function every time this is called
+        hxs[uid].maker = function(expr){
+          return desmos.HelperExpression.call(desmos,{latex:expr});
+        };
 
         if (window.debugLog) {
           window.widgetDebug = window.widgetDebug || {
