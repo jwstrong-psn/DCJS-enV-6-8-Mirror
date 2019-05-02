@@ -2135,6 +2135,197 @@ PearsonGL.External.rootJS = (function() {
           color:((o.name === 'x_1' ? (o.value >= 0) : (o.value < 0)) ? cs.color.mgmColors.BLUE : cs.color.mgmColors.RED)
         });
        };
+      /* ←— A??????? 6-8-7 KC ——————————————————————————————————————————→ *\
+       | synchronizes two dot plots
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G6_8_7_KC = {};
+      fs.G6_8_7_KC.init = function() {
+        var o = hs.parseArgs(arguments);
+        vs.G6_8_7_KC = vs.G6_8_7_KC || {};
+        var sync = vs.G6_8_7_KC;
+
+
+        // Handle resets
+        var reset;
+        if(sync.first_id === o.uniqueId || sync.second_id === o.uniqueId) {
+          o.log('Queueing reset...');
+          if(sync.first_id === o.uniqueId) {
+            reset = {
+              uniqueId: sync.second_id,
+              desmos: sync.second_desmos
+            };
+            hxs[sync.second_id].x2.unobserveAll();
+            hxs[sync.second_id].y2.unobserveAll();
+            hxs[sync.second_id].xs.unobserveAll();
+            hxs[sync.second_id].ys.unobserveAll();
+            sync.second_x2.unobserveAll();
+            sync.second_y2.unobserveAll();
+            sync.second_xs.unobserveAll();
+            sync.second_ys.unobserveAll();
+            sync.second_desmos.setExpressions([
+              {
+                id:'76',
+                latex:'x_2=6'
+              },
+              {
+                id:'75',
+                latex:'y_2=5'
+              },
+              {
+                id:'values',
+                latex:'x_1=\\left[3,4,5,6,7,8,9\\right]'
+              },
+              {
+                id:'counts',
+                latex:'y_1=\\left[1,2,3,5,3,2,1\\right]'
+              }
+            ]);
+            delete vs[sync.second_id];
+            delete hxs[sync.second_id];
+          } else if (sync.second_id === o.uniqueId) {
+            reset = {
+              uniqueId: sync.first_id,
+              desmos: sync.first_desmos
+            };
+            hxs[sync.first_id].x2.unobserveAll();
+            hxs[sync.first_id].y2.unobserveAll();
+            hxs[sync.first_id].xs.unobserveAll();
+            hxs[sync.first_id].ys.unobserveAll();
+            sync.first_x2.unobserveAll();
+            sync.first_y2.unobserveAll();
+            sync.first_xs.unobserveAll();
+            sync.first_ys.unobserveAll();
+            sync.first_desmos.setExpressions([
+              {
+                id:'76',
+                latex:'x_2=6'
+              },
+              {
+                id:'75',
+                latex:'y_2=5'
+              },
+              {
+                id:'values',
+                latex:'x_1=\\left[3,4,5,6,7,8,9\\right]'
+              },
+              {
+                id:'counts',
+                latex:'y_1=\\left[1,2,3,5,3,2,1\\right]'
+              }
+            ]);
+            delete vs[sync.first_id];
+            delete hxs[sync.first_id];
+          }
+          vs.G6_8_7_KC = {};
+          sync = vs.G6_8_7_KC;
+          // Reinitialize arguments
+          o = hs.parseArgs(arguments);
+        }
+
+        var hlps = hxs[o.uniqueId];
+
+        var x2 = hlps.maker('x_2');
+        var y2 = hlps.maker('y_2');
+        var xs = hlps.maker('x_1');
+        var ys = hlps.maker('y_1');
+
+        if(sync.first_id === undefined) {
+          o.log('Syncing first widget:',o.desmos);
+          sync.first_id = o.uniqueId;
+          sync.first_desmos = o.desmos;
+          sync.first_x2 = x2;
+          sync.first_y2 = y2;
+          sync.first_xs = xs;
+          sync.first_ys = ys;
+
+          // handle resets
+          if(reset !== undefined) {
+            o.log('Resetting...');
+            fs.tool.dotPlot.init(reset);
+            fs.G6_8_7_KC.init(reset);
+          }
+        } else {
+          o.log('Syncing second widget:',o.desmos);
+          sync.second_id = o.uniqueId;
+          sync.second_desmos = o.desmos;
+          sync.second_x2 = x2;
+          sync.second_y2 = y2;
+          sync.second_xs = xs;
+          sync.second_ys = ys;
+
+          var x2_1 = function(t,h) {
+            if(sync.x2 !== h[t]) {
+              sync.x2 = h[t];
+              o.desmos.setExpression({id:'76',latex:'x_2='+h[t]});
+            }
+          };
+          var y2_1 = function(t,h){
+            if(sync.y2 !== h[t]) {
+              sync.y2 = h[t];
+              o.desmos.setExpression({id:'75',latex:'y_2='+h[t]});
+            }
+          };
+          var xs_1 = function(t,h){
+            if(!hs.arrayEquals(sync.xs,h[t])) {
+              sync.xs = h[t];
+              o.desmos.setExpression({
+                id:'values',
+                latex:'x_1=\\left['+h[t]+'\\right]'
+              });
+            }
+          };
+          var ys_1 = function(t,h){
+            if(!hs.arrayEquals(sync.ys,h[t])) {
+              sync.ys = h[t];
+              o.desmos.setExpression({
+                id:'counts',
+                latex:'y_1=\\left['+h[t]+'\\right]'
+              });
+            }
+          };
+
+          var x2_2 = function(t,h){
+            if(sync.x2 !== h[t]) {
+              sync.x2 = h[t];
+              sync.first_desmos.setExpression({id:'76',latex:'x_2='+h[t]});
+            }
+          };
+          var y2_2 = function(t,h){
+            if(sync.y2 !== h[t]) {
+              sync.y2 = h[t];
+              sync.first_desmos.setExpression({id:'75',latex:'y_2='+h[t]});
+            }
+          };
+          var xs_2 = function(t,h){
+            if(!hs.arrayEquals(sync.xs,h[t])) {
+              sync.xs = h[t];
+              sync.first_desmos.setExpression({
+                id:'values',
+                latex:'x_1=\\left['+h[t]+'\\right]'
+              });
+            }
+          };
+          var ys_2 = function(t,h){
+            if(!hs.arrayEquals(sync.ys,h[t])) {
+              sync.ys = h[t];
+              sync.first_desmos.setExpression({
+                id:'counts',
+                latex:'y_1=\\left['+h[t]+'\\right]'
+              });
+            }
+          };
+
+          sync.first_x2.observe('numericValue.sync',x2_1);
+          sync.first_y2.observe('numericValue.sync',y2_1);
+          sync.first_xs.observe('listValue.sync',xs_1);
+          sync.first_ys.observe('listValue.sync',ys_1);
+
+          x2.observe('numericValue.sync',x2_2);
+          y2.observe('numericValue.sync',y2_2);
+          xs.observe('listValue.sync',xs_2);
+          ys.observe('listValue.sync',ys_2);
+        }
+       };
       /* ←— A0633965 7-3-2 Ex.1 ——————————————————————————————————————————→ *\
        | Records score of hits & misses
        * ←————————————————————————————————————————————————————————————————→ */
