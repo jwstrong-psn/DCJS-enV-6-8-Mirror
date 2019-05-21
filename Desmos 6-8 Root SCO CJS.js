@@ -2135,6 +2135,43 @@ PearsonGL.External.rootJS = (function() {
           color:((o.name === 'x_1' ? (o.value >= 0) : (o.value < 0)) ? cs.color.mgmColors.BLUE : cs.color.mgmColors.RED)
         });
        };
+      /* ←— A??????? 6-6-5 Example 1 ——————————————————————————————————————————→ *\
+       | Generates percent multiplication problems
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G6_6_5_Ex_1 = {};
+       cs.G6_6_5_Ex_1 = {
+        MIN_WHOLE: 10,
+        MAX_WHOLE: 600,
+        MIN_PERCENT: 10,
+        MAX_PERCENT: 90
+       };
+      fs.G6_6_5_Ex_1.newQ = function() {
+        var o = hs.parseArgs(arguments);
+        var cons = cs.G6_6_5_Ex_1; 
+
+        var N = cons.MIN_WHOLE+Math.ceil((cons.MAX_WHOLE-cons.MIN_WHOLE+1)*Math.random());
+
+        var m = Math.max(Math.ceil(cons.MIN_PERCENT/100*N), 1);
+        var M = Math.min(Math.floor(cons.MAX_PERCENT/100*N), N-1);
+        var p = Math.random();
+
+        var K = Math.round(M*p + m*(1-p));
+
+        var P = Math.round(100*K/N);
+
+        o.log(K+' is '+P+' percent of '+N+'.');
+
+        o.desmos.setExpressions([
+          {
+            id:'frequency',
+            latex:'K='+K
+          },
+          {
+            id:'total',
+            latex:'N='+N
+          }
+        ]);
+       };
       /* ←— A??????? 6-8-7 KC ——————————————————————————————————————————→ *\
        | synchronizes two dot plots
        * ←————————————————————————————————————————————————————————————————→ */
