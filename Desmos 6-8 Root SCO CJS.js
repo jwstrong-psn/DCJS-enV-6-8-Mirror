@@ -2502,7 +2502,7 @@ PearsonGL.External.rootJS = (function() {
         DEFAULT_POPULATION_SIZE: 2468,
         DEFAULT_NEIGHBORHOODS: 10,
         DEFAULT_PROPORTION: 0.58,
-        DEFAULT_SAMPLE_SIZE: 20,
+        DEFAULT_SAMPLE_SIZE: 100,
         DEFAULT_SMALL_SAMPLE: 10,
         DEFAULT_SURVEYORS: 5,
         DEFAULT_SMALL_SURVEYORS: 1
@@ -2583,7 +2583,7 @@ PearsonGL.External.rootJS = (function() {
           vars_l.V = hlps_l.V.listValue || [];
           vars_r.S = hlps_r.S.listValue || [];
           vars_l.n = vars_l.V.length || vars_l.n || 0;
-          vars_r.k = vars_r.S.reduce(function(acc,e){return acc+e;});
+          vars_r.k = vars_r.S.reduce(function(acc,e){return acc+e;}) || vars_r.k || cons.DEFAULT_SAMPLE_SIZE;
 
           vars_l.r = Math.round(Math.sqrt(vars_l.n)*hlps_l.frame.numericValue);
           if(vars_l.r === 0) {
