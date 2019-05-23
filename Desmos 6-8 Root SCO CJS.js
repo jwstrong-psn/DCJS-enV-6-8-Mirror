@@ -4766,6 +4766,73 @@ PearsonGL.External.rootJS = (function() {
 
         o.desmos.setMathBounds(bounds);
        };
+      /* ←— A??????? 8-2-6 Ex.3 ——————————————————————————————————————————→ *\
+       | Snaps points to the line when the student starts to drag them
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.G8_2_6_KC = {};
+      fs.G8_2_6_KC.init = function() {
+        var o = hs.parseArgs(arguments);
+        var hlps = hxs[o.uniqueId];
+        var vars = vs[o.uniqueId];
+
+        var helper;
+        ['u_0','v_0','u_1','v_1','x_1','x_2','m','b','F_{ix}'].forEach(function(e){
+          helper = hlps.maker(e);
+          helper.observe('numericValue',function(t,h) {
+            vars[e] = h[t];
+          });
+        });
+       };
+      fs.G8_2_6_KC.swapFix = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+
+        if(o.value === vars['F_{ix}'] || vars['F_{ix}'] === undefined) {
+          return;
+        }
+
+        if(o.value === 1 && vars.u_0 !== undefined && vars.u_1 !== undefined) {
+          o.desmos.setExpressions([
+            {
+              id:'x1',
+              latex:'x_1='+vars.u_0,
+              sliderBounds:{step:'1'}
+            },
+            {
+              id:'x2',
+              latex:'x_2='+vars.u_1,
+              sliderBounds:{step:'1'}
+            }
+          ]);
+        } else if(o.value === 0 && vars.x_1 !== undefined && vars.x_2 !== undefined) {
+          o.desmos.setExpressions([
+            {
+              id:'u0',
+              latex:'u_0='+vars.x_1,
+              sliderBounds:{step:'1'}
+            },
+            {
+              id:'v0',
+              latex:'v_0='+(vars.m*vars.x_1+vars.b),
+              sliderBounds:{step:'1'}
+            },
+            {
+              id:'u1',
+              latex:'u_1='+vars.x_2,
+              sliderBounds:{step:'1'}
+            },
+            {
+              id:'v1',
+              latex:'v_1='+(vars.m*vars.x_2+vars.b),
+              sliderBounds:{step:'1'}
+            }
+          ]);
+        }
+        o.desmos.setExpression({
+          id:'fix',
+          latex:'F_{ix}='+o.value
+        });
+       };
       /* ←— A0634006 8-4-1 KC ————————————————————————————————————————————→ *\
        | generates random bivariate data with given properties
        * ←————————————————————————————————————————————————————————————————→ */
