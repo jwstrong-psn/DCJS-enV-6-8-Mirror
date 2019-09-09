@@ -2501,7 +2501,7 @@ PearsonGL.External.rootJS = (function() {
          ],//*/],
         DEFAULT_POPULATION_SIZE: 2468,
         DEFAULT_NEIGHBORHOODS: 10,
-        DEFAULT_PROPORTION: 0.58,
+        DEFAULT_PROPORTION: 0.25,
         DEFAULT_SAMPLE_SIZE: 100,
         DEFAULT_SMALL_SAMPLE: 10,
         DEFAULT_SURVEYORS: 5,
