@@ -1886,8 +1886,9 @@ PearsonGL.External.rootJS = (function() {
        * ←————————————————————————————————————————————————————————————————→ */
        fs.G6_1_4_Ex_1 = {};
        cs.G6_1_4_Ex_1 = {
+        MAX_TICKS: 61, // Max ticks visible on the number line w/correct answer
         MAX_DIVIDEND: 20, // A
-        MAX_DIVISOR: 3, // B can be a mixed number up to here
+        MAX_DIVISOR: 1, // B can be a mixed number up to here
         MAX_DENOMINATOR: 10, // denominator of B
         MAX_QUOTIENT: 15 // Hops on the number line
        };
@@ -1914,7 +1915,9 @@ PearsonGL.External.rootJS = (function() {
               // Make problems for each multiple of the fraction
               for(multiple = 1; multiple <= max_multiple; multiple += 1) {
                 // Rather, each multiple that results in an integer
-                if((multiple * numerator) % denominator === 0) {
+                if(((multiple * numerator) % denominator === 0) &&
+                   // As long as it isn't too busy
+                   (multiple*numerator <= cons.MAX_TICKS)) {
                   problems.push({
                     "numerator":numerator,
                     "denominator": denominator,
