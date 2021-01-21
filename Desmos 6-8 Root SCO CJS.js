@@ -5007,6 +5007,57 @@ PearsonGL.External.rootJS = (function() {
           o.desmos.setExpressions(exprs);
         }); //*/
        };
+      /* ←— A0701352 Fl23 6-2-2 KC ———————————————————————————————————————→ *\
+       | states a bunch of points in order
+       * ←————————————————————————————————————————————————————————————————→ */
+       fs.A0701352 = {};
+      fs.A0701352.sortPoints = function() {
+        var o = hs.parseArgs(arguments);
+        var vars = vs[o.uniqueId];
+        
+        vars[o.name] = o.value;
+
+        var a = vars.a;
+        var b = vars.b;
+        var c = vars.c;
+        var d = vars.d;
+        var n = vars.n;
+
+        if(a === undefined || b === undefined || c === undefined ||
+          d === undefined || n === undefined) {
+          return;
+        }
+
+        var numbers = [
+          {value: a/b, label: '\\mathsf{\\frac${a}${b}}'},
+          {value: c, label: '\\mathsf${c}'},
+          {value: d, label: '\\mathsf${d}'},
+          {value: n, label: '\\mathsf{'+(n < 0 ? '−' : '')+'\\frac${N}{1}}'}
+        ];
+
+        numbers.sort(function(a, b){return (a.value - b.value);});
+
+        var statement = '`\\mathsf{\\mathrm{The\\space numbers,\\space in\\space order\\space from\\space least\\space to\\space greatest,\\space are:}\\space';
+
+        while(numbers.length > 1) {
+          statement += numbers[0].label;
+
+          if(numbers[0].value === numbers[1].value) {
+            statement += '=';
+          } else {
+            statement += ',\\space ';
+          }
+
+          numbers.shift();
+        }
+
+        statement += numbers[0].label + '.}`';
+
+        o.desmos.setExpression({
+          id: 'label',
+          label: statement
+        });
+       };
 
 // Pre-DCJS Stuff
    ;(function(){
